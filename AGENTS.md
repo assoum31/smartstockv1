@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -27,4 +28,13 @@ use the editor.
   `LOVABLE_API_KEY`. When Lovable does not provide one, users can bring their
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
+
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Accounts are real auth users with a synthetic per-store email (`username@storecode...`); only server functions in `src/lib/accounts.functions.ts` create them or check activation PINs (hashed, table has no client policies), so no browser can create accounts or read PINs. The legacy `app_users` table is retired.
+- Every store-owned row carries `tenant_id` and RLS limits reads/writes to the caller's store; inventory sessions open/close only through database functions that snapshot stock, so variances compare against stock at session start.
+- There is exactly one master; it signs in only on the unlinked /master page (store login refuses the master code). Its first sign-in with the default credentials goes through `claimMaster`, which forces a new password, so the default never becomes a real password.
+- Login/master submit buttons stay disabled until the page is interactive, so a click never triggers a plain page reload.
+- The camera barcode library is loaded with a dynamic import inside an effect, because it touches browser APIs and would break server rendering.

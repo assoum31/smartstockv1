@@ -1,80 +1,154 @@
-import { createFileRoute } from "@tanstack/react-router";
-import capturedCSS from "../styles/site.css?raw";
+import { useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  ArrowLeft,
+  ClipboardList,
+  CloudOff,
+  Layers,
+  ScanLine,
+  Scale,
+  ShieldCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { fetchMe } from "@/lib/me";
+import heroImage from "@/assets/warehouse-scan.jpg";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "تسجيل الدخول | Stocki Pro" },
-    { name: "description", content: "اختر دورك في Stocki Pro: مسير المتجر أو عامل الجرد." },
-    { property: "og:title", content: "تسجيل الدخول | Stocki Pro" },
-    { property: "og:description", content: "اختر دورك في Stocki Pro: مسير المتجر أو عامل الجرد." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
-  staticData: { importedDocument: { html: { "dir": "rtl", "lang": "ar" }, body: { "className": "\x61ntialiased" } } },
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      {
+        name: "description",
+        content:
+          "جرد ميداني بالباركود لعدة متاجر: جلسات جرد، فوارق المخزون لكل منتج، عمل بدون إنترنت وتصدير Excel.",
+      },
+      { property: "og:title", content: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      {
+        property: "og:description",
+        content:
+          "جرد ميداني بالباركود لعدة متاجر: جلسات جرد، فوارق المخزون لكل منتج، عمل بدون إنترنت وتصدير Excel.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Landing,
 });
 
-function Index() {
+const FEATURES = [
+  { icon: ScanLine, title: "سكان بالكاميرا", text: "أي هاتف يصبح قارئ باركود، بدون جهاز إضافي." },
+  {
+    icon: Scale,
+    title: "فارق لكل منتج",
+    text: "مجموع كل الرفوف مقابل مخزون النظام المجمّد عند بداية الجلسة.",
+  },
+  {
+    icon: CloudOff,
+    title: "يعمل بدون إنترنت",
+    text: "العدّ يُحفظ في الهاتف ويُرسل تلقائياً عند عودة الشبكة.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "متاجر معزولة",
+    text: "كل متجر يرى بياناته فقط، وكل عامل يدخل برمز تفعيل خاص.",
+  },
+];
+
+function Landing() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    void fetchMe()
+      .then((me) => {
+        if (me && !me.blocked) navigate({ to: me.homePath, replace: true });
+      })
+      .catch(() => {});
+  }, [navigate]);
+
   return (
-    <>
-      <style>{capturedCSS}</style>
-      <div className={"\x62g-ledger flex min-h-screen items-center justify-center p-4"} dir="rtl">
-        <div className="w-full max-w-md">
-          <a className="mb-6 flex items-center justify-center gap-2.5" href="/">
-            <span className={"flex h-11 w-11 items-center justify-center rounded-2xl \x62g-ink text-warning"}>
-              <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
-                <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" />
-                <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" />
-              </svg>
+    <div className="min-h-screen bg-background" dir="rtl">
+      <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+        <section className="bg-ledger flex flex-col px-6 py-8 sm:px-12">
+          <header className="flex items-center justify-between">
+            <span className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-warning">
+                <Layers className="h-5 w-5" />
+              </span>
+              <span className="text-xl font-extrabold">
+                Stocki <span className="text-primary">Pro</span>
+              </span>
             </span>
-            <span className="text-2xl font-extrabold">Stocki <span className="text-primary">Pro</span></span>
-          </a>
-          <h1 className="mb-4 text-center text-lg font-extrabold">من أنت؟</h1>
-          <div className={"\x73pace-y-3"}>
-            <a className={"surface-card flex items-center gap-4 p-5 transition-shadow \x68over:\x73hadow-[\x76ar(\x2d-shadow-lift)]"} href="/manager">
-              <span className={"flex h-12 w-12 shrink-0 items-center justify-center rounded-xl \x62g-ink text-ink-foreground"}>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                  <path d="M12 11h4" />
-                  <path d="M12 16h4" />
-                  <path d="M8 11h.01" />
-                  <path d="M8 16h.01" />
-                </svg>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-extrabold">مسير المتجر</span>
-                <span className="block text-xs text-muted-foreground">جلسات الجرد، العمال، الكميات والفوارق.</span>
-              </span>
-              <svg className="h-5 w-5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m12 19-7-7 7-7" />
-                <path d="M19 12H5" />
-              </svg>
-            </a>
-            <a className={"surface-card flex items-center gap-4 p-5 transition-shadow \x68over:\x73hadow-[\x76ar(\x2d-shadow-lift)]"} href="/worker">
-              <span className={"flex h-12 w-12 shrink-0 items-center justify-center rounded-xl \x62g-ink text-ink-foreground"}>
-                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                  <path d="M7 12h10" />
-                </svg>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-extrabold">عامل الجرد</span>
-                <span className="block text-xs text-muted-foreground">مسح الباركود وتسجيل الكميات.</span>
-              </span>
-              <svg className="h-5 w-5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="m12 19-7-7 7-7" />
-                <path d="M19 12H5" />
-              </svg>
-            </a>
+            <Button asChild variant="outline">
+              <Link to="/login">تسجيل الدخول</Link>
+            </Button>
+          </header>
+
+          <div className="my-auto max-w-xl py-12">
+            <p className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
+              <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-primary" />
+              جرد ميداني مباشر
+            </p>
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.25] tracking-tight sm:text-5xl">
+              اعرف ما في رفوفك،
+              <br />
+              <span className="text-primary">لا ما في الحاسوب.</span>
+            </h1>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
+              فرق الجرد تمسح الباركود بالهاتف، والمسير يرى الفوارق لحظة بلحظة، متجراً بمتجر.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild size="xl">
+                <Link to="/worker">
+                  <ScanLine />
+                  دخول العمال
+                </Link>
+              </Button>
+              <Button asChild size="xl" variant="outline">
+                <Link to="/manager">
+                  <ClipboardList />
+                  دخول المسيرين
+                  <ArrowLeft />
+                </Link>
+              </Button>
+            </div>
+
+            <dl className="mt-12 grid gap-5 sm:grid-cols-2">
+              {FEATURES.map((f) => (
+                <div key={f.title} className="flex gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ink text-ink-foreground">
+                    <f.icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <dt className="text-sm font-extrabold">{f.title}</dt>
+                    <dd className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      {f.text}
+                    </dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
           </div>
-        </div>
+        </section>
+
+        <section className="relative hidden overflow-hidden bg-ink lg:block">
+          <img
+            src={heroImage}
+            alt="عامل يمسح باركود صندوق في مخزن بالهاتف"
+            width={1280}
+            height={1600}
+            className="absolute inset-0 h-full w-full object-cover opacity-90"
+          />
+          <div className="absolute inset-x-8 bottom-8 rounded-2xl bg-ink/85 p-5 text-ink-foreground backdrop-blur">
+            <p className="text-xs text-ink-muted">زيت زيتون 1L — الرف B2</p>
+            <div className="mt-2 flex items-end justify-between">
+              <span className="barcode-chip text-sm text-ink-muted">6111245780031</span>
+              <span className="font-mono text-2xl font-bold text-warning" dir="ltr">
+                −3
+              </span>
+            </div>
+          </div>
+        </section>
       </div>
-      <section aria-label="Notifications alt+T" tabIndex={-1} aria-live="polite" aria-relevant="additions text" aria-atomic="false" />
-    </>
+    </div>
   );
 }
