@@ -245,7 +245,7 @@ export function SessionView({
           </div>
         </div>
         <TabsContent value="variances" className="mt-4">
-          <VarianceTable rows={variances} />
+          <VarianceTable rows={variances} editable={isActive && !readOnly} sessionId={session.id} />
         </TabsContent>
         <TabsContent value="sales" className="mt-4">
           <SalesPanel
@@ -276,7 +276,17 @@ const FILTERS: { value: VarianceFilter; label: string }[] = [
   { value: "all", label: "الكل" },
 ];
 
-function VarianceTable({ rows }: { rows: VarianceRow[] }) {
+function VarianceTable({
+  rows,
+  editable,
+  sessionId,
+}: {
+  rows: VarianceRow[];
+  editable: boolean;
+  sessionId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [removing, setRemoving] = useState<VarianceRow | null>(null);
   const [filter, setFilter] = useState<VarianceFilter>("gaps");
   const [search, setSearch] = useState("");
   const shown = useMemo(() => {
@@ -337,12 +347,13 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
               <th className="px-4 py-3 text-end font-bold">المتوقع</th>
               <th className="px-4 py-3 text-end font-bold">المحسوب</th>
               <th className="px-4 py-3 text-end font-bold">الفارق (المحسوب − المبيعات)</th>
+              {editable && <th className="px-4 py-3" />}
             </tr>
           </thead>
           <tbody className="divide-y">
             {shown.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-10 text-center text-muted-foreground">
+                <td colSpan={8} className="p-10 text-center text-muted-foreground">
                   لا توجد منتجات في هذا التصنيف.
                 </td>
               </tr>
@@ -366,7 +377,22 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
                 </td>
                 <td className="px-4 py-3 text-end font-mono">{formatQty(r.system_quantity)}</td>
                 <td className="px-4 py-3 text-end font-mono text-muted-foreground">
-                  {r.sold_quantity ? `−${formatQty(r.sold_quantity)}` : "—"}
+                  {r.sold_quantity ? (
+                    <>
+                      <span className="font-bold text-foreground">
+                        {r.deducted_quantity ? `−${formatQty(r.deducted_quantity)}` : "0"}
+                      </span>
+                      {r.deducted_quantity !== r.sold_quantity && (
+                        <span className="block text-[10px]">
+                          {r.entries === 0
+                            ? `بيع ${formatQty(r.sold_quantity)} · غير محسوب`
+                            : `بيع ${formatQty(r.sold_quantity)} · قبل العدّ لا يُخصم`}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-end font-mono">{formatQty(r.expected_quantity)}</td>
                 <td className="px-4 py-3 text-end font-mono font-bold">
@@ -386,11 +412,59 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
                     {formatQty(r.variance)}
                   </span>
                 </td>
+                {editable && (
+                  <td className="px-2 py-3">
+                    {r.entries > 0 && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 hover:text-destructive"
+                        aria-label="حذف عدّ المنتج"
+                        onClick={() => setRemoving(r)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={Boolean(removing)} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader className="text-right sm:text-right">
+            <AlertDialogTitle>حذف عدّ هذا المنتج من الجرد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing?.product_name} — تُحذف كل أسطر العدّ ({removing?.entries}) لهذا المنتج في
+              هذه الجلسة.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-start">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!removing) return;
+                const { error } = await supabase
+                  .from("inventory_logs")
+                  .delete()
+                  .eq("session_id", sessionId)
+                  .eq("barcode", removing.barcode);
+                if (error) toast.error(errorText(error));
+                else toast.success("تم الحذف");
+                setRemoving(null);
+                void queryClient.invalidateQueries({ queryKey: ["session-logs", sessionId] });
+              }}
+            >
+              حذف
+            </AlertDialogAction>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
