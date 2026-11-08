@@ -22,6 +22,7 @@ export interface QueuedCount {
     location: string;
     counted_by_name: string;
     counted_at: string;
+    notes?: string | null;
   };
   created_at: string;
   status: "pending" | "failed";
@@ -167,6 +168,7 @@ export function flushQueue(): Promise<void> {
                       counted_quantity: item.payload.counted_quantity,
                       location: item.payload.location,
                       counted_at: item.payload.counted_at,
+                      notes: item.payload.notes ?? null,
                     })
                     .eq("id", item.log_id)
                 : supabase
@@ -176,6 +178,7 @@ export function flushQueue(): Promise<void> {
                       counted_quantity: item.payload.counted_quantity,
                       location: item.payload.location,
                       counted_at: item.payload.counted_at,
+                      notes: item.payload.notes ?? null,
                     })
                     .eq("client_id", item.client_id));
         if (res.error) {

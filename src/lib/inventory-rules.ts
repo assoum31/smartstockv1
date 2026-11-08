@@ -11,6 +11,7 @@ export interface CountRow {
   product_name: string;
   counted_quantity: number;
   location: string | null;
+  counted_at?: string | null;
 }
 
 export interface VarianceRow {
@@ -20,6 +21,8 @@ export interface VarianceRow {
   counted_quantity: number;
   /** Sold through sales tickets during the session (left the shelf after the snapshot). */
   sold_quantity: number;
+  /** Part of the sales taken off the count: only products already counted, sold after their count. */
+  deducted_quantity: number;
   /** What should be on the shelf now: snapshot stock minus session sales. */
   expected_quantity: number;
   variance: number;
@@ -37,9 +40,11 @@ export interface SaleRow {
   barcode: string;
   product_name: string;
   quantity: number;
+  /** When the ticket was made. Missing = treated as sold after counting. */
+  sold_at?: string | null;
 }
 
-/** Sales are deducted from the expected stock: variance = counted - (system - sold). */
+/** Variance = counted − sales made after the product was counted; uncounted products deduct nothing. */
 export function computeVariances(
   snapshot: SnapshotRow[],
   counts: CountRow[],
@@ -54,6 +59,7 @@ export function computeVariances(
       system_quantity: Number(s.system_quantity) || 0,
       counted_quantity: 0,
       sold_quantity: 0,
+      deducted_quantity: 0,
       expected_quantity: 0,
       variance: 0,
       entries: 0,
@@ -62,7 +68,13 @@ export function computeVariances(
     });
   }
 
+  const firstCount = new Map<string, number>();
   for (const c of counts) {
+    const t = c.counted_at ? new Date(c.counted_at).getTime() : NaN;
+    if (Number.isFinite(t)) {
+      const prev = firstCount.get(c.barcode);
+      if (prev === undefined || t < prev) firstCount.set(c.barcode, t);
+    }
     let row = rows.get(c.barcode);
     if (!row) {
       row = {
@@ -71,6 +83,7 @@ export function computeVariances(
         system_quantity: 0,
         counted_quantity: 0,
         sold_quantity: 0,
+        deducted_quantity: 0,
         expected_quantity: 0,
         variance: 0,
         entries: 0,
@@ -94,6 +107,7 @@ export function computeVariances(
         system_quantity: 0,
         counted_quantity: 0,
         sold_quantity: 0,
+        deducted_quantity: 0,
         expected_quantity: 0,
         variance: 0,
         entries: 0,
@@ -103,15 +117,23 @@ export function computeVariances(
       rows.set(sale.barcode, row);
     }
     // Sales may be stored as -10 or 10: always treat them as a positive amount sold.
-    row.sold_quantity += Math.abs(Number(sale.quantity) || 0);
+    const qty = Math.abs(Number(sale.quantity) || 0);
+    row.sold_quantity += qty;
+    // Uncounted product: nothing to deduct. Counted: deduct only what left the shelf after the count.
+    if (row.entries === 0) continue;
+    const countedAt = firstCount.get(sale.barcode);
+    const soldAt = sale.sold_at ? new Date(sale.sold_at).getTime() : NaN;
+    if (countedAt === undefined || !Number.isFinite(soldAt) || soldAt >= countedAt)
+      row.deducted_quantity += qty;
   }
 
   for (const row of rows.values()) {
     row.counted_quantity = round(row.counted_quantity);
     row.sold_quantity = round(row.sold_quantity);
+    row.deducted_quantity = round(row.deducted_quantity);
     row.expected_quantity = round(row.system_quantity - row.sold_quantity);
-    // Variance = counted − sales (e.g. counted 90, sold 20 → 70).
-    row.variance = round(row.counted_quantity - row.sold_quantity);
+    // Variance = counted − sales made after the count (e.g. counted 90, sold 20 later → 70).
+    row.variance = round(row.counted_quantity - row.deducted_quantity);
   }
 
   return Array.from(rows.values()).sort(
@@ -142,6 +164,8 @@ export interface ProductImportRow {
   name: string;
   default_location: string | null;
   system_quantity: number;
+  purchase_price: number;
+  selling_price: number;
 }
 
 export interface ProductImportResult {
@@ -184,6 +208,8 @@ const HEADER_ALIASES: Record<keyof ProductImportRow, string[]> = {
     "الكمية النظامية",
     "المخزون",
   ],
+  purchase_price: ["purchase_price", "prix achat", "prix_achat", "prix d'achat", "cost", "سعر الشراء"],
+  selling_price: ["selling_price", "prix vente", "prix_vente", "prix de vente", "price", "prix", "سعر البيع"],
 };
 
 function findKey(headers: string[], field: keyof ProductImportRow) {
@@ -202,6 +228,8 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
   const kName = findKey(headers, "name");
   const kLoc = findKey(headers, "default_location");
   const kQty = findKey(headers, "system_quantity");
+  const kBuy = findKey(headers, "purchase_price");
+  const kSell = findKey(headers, "selling_price");
   if (!kBarcode || !kName) {
     return {
       rows: [],
@@ -227,8 +255,24 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
           return void errors.push({ line, message: `كمية غير صالحة (${barcode})` });
       }
     }
+    const price = (k: string | undefined) => {
+      if (!k) return 0;
+      const v = String(r[k] ?? "").replace(/\s/g, "").replace(",", ".");
+      return v === "" ? 0 : Number(v);
+    };
+    const purchase_price = price(kBuy);
+    const selling_price = price(kSell);
+    if (!Number.isFinite(purchase_price) || purchase_price < 0 || !Number.isFinite(selling_price) || selling_price < 0)
+      return void errors.push({ line, message: `سعر غير صالح (${barcode})` });
     const loc = kLoc ? String(r[kLoc] ?? "").trim() : "";
-    byBarcode.set(barcode, { barcode, name, default_location: loc || null, system_quantity: qty });
+    byBarcode.set(barcode, {
+      barcode,
+      name,
+      default_location: loc || null,
+      system_quantity: qty,
+      purchase_price,
+      selling_price,
+    });
   });
 
   return { rows: Array.from(byBarcode.values()), errors };

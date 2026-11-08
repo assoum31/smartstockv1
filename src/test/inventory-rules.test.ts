@@ -79,7 +79,7 @@ describe("barcodes stay text", () => {
       { barcode: "0012", name: "A bis", system_quantity: "4,5" },
     ]);
     expect(res.rows).toEqual([
-      { barcode: "0012", name: "A bis", default_location: null, system_quantity: 4.5 },
+      { barcode: "0012", name: "A bis", default_location: null, system_quantity: 4.5, purchase_price: 0, selling_price: 0 },
     ]);
     expect(res.errors.map((e) => e.line)).toEqual([3, 4]);
   });
@@ -211,7 +211,7 @@ describe("worker progress in a session", () => {
 });
 
 describe("session sales", () => {
-  it("deducts sold quantities from expected stock so variance stays true", () => {
+  it("counted product with sales (no time): variance = counted − sold", () => {
     const [row] = computeVariances(
       [{ barcode: "1", product_name: "A", system_quantity: 10 }],
       [{ barcode: "1", product_name: "A", counted_quantity: 7, location: null }],
@@ -219,6 +219,27 @@ describe("session sales", () => {
     );
     expect(row!.sold_quantity).toBe(3);
     expect(row!.expected_quantity).toBe(7);
-    expect(row!.variance).toBe(0);
+    expect(row!.variance).toBe(4);
+  });
+});
+
+describe("sales vs count time", () => {
+  const snap = [{ barcode: "9", product_name: "P", system_quantity: 100 }];
+  const count = [{ barcode: "9", product_name: "P", counted_quantity: 90, location: "A", counted_at: "2026-11-08T10:00:00Z" }];
+  it("uncounted product: sales are not deducted", () => {
+    const [row] = computeVariances(snap, [], [{ barcode: "9", product_name: "P", quantity: 20, sold_at: "2026-11-08T11:00:00Z" }]);
+    expect(row).toMatchObject({ sold_quantity: 20, deducted_quantity: 0, variance: 0 });
+  });
+  it("sold after the count: 90 − 20 = 70", () => {
+    const [row] = computeVariances(snap, count, [{ barcode: "9", product_name: "P", quantity: 20, sold_at: "2026-11-08T11:00:00Z" }]);
+    expect(row!.variance).toBe(70);
+  });
+  it("sold before the count: not deducted again", () => {
+    const [row] = computeVariances(snap, count, [{ barcode: "9", product_name: "P", quantity: 20, sold_at: "2026-11-08T09:00:00Z" }]);
+    expect(row!.variance).toBe(90);
+  });
+  it("reads purchase and selling prices from Excel", () => {
+    const res = parseProductRows([{ barcode: "1", name: "A", "سعر الشراء": "80", "سعر البيع": "120,5" }]);
+    expect(res.rows[0]).toMatchObject({ purchase_price: 80, selling_price: 120.5 });
   });
 });

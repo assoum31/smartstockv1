@@ -8,6 +8,13 @@
       "when": 1794097692028,
       "tag": "0000_stocki_pro_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794161951974,
+      "tag": "0001_prices_and_count_notes",
+      "breakpoints": true
     }
   ]
 }

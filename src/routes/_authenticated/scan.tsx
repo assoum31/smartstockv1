@@ -3,6 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  Camera,
+  CameraOff,
   CloudOff,
   History,
   MapPin,
@@ -71,6 +73,8 @@ function ScanPage() {
   const [autoName, setAutoName] = useState(false);
   const [location, setLocation] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [notes, setNotes] = useState("");
+  const [cameraOn, setCameraOn] = useState(true);
   const [target, setTarget] = useState<Entry | null>(null);
   const barcodeRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
@@ -221,6 +225,7 @@ function ScanPage() {
       location: loc,
       counted_by_name: me.fullName,
       counted_at: new Date().toISOString(),
+      notes: notes.trim() || null,
     };
     const editing = target;
     await enqueueCount({
@@ -244,6 +249,7 @@ function ScanPage() {
     setProductName("");
     setAutoName(false);
     setQuantity("1");
+    setNotes("");
     setTarget(null);
     barcodeRef.current?.focus();
   };
@@ -294,7 +300,22 @@ function ScanPage() {
           </div>
         )}
 
-        <BarcodeScanner onDetected={onDetected} />
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant={cameraOn ? "outline" : "default"}
+            onClick={() => {
+              const next = !cameraOn;
+              setCameraOn(next);
+              if (!next) window.setTimeout(() => barcodeRef.current?.focus(), 50);
+            }}
+          >
+            {cameraOn ? <CameraOff /> : <Camera />}
+            {cameraOn ? "إيقاف الكاميرا (كتابة يدوية)" : "تشغيل الكاميرا"}
+          </Button>
+        </div>
+
+        {cameraOn && <BarcodeScanner onDetected={onDetected} />}
 
         <form onSubmit={submit} className="surface-card space-y-4 p-4 sm:p-5">
           <div className="space-y-1.5">
@@ -443,6 +464,17 @@ function ScanPage() {
                 <Minus className="!size-6" />
               </Button>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="notes">ملاحظة (اختياري)</Label>
+            <Input
+              id="notes"
+              placeholder="مثلاً: كرتون مفتوح، تاريخ قريب..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="h-11"
+            />
           </div>
 
           <Button

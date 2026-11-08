@@ -115,9 +115,13 @@ export function SessionView({
       computeVariances(
         snapshot,
         logs,
-        sales.items.map((i) => ({ ...i, quantity: Number(i.quantity) })),
+        sales.items.map((i) => ({
+          ...i,
+          quantity: Number(i.quantity),
+          sold_at: sales.tickets.find((t) => t.id === i.ticket_id)?.created_at ?? null,
+        })),
       ),
-    [snapshot, logs, sales.items],
+    [snapshot, logs, sales.items, sales.tickets],
   );
   const workers = useMemo(() => new Set(logs.map((l) => l.counted_by_name)).size, [logs]);
   const totalQty = logs.reduce((n, l) => n + Number(l.counted_quantity || 0), 0);
@@ -134,6 +138,7 @@ export function SessionView({
           "Article",
           "Stock système",
           "Vendu",
+          "Vendu après comptage",
           "Stock attendu",
           "Compté",
           "Écart",
@@ -145,6 +150,7 @@ export function SessionView({
           v.product_name,
           v.system_quantity,
           v.sold_quantity,
+          v.deducted_quantity,
           v.expected_quantity,
           v.counted_quantity,
           v.variance,
@@ -155,12 +161,13 @@ export function SessionView({
       },
       {
         name: "Comptages",
-        headers: ["Barcode", "Article", "Quantité", "Emplacement", "Compté par", "Date"],
+        headers: ["Barcode", "Article", "Quantité", "Emplacement", "Note", "Compté par", "Date"],
         rows: logs.map((l) => [
           l.barcode,
           l.product_name,
           Number(l.counted_quantity),
           l.location ?? "",
+          l.notes ?? "",
           l.counted_by_name,
           new Date(l.counted_at).toLocaleString("fr-FR"),
         ]),
@@ -238,7 +245,7 @@ export function SessionView({
           </div>
         </div>
         <TabsContent value="variances" className="mt-4">
-          <VarianceTable rows={variances} />
+          <VarianceTable rows={variances} editable={isActive && !readOnly} sessionId={session.id} />
         </TabsContent>
         <TabsContent value="sales" className="mt-4">
           <SalesPanel
@@ -269,7 +276,17 @@ const FILTERS: { value: VarianceFilter; label: string }[] = [
   { value: "all", label: "الكل" },
 ];
 
-function VarianceTable({ rows }: { rows: VarianceRow[] }) {
+function VarianceTable({
+  rows,
+  editable,
+  sessionId,
+}: {
+  rows: VarianceRow[];
+  editable: boolean;
+  sessionId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [removing, setRemoving] = useState<VarianceRow | null>(null);
   const [filter, setFilter] = useState<VarianceFilter>("gaps");
   const [search, setSearch] = useState("");
   const shown = useMemo(() => {
@@ -330,12 +347,13 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
               <th className="px-4 py-3 text-end font-bold">المتوقع</th>
               <th className="px-4 py-3 text-end font-bold">المحسوب</th>
               <th className="px-4 py-3 text-end font-bold">الفارق (المحسوب − المبيعات)</th>
+              {editable && <th className="px-4 py-3" />}
             </tr>
           </thead>
           <tbody className="divide-y">
             {shown.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-10 text-center text-muted-foreground">
+                <td colSpan={8} className="p-10 text-center text-muted-foreground">
                   لا توجد منتجات في هذا التصنيف.
                 </td>
               </tr>
@@ -359,7 +377,22 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
                 </td>
                 <td className="px-4 py-3 text-end font-mono">{formatQty(r.system_quantity)}</td>
                 <td className="px-4 py-3 text-end font-mono text-muted-foreground">
-                  {r.sold_quantity ? `−${formatQty(r.sold_quantity)}` : "—"}
+                  {r.sold_quantity ? (
+                    <>
+                      <span className="font-bold text-foreground">
+                        {r.deducted_quantity ? `−${formatQty(r.deducted_quantity)}` : "0"}
+                      </span>
+                      {r.deducted_quantity !== r.sold_quantity && (
+                        <span className="block text-[10px]">
+                          {r.entries === 0
+                            ? `بيع ${formatQty(r.sold_quantity)} · غير محسوب`
+                            : `بيع ${formatQty(r.sold_quantity)} · قبل العدّ لا يُخصم`}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </td>
                 <td className="px-4 py-3 text-end font-mono">{formatQty(r.expected_quantity)}</td>
                 <td className="px-4 py-3 text-end font-mono font-bold">
@@ -379,11 +412,59 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
                     {formatQty(r.variance)}
                   </span>
                 </td>
+                {editable && (
+                  <td className="px-2 py-3">
+                    {r.entries > 0 && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 hover:text-destructive"
+                        aria-label="حذف عدّ المنتج"
+                        onClick={() => setRemoving(r)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <AlertDialog open={Boolean(removing)} onOpenChange={(o) => !o && setRemoving(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader className="text-right sm:text-right">
+            <AlertDialogTitle>حذف عدّ هذا المنتج من الجرد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removing?.product_name} — تُحذف كل أسطر العدّ ({removing?.entries}) لهذا المنتج في
+              هذه الجلسة.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-start">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!removing) return;
+                const { error } = await supabase
+                  .from("inventory_logs")
+                  .delete()
+                  .eq("session_id", sessionId)
+                  .eq("barcode", removing.barcode);
+                if (error) toast.error(errorText(error));
+                else toast.success("تم الحذف");
+                setRemoving(null);
+                void queryClient.invalidateQueries({ queryKey: ["session-logs", sessionId] });
+              }}
+            >
+              حذف
+            </AlertDialogAction>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -401,7 +482,7 @@ function LogsTable({
   const [search, setSearch] = useState("");
   const [worker, setWorker] = useState("all");
   const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: "", qty: "", location: "" });
+  const [draft, setDraft] = useState({ name: "", qty: "", location: "", notes: "" });
   const [deleting, setDeleting] = useState<InventoryLog | null>(null);
   const workers = useMemo(() => Array.from(new Set(logs.map((l) => l.counted_by_name))), [logs]);
   const refresh = () =>
@@ -427,6 +508,7 @@ function LogsTable({
         product_name: draft.name.trim(),
         counted_quantity: qty,
         location: draft.location.trim() || null,
+        notes: draft.notes.trim() || null,
       })
       .eq("id", id);
     if (error) return void toast.error(errorText(error));
@@ -467,6 +549,7 @@ function LogsTable({
               <th className="px-4 py-3 text-start font-bold">المنتج</th>
               <th className="px-4 py-3 text-end font-bold">الكمية</th>
               <th className="px-4 py-3 text-start font-bold">الموقع</th>
+              <th className="px-4 py-3 text-start font-bold">ملاحظة</th>
               <th className="px-4 py-3 text-start font-bold">بواسطة</th>
               <th className="px-4 py-3 text-start font-bold">الوقت</th>
               {editable && <th className="px-4 py-3" />}
@@ -475,7 +558,7 @@ function LogsTable({
           <tbody className="divide-y">
             {shown.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                <td colSpan={7} className="p-10 text-center text-muted-foreground">
                   لا توجد أسطر عدّ بعد.
                 </td>
               </tr>
@@ -502,6 +585,14 @@ function LogsTable({
                     <Input
                       value={draft.location}
                       onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                      className="h-9"
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input
+                      value={draft.notes}
+                      placeholder="اختياري"
+                      onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                       className="h-9"
                     />
                   </td>
@@ -545,6 +636,9 @@ function LogsTable({
                       {l.location || "—"}
                     </span>
                   </td>
+                  <td className="max-w-48 px-4 py-3 text-xs text-muted-foreground">
+                    {l.notes || "—"}
+                  </td>
                   <td className="px-4 py-3 font-medium">{l.counted_by_name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                     {formatDateTime(l.counted_at)}
@@ -563,6 +657,7 @@ function LogsTable({
                               name: l.product_name,
                               qty: String(l.counted_quantity),
                               location: l.location ?? "",
+                              notes: l.notes ?? "",
                             });
                           }}
                         >
