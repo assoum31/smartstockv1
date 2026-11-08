@@ -25,7 +25,7 @@ describe("variance is per product, not per line", () => {
       ],
     );
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ counted_quantity: 8, variance: -2, entries: 3 });
+    expect(rows[0]).toMatchObject({ counted_quantity: 8, variance: 8, entries: 3 });
     expect(rows[0]!.locations).toEqual(["A1", "B2", "C3"]);
   });
 
@@ -34,7 +34,25 @@ describe("variance is per product, not per line", () => {
       [{ barcode: "222", product_name: "Sucre", system_quantity: 5 }],
       [],
     );
-    expect(row).toMatchObject({ counted_quantity: 0, variance: -5, in_snapshot: true, entries: 0 });
+    expect(row).toMatchObject({ counted_quantity: 0, variance: 0, in_snapshot: true, entries: 0 });
+  });
+
+  it("variance = counted − sales: counted 90, sold 20 gives 70", () => {
+    const [row] = computeVariances(
+      [{ barcode: "9", product_name: "P", system_quantity: 100 }],
+      [{ barcode: "9", product_name: "P", counted_quantity: 90, location: null }],
+      [{ barcode: "9", product_name: "P", quantity: 20 }],
+    );
+    expect(row!.variance).toBe(70);
+  });
+
+  it("treats sales stored as negative (-20) the same as 20", () => {
+    const [row] = computeVariances(
+      [],
+      [{ barcode: "9", product_name: "P", counted_quantity: 90, location: null }],
+      [{ barcode: "9", product_name: "P", quantity: -20 }],
+    );
+    expect(row).toMatchObject({ sold_quantity: 20, variance: 70 });
   });
 
   it("treats a counted product missing from the catalog as surplus against zero", () => {
