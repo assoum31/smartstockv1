@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import capturedCSS from "../styles/site.css?raw";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "تسجيل الدخول | Stocki Pro" }] }),
+  head: () => ({ meta: [
+    { title: "تسجيل الدخول | Stocki Pro" },
+    { name: "description", content: "اختر دورك في Stocki Pro: مسير المتجر أو عامل الجرد." },
+    { property: "og:title", content: "تسجيل الدخول | Stocki Pro" },
+    { property: "og:description", content: "اختر دورك في Stocki Pro: مسير المتجر أو عامل الجرد." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   staticData: { importedDocument: { html: { "dir": "rtl", "lang": "ar" }, body: { "className": "\x61ntialiased" } } },
   component: Index,
 });
