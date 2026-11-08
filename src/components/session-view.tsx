@@ -115,9 +115,13 @@ export function SessionView({
       computeVariances(
         snapshot,
         logs,
-        sales.items.map((i) => ({ ...i, quantity: Number(i.quantity) })),
+        sales.items.map((i) => ({
+          ...i,
+          quantity: Number(i.quantity),
+          sold_at: sales.tickets.find((t) => t.id === i.ticket_id)?.created_at ?? null,
+        })),
       ),
-    [snapshot, logs, sales.items],
+    [snapshot, logs, sales.items, sales.tickets],
   );
   const workers = useMemo(() => new Set(logs.map((l) => l.counted_by_name)).size, [logs]);
   const totalQty = logs.reduce((n, l) => n + Number(l.counted_quantity || 0), 0);
@@ -134,6 +138,7 @@ export function SessionView({
           "Article",
           "Stock système",
           "Vendu",
+          "Vendu après comptage",
           "Stock attendu",
           "Compté",
           "Écart",
@@ -145,6 +150,7 @@ export function SessionView({
           v.product_name,
           v.system_quantity,
           v.sold_quantity,
+          v.deducted_quantity,
           v.expected_quantity,
           v.counted_quantity,
           v.variance,
@@ -155,12 +161,13 @@ export function SessionView({
       },
       {
         name: "Comptages",
-        headers: ["Barcode", "Article", "Quantité", "Emplacement", "Compté par", "Date"],
+        headers: ["Barcode", "Article", "Quantité", "Emplacement", "Note", "Compté par", "Date"],
         rows: logs.map((l) => [
           l.barcode,
           l.product_name,
           Number(l.counted_quantity),
           l.location ?? "",
+          l.notes ?? "",
           l.counted_by_name,
           new Date(l.counted_at).toLocaleString("fr-FR"),
         ]),
@@ -401,7 +408,7 @@ function LogsTable({
   const [search, setSearch] = useState("");
   const [worker, setWorker] = useState("all");
   const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState({ name: "", qty: "", location: "" });
+  const [draft, setDraft] = useState({ name: "", qty: "", location: "", notes: "" });
   const [deleting, setDeleting] = useState<InventoryLog | null>(null);
   const workers = useMemo(() => Array.from(new Set(logs.map((l) => l.counted_by_name))), [logs]);
   const refresh = () =>
@@ -427,6 +434,7 @@ function LogsTable({
         product_name: draft.name.trim(),
         counted_quantity: qty,
         location: draft.location.trim() || null,
+        notes: draft.notes.trim() || null,
       })
       .eq("id", id);
     if (error) return void toast.error(errorText(error));
@@ -467,6 +475,7 @@ function LogsTable({
               <th className="px-4 py-3 text-start font-bold">المنتج</th>
               <th className="px-4 py-3 text-end font-bold">الكمية</th>
               <th className="px-4 py-3 text-start font-bold">الموقع</th>
+              <th className="px-4 py-3 text-start font-bold">ملاحظة</th>
               <th className="px-4 py-3 text-start font-bold">بواسطة</th>
               <th className="px-4 py-3 text-start font-bold">الوقت</th>
               {editable && <th className="px-4 py-3" />}
@@ -475,7 +484,7 @@ function LogsTable({
           <tbody className="divide-y">
             {shown.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                <td colSpan={7} className="p-10 text-center text-muted-foreground">
                   لا توجد أسطر عدّ بعد.
                 </td>
               </tr>
@@ -502,6 +511,14 @@ function LogsTable({
                     <Input
                       value={draft.location}
                       onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                      className="h-9"
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <Input
+                      value={draft.notes}
+                      placeholder="اختياري"
+                      onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                       className="h-9"
                     />
                   </td>
@@ -545,6 +562,9 @@ function LogsTable({
                       {l.location || "—"}
                     </span>
                   </td>
+                  <td className="max-w-48 px-4 py-3 text-xs text-muted-foreground">
+                    {l.notes || "—"}
+                  </td>
                   <td className="px-4 py-3 font-medium">{l.counted_by_name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                     {formatDateTime(l.counted_at)}
@@ -563,6 +583,7 @@ function LogsTable({
                               name: l.product_name,
                               qty: String(l.counted_quantity),
                               location: l.location ?? "",
+                              notes: l.notes ?? "",
                             });
                           }}
                         >
