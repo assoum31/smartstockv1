@@ -211,7 +211,7 @@ describe("worker progress in a session", () => {
 });
 
 describe("session sales", () => {
-  it("deducts sold quantities from expected stock so variance stays true", () => {
+  it("counted product with sales (no time): variance = counted − sold", () => {
     const [row] = computeVariances(
       [{ barcode: "1", product_name: "A", system_quantity: 10 }],
       [{ barcode: "1", product_name: "A", counted_quantity: 7, location: null }],
@@ -219,7 +219,7 @@ describe("session sales", () => {
     );
     expect(row!.sold_quantity).toBe(3);
     expect(row!.expected_quantity).toBe(7);
-    expect(row!.variance).toBe(0);
+    expect(row!.variance).toBe(4);
   });
 });
 
