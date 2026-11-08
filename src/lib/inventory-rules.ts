@@ -102,14 +102,16 @@ export function computeVariances(
       };
       rows.set(sale.barcode, row);
     }
-    row.sold_quantity += Number(sale.quantity) || 0;
+    // Sales may be stored as -10 or 10: always treat them as a positive amount sold.
+    row.sold_quantity += Math.abs(Number(sale.quantity) || 0);
   }
 
   for (const row of rows.values()) {
     row.counted_quantity = round(row.counted_quantity);
     row.sold_quantity = round(row.sold_quantity);
     row.expected_quantity = round(row.system_quantity - row.sold_quantity);
-    row.variance = round(row.counted_quantity - row.expected_quantity);
+    // Variance = counted − sales (e.g. counted 90, sold 20 → 70).
+    row.variance = round(row.counted_quantity - row.sold_quantity);
   }
 
   return Array.from(rows.values()).sort(

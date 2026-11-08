@@ -329,7 +329,7 @@ function VarianceTable({ rows }: { rows: VarianceRow[] }) {
               <th className="px-4 py-3 text-end font-bold">المبيعات</th>
               <th className="px-4 py-3 text-end font-bold">المتوقع</th>
               <th className="px-4 py-3 text-end font-bold">المحسوب</th>
-              <th className="px-4 py-3 text-end font-bold">الفارق</th>
+              <th className="px-4 py-3 text-end font-bold">الفارق (المحسوب − المبيعات)</th>
             </tr>
           </thead>
           <tbody className="divide-y">
