@@ -10,33 +10,182 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ManagerRouteImport } from './routes/manager'
+import { Route as MasterRouteImport } from './routes/master'
+import { Route as WorkerRouteImport } from './routes/worker'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores.$storeId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagerRoute = ManagerRouteImport.update({
+  id: '/manager',
+  path: '/manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterRoute = MasterRouteImport.update({
+  id: '/master',
+  path: '/master',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerRoute = WorkerRouteImport.update({
+  id: '/worker',
+  path: '/worker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStoresStoreIdRoute =
+  AuthenticatedStoresStoreIdRouteImport.update({
+    id: '/stores/$storeId',
+    path: '/stores/$storeId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/manager': typeof ManagerRoute
+  '/master': typeof MasterRoute
+  '/worker': typeof WorkerRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/products': typeof AuthenticatedProductsRoute
+  '/scan': typeof AuthenticatedScanRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/manager': typeof ManagerRoute
+  '/master': typeof MasterRoute
+  '/worker': typeof WorkerRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/products': typeof AuthenticatedProductsRoute
+  '/scan': typeof AuthenticatedScanRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/manager': typeof ManagerRoute
+  '/master': typeof MasterRoute
+  '/worker': typeof WorkerRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/scan': typeof AuthenticatedScanRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/manager'
+    | '/master'
+    | '/worker'
+    | '/admin'
+    | '/dashboard'
+    | '/products'
+    | '/scan'
+    | '/settings'
+    | '/team'
+    | '/stores/$storeId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/manager'
+    | '/master'
+    | '/worker'
+    | '/admin'
+    | '/dashboard'
+    | '/products'
+    | '/scan'
+    | '/settings'
+    | '/team'
+    | '/stores/$storeId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/manager'
+    | '/master'
+    | '/worker'
+    | '/_authenticated/admin'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/products'
+    | '/_authenticated/scan'
+    | '/_authenticated/settings'
+    | '/_authenticated/team'
+    | '/_authenticated/stores/$storeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ManagerRoute: typeof ManagerRoute
+  MasterRoute: typeof MasterRoute
+  WorkerRoute: typeof WorkerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +197,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manager': {
+      id: '/manager'
+      path: '/manager'
+      fullPath: '/manager'
+      preLoaderRoute: typeof ManagerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master': {
+      id: '/master'
+      path: '/master'
+      fullPath: '/master'
+      preLoaderRoute: typeof MasterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker': {
+      id: '/worker'
+      path: '/worker'
+      fullPath: '/worker'
+      preLoaderRoute: typeof WorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stores/$storeId': {
+      id: '/_authenticated/stores/$storeId'
+      path: '/stores/$storeId'
+      fullPath: '/stores/$storeId'
+      preLoaderRoute: typeof AuthenticatedStoresStoreIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ManagerRoute: ManagerRoute,
+  MasterRoute: MasterRoute,
+  WorkerRoute: WorkerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
