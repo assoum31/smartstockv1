@@ -1,0 +1,9 @@
+# Stocki Pro roadmap
+
+- [ ] Get the original spec (cahier des charges + topo) from the user — waiting on the user
+- [x] Step 1: secure accounts (real sign-in, synthetic email per store), stores, roles, store isolation rules + tests across 2 stores
+- [x] Step 2: /login + first sign-in with one-time PIN + route protection
+- [x] Step 3: /scan with inventory sessions, duplicate detection per session, offline queue + sync
+- [x] Step 4: /dashboard with live updates, écart per product (stock snapshot), Excel import/export (barcodes as text)
+- [x] Step 5: /admin (master) for stores and managers, installable phone app (home-screen icon)
+- [ ] Import existing data from the old backend (CSV exports) — waiting on the user
