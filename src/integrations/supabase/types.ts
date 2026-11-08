@@ -24,6 +24,7 @@ export type Database = {
           counted_quantity: number
           id: string
           location: string | null
+          notes: string | null
           product_name: string
           session_id: string | null
           tenant_id: string | null
@@ -38,6 +39,7 @@ export type Database = {
           counted_quantity?: number
           id?: string
           location?: string | null
+          notes?: string | null
           product_name: string
           session_id?: string | null
           tenant_id?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           counted_quantity?: number
           id?: string
           location?: string | null
+          notes?: string | null
           product_name?: string
           session_id?: string | null
           tenant_id?: string | null
@@ -119,6 +122,8 @@ export type Database = {
           default_location: string | null
           id: string
           name: string
+          purchase_price: number
+          selling_price: number
           system_quantity: number
           tenant_id: string | null
           updated_at: string
@@ -129,6 +134,8 @@ export type Database = {
           default_location?: string | null
           id?: string
           name: string
+          purchase_price?: number
+          selling_price?: number
           system_quantity?: number
           tenant_id?: string | null
           updated_at?: string
@@ -139,6 +146,8 @@ export type Database = {
           default_location?: string | null
           id?: string
           name?: string
+          purchase_price?: number
+          selling_price?: number
           system_quantity?: number
           tenant_id?: string | null
           updated_at?: string
