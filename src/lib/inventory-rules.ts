@@ -44,7 +44,7 @@ export interface SaleRow {
   sold_at?: string | null;
 }
 
-/** Sales are deducted from the expected stock: variance = counted - (system - sold). */
+/** Variance = counted − sales made after the product was counted; uncounted products deduct nothing. */
 export function computeVariances(
   snapshot: SnapshotRow[],
   counts: CountRow[],
@@ -84,7 +84,6 @@ export function computeVariances(
         counted_quantity: 0,
         sold_quantity: 0,
         deducted_quantity: 0,
-      deducted_quantity: 0,
         expected_quantity: 0,
         variance: 0,
         entries: 0,
@@ -109,7 +108,6 @@ export function computeVariances(
         counted_quantity: 0,
         sold_quantity: 0,
         deducted_quantity: 0,
-      deducted_quantity: 0,
         expected_quantity: 0,
         variance: 0,
         entries: 0,
