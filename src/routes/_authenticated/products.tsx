@@ -7,6 +7,7 @@ import {
   Download,
   FileSpreadsheet,
   Package,
+  Printer,
   Search,
   Upload,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
+import { LabelPrintDialog, type LabelProduct } from "@/components/label-print-dialog";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { chunk, parseProductRows, type ProductImportResult } from "@/lib/inventory-rules";
 import { productsQuery } from "@/lib/queries";
@@ -48,6 +50,7 @@ function ProductsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [parsed, setParsed] = useState<(ProductImportResult & { fileName: string }) | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [labelItems, setLabelItems] = useState<LabelProduct[] | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -140,6 +143,14 @@ function ProductsPage() {
               <Download />
               تصدير Excel
             </Button>
+            <Button
+              variant="outline"
+              disabled={filtered.length === 0}
+              onClick={() => setLabelItems(filtered)}
+            >
+              <Printer />
+              ملصقات الباركود
+            </Button>
             <Button onClick={() => fileRef.current?.click()}>
               <Upload />
               استيراد Excel
@@ -195,6 +206,7 @@ function ProductsPage() {
                   <th className="px-4 py-3 text-end font-bold">الكمية النظامية</th>
                   <th className="px-4 py-3 text-end font-bold">سعر الشراء</th>
                   <th className="px-4 py-3 text-end font-bold">سعر البيع</th>
+                  <th className="px-2 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -212,6 +224,11 @@ function ProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-end font-mono">{formatQty(Number(p.purchase_price))}</td>
                     <td className="px-4 py-3 text-end font-mono font-bold">{formatQty(Number(p.selling_price))}</td>
+                    <td className="px-2 py-3">
+                      <Button size="icon" variant="ghost" aria-label="طباعة ملصق" onClick={() => setLabelItems([p])}>
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -224,6 +241,12 @@ function ProductsPage() {
           </div>
         )}
       </div>
+
+      <LabelPrintDialog
+        products={labelItems ?? []}
+        open={Boolean(labelItems)}
+        onOpenChange={(o) => !o && setLabelItems(null)}
+      />
 
       <Dialog
         open={Boolean(parsed)}
