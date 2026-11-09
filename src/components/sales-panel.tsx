@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Camera, Download, Plus, Printer, Receipt, Trash2, Upload, X } from "lucide-react";
-import { useRef } from "react";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { parseSalesRows } from "@/lib/inventory-rules";
 import { toast } from "sonner";
