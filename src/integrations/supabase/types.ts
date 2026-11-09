@@ -455,6 +455,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_sales_ticket: {
+        Args: {
+          _items: Json
+          _notes?: string
+          _session_id: string
+          _sold_at?: string
+        }
+        Returns: string
+      }
       is_manager: { Args: never; Returns: boolean }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       start_inventory_session: { Args: { _name: string }; Returns: string }
