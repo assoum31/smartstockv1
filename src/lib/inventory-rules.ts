@@ -366,3 +366,79 @@ export function workerProgress(
     }))
     .sort((a, b) => b.lines - a.lines || a.name.localeCompare(b.name));
 }
+
+export interface SalesImportTicket {
+  ref: string;
+  sold_at: string | null;
+  notes: string | null;
+  items: { barcode: string; product_name: string; quantity: number; unit_price: number }[];
+}
+
+const SALES_ALIASES = {
+  ticket: ["ticket", "bon", "n bon", "numero", "ticket_no", "رقم البون", "البون"],
+  barcode: HEADER_ALIASES.barcode,
+  name: HEADER_ALIASES.name,
+  quantity: ["quantity", "quantite", "quantité", "qte", "الكمية", "الكمية المباعة"],
+  unit_price: ["unit_price", "prix", "price", "prix unitaire", "سعر الوحدة", "سعر البيع", "السعر"],
+  date: ["date", "sold_at", "datetime", "التاريخ", "الوقت", "وقت البيع"],
+  notes: ["note", "notes", "remarque", "ملاحظة"],
+};
+
+/** Parse a detailed sales sheet: rows sharing a ticket number become one multi-product ticket. */
+export function parseSalesRows(
+  raw: Record<string, unknown>[],
+  prices: Map<string, { name: string; price: number }> = new Map(),
+): { tickets: SalesImportTicket[]; errors: { line: number; message: string }[] } {
+  const errors: { line: number; message: string }[] = [];
+  if (raw.length === 0) return { tickets: [], errors: [{ line: 0, message: "الملف فارغ" }] };
+  const headers = Object.keys(raw[0] ?? {});
+  const key = (f: keyof typeof SALES_ALIASES) =>
+    headers.find((h) => SALES_ALIASES[f].includes(h.trim().toLowerCase()));
+  const k = {
+    ticket: key("ticket"),
+    barcode: key("barcode"),
+    name: key("name"),
+    quantity: key("quantity"),
+    unit_price: key("unit_price"),
+    date: key("date"),
+    notes: key("notes"),
+  };
+  if (!k.barcode || !k.quantity)
+    return { tickets: [], errors: [{ line: 1, message: "يجب أن يحتوي الملف على عمودي الباركود والكمية" }] };
+  const tickets = new Map<string, SalesImportTicket>();
+  const num = (v: unknown) => Number(String(v ?? "").replace(/\s/g, "").replace(",", "."));
+  raw.forEach((r, i) => {
+    const line = i + 2;
+    const barcode = normalizeBarcode(r[k.barcode!]);
+    const qtyText = String(r[k.quantity!] ?? "").trim();
+    if (!barcode && !qtyText) return;
+    if (!barcode) return void errors.push({ line, message: "باركود فارغ" });
+    const quantity = Math.abs(num(qtyText));
+    if (!Number.isFinite(quantity) || quantity <= 0)
+      return void errors.push({ line, message: `كمية غير صالحة (${barcode})` });
+    const known = prices.get(barcode);
+    const priceText = k.unit_price ? String(r[k.unit_price] ?? "").trim() : "";
+    const unit_price = priceText === "" ? (known?.price ?? 0) : num(priceText);
+    if (!Number.isFinite(unit_price) || unit_price < 0)
+      return void errors.push({ line, message: `سعر غير صالح (${barcode})` });
+    let sold_at: string | null = null;
+    const dateText = k.date ? String(r[k.date] ?? "").trim() : "";
+    if (dateText) {
+      const d = new Date(dateText.replace(" ", "T"));
+      if (Number.isNaN(d.getTime())) return void errors.push({ line, message: `تاريخ غير صالح (${dateText})` });
+      sold_at = d.toISOString();
+    }
+    const ref = (k.ticket ? String(r[k.ticket] ?? "").trim() : "") || `__line${line}`;
+    let t = tickets.get(ref);
+    if (!t) {
+      t = { ref, sold_at, notes: null, items: [] };
+      tickets.set(ref, t);
+    }
+    if (!t.sold_at && sold_at) t.sold_at = sold_at;
+    const note = k.notes ? String(r[k.notes] ?? "").trim() : "";
+    if (note && !t.notes) t.notes = note;
+    const name = (k.name ? String(r[k.name] ?? "").trim() : "") || known?.name || barcode;
+    t.items.push({ barcode, product_name: name, quantity, unit_price });
+  });
+  return { tickets: Array.from(tickets.values()), errors };
+}

@@ -7,3 +7,6 @@
 - [x] Step 4: /dashboard with live updates, écart per product (stock snapshot), Excel import/export (barcodes as text)
 - [x] Step 5: /admin (master) for stores and managers, installable phone app (home-screen icon)
 - [ ] Import existing data from the old backend (CSV exports) — waiting on the user
+- [x] Camera on/off + manual entry, count notes, manager-only product delete in a session
+- [x] Purchase/selling prices in products + Excel; detailed sales Excel import (rows grouped by ticket number)
+- [x] Sales deducted only from counted products, and only when sold after the count

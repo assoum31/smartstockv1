@@ -106,8 +106,8 @@ function ProductsPage() {
                 downloadWorkbook("stocki-modele-produits.xlsx", [
                   {
                     name: "produits",
-                    headers: ["barcode", "name", "location", "system_quantity"],
-                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24]],
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price"],
+                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24, 850, 1000]],
                     textColumns: [0],
                   },
                 ])
@@ -115,6 +115,30 @@ function ProductsPage() {
             >
               <Download />
               نموذج Excel
+            </Button>
+            <Button
+              variant="outline"
+              disabled={products.length === 0}
+              onClick={() =>
+                downloadWorkbook("stocki-produits.xlsx", [
+                  {
+                    name: "produits",
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price"],
+                    rows: products.map((p) => [
+                      p.barcode,
+                      p.name,
+                      p.default_location ?? "",
+                      Number(p.system_quantity),
+                      Number(p.purchase_price),
+                      Number(p.selling_price),
+                    ]),
+                    textColumns: [0],
+                  },
+                ])
+              }
+            >
+              <Download />
+              تصدير Excel
             </Button>
             <Button onClick={() => fileRef.current?.click()}>
               <Upload />
@@ -169,6 +193,8 @@ function ProductsPage() {
                   <th className="px-4 py-3 text-start font-bold">الباركود</th>
                   <th className="px-4 py-3 text-start font-bold">الموقع</th>
                   <th className="px-4 py-3 text-end font-bold">الكمية النظامية</th>
+                  <th className="px-4 py-3 text-end font-bold">سعر الشراء</th>
+                  <th className="px-4 py-3 text-end font-bold">سعر البيع</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -184,6 +210,8 @@ function ProductsPage() {
                     <td className="px-4 py-3 text-end font-mono font-bold">
                       {formatQty(Number(p.system_quantity))}
                     </td>
+                    <td className="px-4 py-3 text-end font-mono">{formatQty(Number(p.purchase_price))}</td>
+                    <td className="px-4 py-3 text-end font-mono font-bold">{formatQty(Number(p.selling_price))}</td>
                   </tr>
                 ))}
               </tbody>

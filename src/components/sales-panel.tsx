@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Camera, Plus, Printer, Receipt, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { Camera, Download, Plus, Printer, Receipt, Trash2, Upload, X } from "lucide-react";
+import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
+import { parseSalesRows } from "@/lib/inventory-rules";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import {
+  productsQuery,
   salesTicketsQuery,
   type InventorySession,
   type SalesTicket,
@@ -91,16 +94,17 @@ export function SalesPanel({
           <p className="text-xs text-muted-foreground">مجموع المبيعات</p>
           <p className="font-mono text-xl font-bold">{money(totalAmount)} دج</p>
         </div>
+        {canSell && <ImportSalesButtons session={session} />}
         {canSell && (
-          <Button className="ms-auto" onClick={() => setCreating(true)}>
+          <Button onClick={() => setCreating(true)}>
             <Plus />
             بون بيع جديد
           </Button>
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        الكميات المباعة تُخصم من المخزون المتوقع، فيبقى الفارق = المحسوب − (المخزون الأولي −
-        المبيعات).
+        تُخصم المبيعات من المحسوب فقط إذا كان المنتج قد عُدّ وبيع بعد عدّه. المنتج غير المحسوب لا
+        يُخصم منه شيء. في ملف Excel، الأسطر التي تحمل نفس رقم البون تصبح بوناً واحداً.
       </p>
 
       <div className="surface-card divide-y">
@@ -381,5 +385,84 @@ function TicketDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ImportSalesButtons({ session }: { session: InventorySession }) {
+  const queryClient = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const { data: products = [] } = useQuery(productsQuery(session.tenant_id));
+
+  const onFile = async (file: File) => {
+    setBusy(true);
+    try {
+      const raw = await readSheetAsText(file);
+      const prices = new Map(
+        products.map((p) => [p.barcode, { name: p.name, price: Number(p.selling_price) || 0 }]),
+      );
+      const { tickets, errors } = parseSalesRows(raw, prices);
+      if (errors.length) toast.warning(`${errors.length} سطر مرفوض (السطر ${errors[0]!.line}: ${errors[0]!.message})`);
+      let done = 0;
+      for (const t of tickets) {
+        const { error } = await supabase.rpc("import_sales_ticket", {
+          _session_id: session.id,
+          _items: t.items as never,
+          _notes: t.notes ?? (t.ref.startsWith("__") ? "" : `Excel bon ${t.ref}`),
+          ...(t.sold_at ? { _sold_at: t.sold_at } : {}),
+        });
+        if (error) {
+          toast.error(`توقف بعد ${done} بون: ${errorText(error)}`);
+          break;
+        }
+        done++;
+      }
+      if (done) toast.success(`تم استيراد ${done} بون`);
+    } catch {
+      toast.error("تعذرت قراءة الملف.");
+    } finally {
+      setBusy(false);
+      void queryClient.invalidateQueries({ queryKey: ["sales-tickets", session.id] });
+    }
+  };
+
+  return (
+    <div className="ms-auto flex flex-wrap gap-2">
+      <Button
+        variant="outline"
+        onClick={() =>
+          downloadWorkbook("stocki-modele-ventes.xlsx", [
+            {
+              name: "ventes",
+              headers: ["ticket", "date", "barcode", "name", "quantity", "unit_price", "note"],
+              rows: [
+                [1, "2026-11-08 10:30", "0061112457800", "زيت زيتون 1L", 2, 1000, "زبون 1"],
+                [1, "2026-11-08 10:30", "0061112457801", "سكر 1kg", 1, 150, ""],
+                [2, "2026-11-08 11:05", "0061112457800", "زيت زيتون 1L", 1, 1000, ""],
+              ],
+              textColumns: [2],
+            },
+          ])
+        }
+      >
+        <Download />
+        نموذج المبيعات
+      </Button>
+      <Button variant="outline" disabled={busy} onClick={() => fileRef.current?.click()}>
+        <Upload />
+        {busy ? "جارٍ الاستيراد..." : "استيراد مبيعات Excel"}
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void onFile(f);
+          e.target.value = "";
+        }}
+      />
+    </div>
   );
 }

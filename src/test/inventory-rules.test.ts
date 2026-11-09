@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   chunk,
   computeVariances,
+  parseSalesRows,
   normalizeBarcode,
   parseProductRows,
   workerProgress,
@@ -241,5 +242,21 @@ describe("sales vs count time", () => {
   it("reads purchase and selling prices from Excel", () => {
     const res = parseProductRows([{ barcode: "1", name: "A", "سعر الشراء": "80", "سعر البيع": "120,5" }]);
     expect(res.rows[0]).toMatchObject({ purchase_price: 80, selling_price: 120.5 });
+  });
+});
+
+describe("sales Excel import", () => {
+  it("groups rows with the same ticket number into one multi-product ticket", () => {
+    const res = parseSalesRows([
+      { "رقم البون": "15", barcode: "1", quantity: "2", prix: "100" },
+      { "رقم البون": "15", barcode: "2", quantity: "-3", prix: "50" },
+      { "رقم البون": "", barcode: "3", quantity: "1" },
+    ]);
+    expect(res.tickets).toHaveLength(2);
+    expect(res.tickets[0]!.items.map((i) => i.quantity)).toEqual([2, 3]);
+  });
+  it("uses the catalog selling price when the sheet has none", () => {
+    const res = parseSalesRows([{ barcode: "7", quantity: "1" }], new Map([["7", { name: "X", price: 250 }]]));
+    expect(res.tickets[0]!.items[0]).toMatchObject({ unit_price: 250, product_name: "X" });
   });
 });
