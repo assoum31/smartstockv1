@@ -10,6 +10,6 @@
 - [x] Camera on/off + manual entry, count notes, manager-only product delete in a session
 - [x] Purchase/selling prices in products + Excel; detailed sales Excel import (rows grouped by ticket number)
 - [x] Sales deducted only from counted products, and only when sold after the count
-- [ ] Scan: only barcode required; notes go to manager alerts tab
-- [ ] Flash (torch) button next to camera on/off
-- [ ] Rename app to SMART STOCK + new home headline/subtitle
+- [x] Scan: only barcode required; notes go to manager alerts tab
+- [x] Flash (torch) button next to camera on/off
+- [x] Rename app to SMART STOCK + new home headline/subtitle
