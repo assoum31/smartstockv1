@@ -228,6 +228,14 @@ export function SessionView({
             <TabsTrigger value="sales">المبيعات ({sales.tickets.length})</TabsTrigger>
             <TabsTrigger value="workers">تقدم العمال</TabsTrigger>
             <TabsTrigger value="logs">سجل العدّ</TabsTrigger>
+            <TabsTrigger value="alerts">
+              التنبيهات
+              {logs.filter((l) => l.notes?.trim()).length > 0 && (
+                <span className="ms-1.5 rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                  {logs.filter((l) => l.notes?.trim()).length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
             {isActive && !readOnly && (
@@ -262,6 +270,31 @@ export function SessionView({
         </TabsContent>
         <TabsContent value="logs" className="mt-4">
           <LogsTable logs={logs} editable={isActive && !readOnly} sessionId={session.id} />
+        </TabsContent>
+        <TabsContent value="alerts" className="mt-4">
+          <div className="space-y-2">
+            {logs.filter((l) => l.notes?.trim()).length === 0 ? (
+              <p className="surface-card p-8 text-center text-sm text-muted-foreground">
+                لا توجد ملاحظات من فريق الجرد بعد.
+              </p>
+            ) : (
+              [...logs]
+                .filter((l) => l.notes?.trim())
+                .sort((a, b) => b.counted_at.localeCompare(a.counted_at))
+                .map((l) => (
+                  <div key={l.id} className="surface-card border-s-4 border-warning p-4">
+                    <p className="font-bold">{l.notes}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {l.product_name} · <span className="barcode-chip">{l.barcode}</span> · الكمية{" "}
+                      {formatQty(Number(l.counted_quantity))} · {l.location || "—"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {l.counted_by_name} · {formatDateTime(l.counted_at)}
+                    </p>
+                  </div>
+                ))
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -13,6 +13,8 @@ import {
   Plus,
   Send,
   Trash2,
+  Flashlight,
+  FlashlightOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +77,8 @@ function ScanPage() {
   const [quantity, setQuantity] = useState("1");
   const [notes, setNotes] = useState("");
   const [cameraOn, setCameraOn] = useState(true);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
   const [target, setTarget] = useState<Entry | null>(null);
   const barcodeRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
@@ -300,13 +304,24 @@ function ScanPage() {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant={torchOn ? "warning" : "outline"}
+            disabled={!cameraOn || !torchSupported}
+            onClick={() => setTorchOn((t) => !t)}
+            title={torchSupported ? "الفلاش" : "الفلاش غير متاح في هذه الكاميرا"}
+          >
+            {torchOn ? <FlashlightOff /> : <Flashlight />}
+            {torchOn ? "إطفاء الفلاش" : "الفلاش"}
+          </Button>
           <Button
             type="button"
             variant={cameraOn ? "outline" : "default"}
             onClick={() => {
               const next = !cameraOn;
               setCameraOn(next);
+              if (!next) setTorchOn(false);
               if (!next) window.setTimeout(() => barcodeRef.current?.focus(), 50);
             }}
           >
@@ -315,7 +330,13 @@ function ScanPage() {
           </Button>
         </div>
 
-        {cameraOn && <BarcodeScanner onDetected={onDetected} />}
+        {cameraOn && (
+          <BarcodeScanner
+            onDetected={onDetected}
+            torchOn={torchOn}
+            onTorchSupport={setTorchSupported}
+          />
+        )}
 
         <form onSubmit={submit} className="surface-card space-y-4 p-4 sm:p-5">
           <div className="space-y-1.5">
