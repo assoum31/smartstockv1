@@ -6,9 +6,11 @@ import { RefreshCw } from "lucide-react";
 
 interface BarcodeScannerProps {
   onDetected: (code: string) => void;
+  torchOn?: boolean;
+  onTorchSupport?: (supported: boolean) => void;
 }
 
-export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
+export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: BarcodeScannerProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   const [cameras, setCameras] = useState<CameraDevice[]>([]);
@@ -54,12 +56,18 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
         setIsStarted(true);
         setErrorMsg(null);
+        try {
+          const caps = scannerRef.current.getRunningTrackCapabilities() as { torch?: boolean };
+          onTorchSupport?.(Boolean(caps.torch));
+        } catch {
+          onTorchSupport?.(false);
+        }
       } catch (err: unknown) {
         console.error("Camera Init Error:", err);
         setErrorMsg("تعذر تشغيل الكاميرا. يرجى التأكد من إعطاء صلاحية الكاميرا للمتصفح.");
       }
     },
-    [onDetected],
+    [onDetected, onTorchSupport],
   );
 
   useEffect(() => {
@@ -124,6 +132,14 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
       stopCamera();
     };
   }, [startCamera]);
+
+  useEffect(() => {
+    const s = scannerRef.current;
+    if (!isStarted || !s?.isScanning) return;
+    s.applyVideoConstraints({ advanced: [{ torch: torchOn } as MediaTrackConstraintSet] }).catch(
+      () => onTorchSupport?.(false),
+    );
+  }, [torchOn, isStarted, onTorchSupport]);
 
   const toggleLens = () => {
     if (cameras.length > 1) {

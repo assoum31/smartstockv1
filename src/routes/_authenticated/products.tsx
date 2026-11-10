@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/products")({
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
-  head: () => ({ meta: [{ title: "المنتجات | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "المنتجات | SMART STOCK" }] }),
   component: ProductsPage,
 });
 

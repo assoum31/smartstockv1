@@ -16,13 +16,13 @@ import heroImage from "@/assets/warehouse-scan.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      { title: "SMART STOCK | منصة الجرد الذكي للمتاجر" },
       {
         name: "description",
         content:
           "جرد ميداني بالباركود لعدة متاجر: جلسات جرد، فوارق المخزون لكل منتج، عمل بدون إنترنت وتصدير Excel.",
       },
-      { property: "og:title", content: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      { property: "og:title", content: "SMART STOCK | منصة الجرد الذكي للمتاجر" },
       {
         property: "og:description",
         content:
@@ -75,7 +75,7 @@ function Landing() {
                 <Layers className="h-5 w-5" />
               </span>
               <span className="text-xl font-extrabold">
-                Stocki <span className="text-primary">Pro</span>
+                SMART <span className="text-primary">STOCK</span>
               </span>
             </span>
             <Button asChild variant="outline">
@@ -89,12 +89,12 @@ function Landing() {
               جرد ميداني مباشر
             </p>
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.25] tracking-tight sm:text-5xl">
-              اعرف ما في رفوفك،
+              اعرف ما في رفوفك
               <br />
-              <span className="text-primary">لا ما في الحاسوب.</span>
+              <span className="text-primary">في الوقت الحالي</span>
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-              فرق الجرد تمسح الباركود بالهاتف، والمسير يرى الفوارق لحظة بلحظة، متجراً بمتجر.
+              فريق الحساب يمسح الباركود بالهاتف و المسير يرى الفوارق لحظة بلحظة
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="xl">

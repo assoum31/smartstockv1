@@ -198,7 +198,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
             <Layers className="h-6 w-6" />
           </span>
           <span className="text-2xl font-extrabold">
-            Stocki <span className="text-primary">Pro</span>
+            SMART <span className="text-primary">STOCK</span>
           </span>
         </Link>
 

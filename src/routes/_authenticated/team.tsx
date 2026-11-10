@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/team")({
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(teamQuery(context.tenant.id)),
-  head: () => ({ meta: [{ title: "الفريق | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "الفريق | SMART STOCK" }] }),
   component: TeamPage,
 });
 

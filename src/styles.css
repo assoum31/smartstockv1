@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Stocki Pro design system — "warehouse ledger".
+ * SMART STOCK design system — "warehouse ledger".
  * Warm paper surfaces, deep ink text, a pine-green working color and an
  * amber signal color for anything that needs attention (variances, offline).
  * Every color lives here as an oklch token; components only use the tokens.

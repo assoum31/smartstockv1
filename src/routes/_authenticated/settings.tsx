@@ -12,7 +12,7 @@ import { ROLE_LABEL } from "@/lib/me";
 import { reasonText } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "الإعدادات | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "الإعدادات | SMART STOCK" }] }),
   component: SettingsPage,
 });
 

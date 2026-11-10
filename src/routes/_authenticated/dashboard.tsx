@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       context.queryClient.ensureQueryData(teamQuery(context.tenant.id)),
     ]);
   },
-  head: () => ({ meta: [{ title: "لوحة الجرد | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "لوحة الجرد | SMART STOCK" }] }),
   component: DashboardPage,
 });
 

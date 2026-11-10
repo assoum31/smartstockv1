@@ -13,6 +13,8 @@ import {
   Plus,
   Send,
   Trash2,
+  Flashlight,
+  FlashlightOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
       context.queryClient.ensureQueryData(sessionLogsQuery(session?.id ?? null)),
     ]);
   },
-  head: () => ({ meta: [{ title: "السكان | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }] }),
   component: ScanPage,
 });
 
@@ -75,6 +77,8 @@ function ScanPage() {
   const [quantity, setQuantity] = useState("1");
   const [notes, setNotes] = useState("");
   const [cameraOn, setCameraOn] = useState(true);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
   const [target, setTarget] = useState<Entry | null>(null);
   const barcodeRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
@@ -213,14 +217,14 @@ function ScanPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
-    const qty = Number(quantity.replace(",", "."));
-    if (!clean || !productName.trim()) return void toast.error("الباركود واسم المنتج مطلوبان.");
+    const qty = quantity.trim() ? Number(quantity.replace(",", ".")) : 1;
+    if (!clean) return void toast.error("الباركود مطلوب.");
     if (!Number.isFinite(qty) || qty < 0) return void toast.error("كمية غير صالحة.");
     const loc = location.trim() || "غير محدد";
     const payload = {
       session_id: session.id,
       barcode: clean,
-      product_name: productName.trim(),
+      product_name: productName.trim() || productMap.get(clean)?.name || `منتج غير مسجل (${clean})`,
       counted_quantity: qty,
       location: loc,
       counted_by_name: me.fullName,
@@ -300,13 +304,24 @@ function ScanPage() {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant={torchOn ? "warning" : "outline"}
+            disabled={!cameraOn || !torchSupported}
+            onClick={() => setTorchOn((t) => !t)}
+            title={torchSupported ? "الفلاش" : "الفلاش غير متاح في هذه الكاميرا"}
+          >
+            {torchOn ? <FlashlightOff /> : <Flashlight />}
+            {torchOn ? "إطفاء الفلاش" : "الفلاش"}
+          </Button>
           <Button
             type="button"
             variant={cameraOn ? "outline" : "default"}
             onClick={() => {
               const next = !cameraOn;
               setCameraOn(next);
+              if (!next) setTorchOn(false);
               if (!next) window.setTimeout(() => barcodeRef.current?.focus(), 50);
             }}
           >
@@ -315,7 +330,13 @@ function ScanPage() {
           </Button>
         </div>
 
-        {cameraOn && <BarcodeScanner onDetected={onDetected} />}
+        {cameraOn && (
+          <BarcodeScanner
+            onDetected={onDetected}
+            torchOn={torchOn}
+            onTorchSupport={setTorchSupported}
+          />
+        )}
 
         <form onSubmit={submit} className="surface-card space-y-4 p-4 sm:p-5">
           <div className="space-y-1.5">
@@ -406,7 +427,7 @@ function ScanPage() {
             </Label>
             <Input
               id="product-name"
-              required
+              placeholder="اختياري"
               value={productName}
               onChange={(e) => {
                 setProductName(e.target.value);
@@ -448,7 +469,6 @@ function ScanPage() {
               <Input
                 id="qty"
                 ref={qtyRef}
-                required
                 inputMode="decimal"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
@@ -467,7 +487,7 @@ function ScanPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="notes">ملاحظة (اختياري)</Label>
+            <Label htmlFor="notes">ملاحظة (اختياري، تصل للمسير في التنبيهات)</Label>
             <Input
               id="notes"
               placeholder="مثلاً: كرتون مفتوح، تاريخ قريب..."

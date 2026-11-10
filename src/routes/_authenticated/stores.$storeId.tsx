@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/stores/$storeId")({
     return { store };
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: loaderData ? `${loaderData.store.name} | Stocki Pro` : "متجر | Stocki Pro" }],
+    meta: [{ title: loaderData ? `${loaderData.store.name} | SMART STOCK` : "متجر | SMART STOCK" }],
   }),
   notFoundComponent: () => (
     <div className="surface-card p-10 text-center">
