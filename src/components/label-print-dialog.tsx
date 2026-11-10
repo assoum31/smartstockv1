@@ -107,7 +107,7 @@ body{font-family:Arial,sans-serif}
             طباعة ملصقات الباركود
           </DialogTitle>
           <DialogDescription>
-            {products.length === 1 ? products[0].name : `${products.length} منتج`}
+            {products.length === 1 ? products[0]?.name : `${products.length} منتج`}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
