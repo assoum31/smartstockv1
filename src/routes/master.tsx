@@ -21,10 +21,10 @@ import { reasonText } from "@/lib/messages";
 export const Route = createFileRoute("/master")({
   head: () => ({
     meta: [
-      { title: "Stocki Pro" },
-      { name: "description", content: "Stocki Pro" },
-      { property: "og:title", content: "Stocki Pro" },
-      { property: "og:description", content: "Stocki Pro" },
+      { title: "SMART STOCK" },
+      { name: "description", content: "SMART STOCK" },
+      { property: "og:title", content: "SMART STOCK" },
+      { property: "og:description", content: "SMART STOCK" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },

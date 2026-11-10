@@ -21,7 +21,7 @@ export interface PinInfo {
 /** Shows a one-time activation PIN. It is never shown again after closing. */
 export function PinReveal({ info, onClose }: { info: PinInfo | null; onClose: () => void }) {
   const text = info
-    ? `Stocki Pro\nرمز المتجر: ${info.storeCode}\nاسم المستخدم: ${info.username}\nرمز التفعيل: ${info.pin}`
+    ? `SMART STOCK\nرمز المتجر: ${info.storeCode}\nاسم المستخدم: ${info.username}\nرمز التفعيل: ${info.pin}`
     : "";
   return (
     <Dialog open={Boolean(info)} onOpenChange={(o) => !o && onClose()}>

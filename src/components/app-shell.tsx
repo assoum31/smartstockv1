@@ -112,7 +112,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
             </span>
             <span className="leading-tight">
               <span className="block text-base font-extrabold">
-                Stocki <span className="text-warning">Pro</span>
+                SMART <span className="text-warning">STOCK</span>
               </span>
               <span className="block max-w-[10rem] truncate text-[11px] text-ink-muted">
                 {me.tenant ? me.tenant.name : "الإدارة العامة"}

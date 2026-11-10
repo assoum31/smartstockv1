@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ClipboardList, Layers, ScanLine } from "lucide-react";
 
-const TITLE = "تسجيل الدخول | Stocki Pro";
+const TITLE = "تسجيل الدخول | SMART STOCK";
 const DESCRIPTION = "اختر صفحة الدخول: مسير المتجر أو عامل الجرد.";
 
 export const Route = createFileRoute("/login")({
@@ -42,7 +42,7 @@ function LoginChooser() {
             <Layers className="h-6 w-6" />
           </span>
           <span className="text-2xl font-extrabold">
-            Stocki <span className="text-primary">Pro</span>
+            SMART <span className="text-primary">STOCK</span>
           </span>
         </Link>
         <h1 className="mb-4 text-center text-lg font-extrabold">من أنت؟</h1>

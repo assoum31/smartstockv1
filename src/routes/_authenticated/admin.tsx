@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
     if (!context.me.isMaster) throw redirect({ to: context.me.homePath });
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(storesQuery()),
-  head: () => ({ meta: [{ title: "المتاجر | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "المتاجر | SMART STOCK" }] }),
   component: AdminPage,
 });
 

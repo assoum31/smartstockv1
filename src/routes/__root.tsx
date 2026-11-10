@@ -100,12 +100,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      { title: "SMART STOCK | منصة الجرد الذكي للمتاجر" },
       {
         name: "description",
         content: "منصة جرد متعددة المتاجر: سكان بالباركود، جلسات جرد، فوارق المخزون مباشرة",
       },
-      { property: "og:title", content: "Stocki Pro | منصة الجرد الذكي للمتاجر" },
+      { property: "og:title", content: "SMART STOCK | منصة الجرد الذكي للمتاجر" },
       {
         property: "og:description",
         content: "منصة جرد متعددة المتاجر: سكان بالباركود، جلسات جرد، فوارق المخزون مباشرة",
@@ -114,7 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "theme-color", content: "#1d2433" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "Stocki Pro" },
+      { name: "apple-mobile-web-app-title", content: "SMART STOCK" },
     ],
     links: [
       {

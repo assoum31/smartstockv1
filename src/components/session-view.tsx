@@ -76,7 +76,7 @@ export function SessionView({
   session,
   tenantId,
   readOnly = false,
-  storeName = "Stocki Pro",
+  storeName = "SMART STOCK",
 }: {
   session: InventorySession;
   tenantId: string;

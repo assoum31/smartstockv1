@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { StoreLogin } from "@/components/store-login";
 
-const TITLE = "دخول المسيرين | Stocki Pro";
+const TITLE = "دخول المسيرين | SMART STOCK";
 const DESCRIPTION = "صفحة دخول مسيري وأصحاب المتاجر: جلسات الجرد، متابعة العمال والفوارق.";
 
 export const Route = createFileRoute("/manager")({

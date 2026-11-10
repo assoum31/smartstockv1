@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
       context.queryClient.ensureQueryData(sessionLogsQuery(session?.id ?? null)),
     ]);
   },
-  head: () => ({ meta: [{ title: "السكان | Stocki Pro" }] }),
+  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }] }),
   component: ScanPage,
 });
 
@@ -213,14 +213,14 @@ function ScanPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
-    const qty = Number(quantity.replace(",", "."));
-    if (!clean || !productName.trim()) return void toast.error("الباركود واسم المنتج مطلوبان.");
+    const qty = quantity.trim() ? Number(quantity.replace(",", ".")) : 1;
+    if (!clean) return void toast.error("الباركود مطلوب.");
     if (!Number.isFinite(qty) || qty < 0) return void toast.error("كمية غير صالحة.");
     const loc = location.trim() || "غير محدد";
     const payload = {
       session_id: session.id,
       barcode: clean,
-      product_name: productName.trim(),
+      product_name: productName.trim() || productMap.get(clean)?.name || `منتج غير مسجل (${clean})`,
       counted_quantity: qty,
       location: loc,
       counted_by_name: me.fullName,
@@ -406,7 +406,7 @@ function ScanPage() {
             </Label>
             <Input
               id="product-name"
-              required
+              placeholder="اختياري"
               value={productName}
               onChange={(e) => {
                 setProductName(e.target.value);
@@ -448,7 +448,6 @@ function ScanPage() {
               <Input
                 id="qty"
                 ref={qtyRef}
-                required
                 inputMode="decimal"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
@@ -467,7 +466,7 @@ function ScanPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="notes">ملاحظة (اختياري)</Label>
+            <Label htmlFor="notes">ملاحظة (اختياري، تصل للمسير في التنبيهات)</Label>
             <Input
               id="notes"
               placeholder="مثلاً: كرتون مفتوح، تاريخ قريب..."
