@@ -56,7 +56,10 @@ function ProductsPage() {
     const q = search.trim().toLowerCase();
     const list = q
       ? products.filter(
-          (p) => p.barcode.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
+          (p) =>
+            p.barcode.toLowerCase().includes(q) ||
+            (p.alt_barcodes ?? []).some((b) => b.includes(q)) ||
+            p.name.toLowerCase().includes(q),
         )
       : products;
     return list.slice(0, 200);
@@ -109,8 +112,8 @@ function ProductsPage() {
                 downloadWorkbook("stocki-modele-produits.xlsx", [
                   {
                     name: "produits",
-                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price"],
-                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24, 850, 1000]],
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
+                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24, 850, 1000, 12, "0061112457817, 0061112457824"]],
                     textColumns: [0],
                   },
                 ])
@@ -126,7 +129,7 @@ function ProductsPage() {
                 downloadWorkbook("stocki-produits.xlsx", [
                   {
                     name: "produits",
-                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price"],
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
                     rows: products.map((p) => [
                       p.barcode,
                       p.name,
@@ -134,6 +137,8 @@ function ProductsPage() {
                       Number(p.system_quantity),
                       Number(p.purchase_price),
                       Number(p.selling_price),
+                      Number(p.carton_size),
+                      (p.alt_barcodes ?? []).join(", "),
                     ]),
                     textColumns: [0],
                   },
@@ -206,6 +211,8 @@ function ProductsPage() {
                   <th className="px-4 py-3 text-end font-bold">الكمية النظامية</th>
                   <th className="px-4 py-3 text-end font-bold">سعر الشراء</th>
                   <th className="px-4 py-3 text-end font-bold">سعر البيع</th>
+                  <th className="px-4 py-3 text-end font-bold">الهامش</th>
+                  <th className="px-4 py-3 text-end font-bold">الكرتون</th>
                   <th className="px-2 py-3" />
                 </tr>
               </thead>
@@ -217,6 +224,11 @@ function ProductsPage() {
                       <span className="barcode-chip rounded-md bg-secondary px-2 py-0.5 text-xs">
                         {p.barcode}
                       </span>
+                      {(p.alt_barcodes ?? []).length > 0 && (
+                        <p className="mt-1 text-[10px] text-muted-foreground" dir="ltr">
+                          + {(p.alt_barcodes ?? []).join(", ")}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{p.default_location || "—"}</td>
                     <td className="px-4 py-3 text-end font-mono font-bold">
@@ -224,6 +236,20 @@ function ProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-end font-mono">{formatQty(Number(p.purchase_price))}</td>
                     <td className="px-4 py-3 text-end font-mono font-bold">{formatQty(Number(p.selling_price))}</td>
+                    <td
+                      className={`px-4 py-3 text-end font-mono text-xs ${
+                        Number(p.selling_price) > 0 && Number(p.selling_price) <= Number(p.purchase_price)
+                          ? "font-bold text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {Number(p.selling_price) > 0
+                        ? `${Math.round(((Number(p.selling_price) - Number(p.purchase_price)) / Number(p.selling_price)) * 100)}%`
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-end font-mono text-xs">
+                      {Number(p.carton_size) > 1 ? `× ${formatQty(Number(p.carton_size))}` : "—"}
+                    </td>
                     <td className="px-2 py-3">
                       <Button size="icon" variant="ghost" aria-label="طباعة ملصق" onClick={() => setLabelItems([p])}>
                         <Printer className="h-4 w-4" />

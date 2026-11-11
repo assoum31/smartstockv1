@@ -6,6 +6,8 @@ import {
   normalizeBarcode,
   parseProductRows,
   workerProgress,
+  findProductByBarcode,
+  varianceValue,
 } from "@/lib/inventory-rules";
 import {
   accountEmail,
@@ -80,7 +82,7 @@ describe("barcodes stay text", () => {
       { barcode: "0012", name: "A bis", system_quantity: "4,5" },
     ]);
     expect(res.rows).toEqual([
-      { barcode: "0012", name: "A bis", default_location: null, system_quantity: 4.5, purchase_price: 0, selling_price: 0 },
+      { barcode: "0012", name: "A bis", default_location: null, system_quantity: 4.5, purchase_price: 0, selling_price: 0, carton_size: 1, alt_barcodes: [] },
     ]);
     expect(res.errors.map((e) => e.line)).toEqual([3, 4]);
   });
@@ -258,5 +260,31 @@ describe("sales Excel import", () => {
   it("uses the catalog selling price when the sheet has none", () => {
     const res = parseSalesRows([{ barcode: "7", quantity: "1" }], new Map([["7", { name: "X", price: 250 }]]));
     expect(res.tickets[0]!.items[0]).toMatchObject({ unit_price: 250, product_name: "X" });
+  });
+});
+
+describe("cartons, alternate barcodes and money value", () => {
+  it("imports carton size and alternate barcodes", () => {
+    const res = parseProductRows([
+      { barcode: "111", name: "Lait", carton_size: "12", alt_barcodes: "222, 333;111" },
+    ]);
+    expect(res.rows[0]).toMatchObject({ carton_size: 12, alt_barcodes: ["222", "333"] });
+  });
+  it("finds a product by an alternate barcode", () => {
+    const list = [{ barcode: "111", alt_barcodes: ["222"], name: "Lait" }];
+    expect(findProductByBarcode(list, "222")?.barcode).toBe("111");
+    expect(findProductByBarcode(list, "999")).toBeUndefined();
+  });
+  it("values variances at purchase price, ignoring uncounted products", () => {
+    const prices = new Map([["a", 100], ["b", 50], ["c", 10]]);
+    const v = varianceValue(
+      [
+        { barcode: "a", variance: -3, entries: 1 },
+        { barcode: "b", variance: 2, entries: 1 },
+        { barcode: "c", variance: -5, entries: 0 },
+      ],
+      prices,
+    );
+    expect(v).toEqual({ shortage: 300, surplus: 100 });
   });
 });
