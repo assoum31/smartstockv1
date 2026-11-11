@@ -26,6 +26,7 @@ import { activeSessionQuery, productsQuery, sessionLogsQuery } from "@/lib/queri
 import { discardQueued, enqueueCount, newClientId, useSyncState } from "@/lib/offline";
 import { formatDateTime, formatQty } from "@/lib/messages";
 import { cn } from "@/lib/utils";
+import { findProductByBarcode } from "@/lib/inventory-rules";
 
 export const Route = createFileRoute("/_authenticated/scan")({
   beforeLoad: ({ context }) => {
@@ -76,6 +77,8 @@ function ScanPage() {
   const [location, setLocation] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [notes, setNotes] = useState("");
+  const [unit, setUnit] = useState<"piece" | "carton">("piece");
+  const [cartonSize, setCartonSize] = useState("1");
   const [cameraOn, setCameraOn] = useState(true);
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
@@ -158,7 +161,10 @@ function ScanPage() {
     return list;
   }, [serverLogs, queue, session, me.userId]);
 
-  const clean = barcode.trim();
+  const typed = barcode.trim();
+  // An alternate barcode is counted under the product's main barcode
+  const clean = (typed && findProductByBarcode(products, typed)?.barcode) || typed;
+  const isAlt = Boolean(typed && clean !== typed);
   const duplicates = useMemo(
     () => (clean ? entries.filter((e) => e.barcode === clean) : []),
     [entries, clean],
@@ -189,6 +195,7 @@ function ScanPage() {
         setAutoName(true);
         if (!location && p.default_location) setLocation(p.default_location);
       }
+      setCartonSize(String(Number(p?.carton_size) > 0 ? Number(p?.carton_size) : 1));
       // Same product already counted at this location? Default to editing that line.
       const sameSpot = entries.find(
         (e) =>
@@ -217,7 +224,10 @@ function ScanPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
-    const qty = quantity.trim() ? Number(quantity.replace(",", ".")) : 1;
+    const entered = quantity.trim() ? Number(quantity.replace(",", ".")) : 1;
+    const perCarton = Number(cartonSize.replace(",", ".")) || 0;
+    if (unit === "carton" && perCarton <= 0) return void toast.error("سعة الكرتون غير صالحة.");
+    const qty = unit === "carton" ? Math.round(entered * perCarton * 1000) / 1000 : entered;
     if (!clean) return void toast.error("الباركود مطلوب.");
     if (!Number.isFinite(qty) || qty < 0) return void toast.error("كمية غير صالحة.");
     const loc = location.trim() || "غير محدد";
@@ -254,6 +264,7 @@ function ScanPage() {
     setAutoName(false);
     setQuantity("1");
     setNotes("");
+    setUnit("piece");
     setTarget(null);
     barcodeRef.current?.focus();
   };
@@ -353,6 +364,11 @@ function ScanPage() {
               onChange={(e) => setBarcode(e.target.value)}
               className="barcode-chip h-12 bg-muted text-center text-lg font-bold"
             />
+            {isAlt && (
+              <p className="text-xs text-muted-foreground">
+                باركود بديل ← يُحسب على الرمز الرئيسي <span className="barcode-chip">{clean}</span>
+              </p>
+            )}
           </div>
 
           {duplicates.length > 0 && (
@@ -455,7 +471,30 @@ function ScanPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="qty">{target ? "الكمية الجديدة" : "الكمية المحسوبة"}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="qty">
+                {unit === "carton"
+                  ? "عدد الكراتين"
+                  : target
+                    ? "الكمية الجديدة"
+                    : "الكمية المحسوبة"}
+              </Label>
+              <div className="flex rounded-lg bg-muted p-0.5 text-xs font-bold">
+                {(["piece", "carton"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setUnit(u)}
+                    className={cn(
+                      "rounded-md px-3 py-1",
+                      unit === u ? "bg-card shadow-sm" : "text-muted-foreground",
+                    )}
+                  >
+                    {u === "piece" ? "بالقطعة" : "بالكرتون"}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -484,6 +523,28 @@ function ScanPage() {
                 <Minus className="!size-6" />
               </Button>
             </div>
+            {unit === "carton" && (
+              <div className="flex items-center gap-2 rounded-xl bg-accent p-2 text-sm text-accent-foreground">
+                <Label htmlFor="carton-size" className="shrink-0">
+                  قطع في الكرتون
+                </Label>
+                <Input
+                  id="carton-size"
+                  inputMode="decimal"
+                  value={cartonSize}
+                  onChange={(e) => setCartonSize(e.target.value)}
+                  className="h-9 w-20 text-center font-mono font-bold"
+                />
+                <span className="ms-auto font-mono font-bold">
+                  ={" "}
+                  {formatQty(
+                    (Number(quantity.replace(",", ".")) || 0) *
+                      (Number(cartonSize.replace(",", ".")) || 0),
+                  )}{" "}
+                  قطعة
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
