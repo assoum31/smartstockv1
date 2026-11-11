@@ -166,6 +166,8 @@ export interface ProductImportRow {
   system_quantity: number;
   purchase_price: number;
   selling_price: number;
+  carton_size: number;
+  alt_barcodes: string[];
 }
 
 export interface ProductImportResult {
@@ -210,7 +212,43 @@ const HEADER_ALIASES: Record<keyof ProductImportRow, string[]> = {
   ],
   purchase_price: ["purchase_price", "prix achat", "prix_achat", "prix d'achat", "cost", "سعر الشراء"],
   selling_price: ["selling_price", "prix vente", "prix_vente", "prix de vente", "price", "prix", "سعر البيع"],
+  carton_size: ["carton_size", "colisage", "carton", "pack", "سعة الكرتون", "الكرتون"],
+  alt_barcodes: ["alt_barcodes", "codes alternatifs", "barcodes", "باركودات بديلة", "باركود بديل"],
 };
+
+/** Split "a, b; c" into clean alternate barcodes, without the main one. */
+export function parseAltBarcodes(value: unknown, main = ""): string[] {
+  const out = String(value ?? "")
+    .split(/[,;|\s]+/)
+    .map((b) => b.trim())
+    .filter((b) => b && b !== main);
+  return Array.from(new Set(out));
+}
+
+/** Find a product by its main or any alternate barcode. */
+export function findProductByBarcode<
+  T extends { barcode: string; alt_barcodes?: string[] | null },
+>(products: T[], code: string): T | undefined {
+  const c = code.trim();
+  if (!c) return undefined;
+  return products.find((p) => p.barcode === c) ?? products.find((p) => p.alt_barcodes?.includes(c));
+}
+
+/** Money value of variances at purchase price: shortage (negative rows) and surplus. */
+export function varianceValue(
+  rows: { barcode: string; variance: number; entries: number }[],
+  purchasePrice: Map<string, number>,
+) {
+  let shortage = 0;
+  let surplus = 0;
+  for (const r of rows) {
+    if (r.entries === 0) continue;
+    const v = r.variance * (purchasePrice.get(r.barcode) ?? 0);
+    if (v < 0) shortage += -v;
+    else surplus += v;
+  }
+  return { shortage: Math.round(shortage * 100) / 100, surplus: Math.round(surplus * 100) / 100 };
+}
 
 function findKey(headers: string[], field: keyof ProductImportRow) {
   const aliases = HEADER_ALIASES[field];
@@ -230,6 +268,8 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
   const kQty = findKey(headers, "system_quantity");
   const kBuy = findKey(headers, "purchase_price");
   const kSell = findKey(headers, "selling_price");
+  const kCarton = findKey(headers, "carton_size");
+  const kAlt = findKey(headers, "alt_barcodes");
   if (!kBarcode || !kName) {
     return {
       rows: [],
@@ -272,6 +312,8 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
       system_quantity: qty,
       purchase_price,
       selling_price,
+      carton_size: kCarton && price(kCarton) > 0 ? price(kCarton) : 1,
+      alt_barcodes: kAlt ? parseAltBarcodes(r[kAlt], barcode) : [],
     });
   });
 
