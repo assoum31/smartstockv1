@@ -42,8 +42,9 @@ import {
 import { StatCard } from "@/components/stat-card";
 import { WorkerProgress } from "@/components/worker-progress";
 import { SalesPanel, useSalesTickets } from "@/components/sales-panel";
-import { computeVariances, type VarianceRow } from "@/lib/inventory-rules";
+import { computeVariances, varianceValue, type VarianceRow } from "@/lib/inventory-rules";
 import {
+  productsQuery,
   sessionLogsQuery,
   snapshotQuery,
   type InventoryLog,
@@ -123,6 +124,12 @@ export function SessionView({
       ),
     [snapshot, logs, sales.items, sales.tickets],
   );
+  const { data: products = [] } = useQuery(productsQuery(tenantId));
+  const prices = useMemo(
+    () => new Map(products.map((p) => [p.barcode, Number(p.purchase_price) || 0])),
+    [products],
+  );
+  const money = useMemo(() => varianceValue(variances, prices), [variances, prices]);
   const workers = useMemo(() => new Set(logs.map((l) => l.counted_by_name)).size, [logs]);
   const totalQty = logs.reduce((n, l) => n + Number(l.counted_quantity || 0), 0);
   const gaps = variances.filter((v) => v.variance !== 0 && v.entries > 0).length;
@@ -142,6 +149,7 @@ export function SessionView({
           "Stock attendu",
           "Compté",
           "Écart",
+          "Valeur écart (DA)",
           "Lignes",
           "Emplacements",
         ],
@@ -154,6 +162,7 @@ export function SessionView({
           v.expected_quantity,
           v.counted_quantity,
           v.variance,
+          v.entries > 0 ? Math.round(v.variance * (prices.get(v.barcode) ?? 0) * 100) / 100 : 0,
           v.entries,
           v.locations.join(" | "),
         ]),
@@ -220,6 +229,20 @@ export function SessionView({
         />
         <StatCard label="القائمون بالجرد" value={workers} icon={Users} />
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="surface-card border-s-4 border-s-destructive p-4">
+          <p className="text-xs font-bold text-muted-foreground">قيمة العجز (بسعر الشراء)</p>
+          <p className="font-mono text-2xl font-extrabold text-destructive" dir="ltr">
+            −{formatQty(money.shortage)} دج
+          </p>
+        </div>
+        <div className="surface-card border-s-4 border-s-warning p-4">
+          <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر الشراء)</p>
+          <p className="font-mono text-2xl font-extrabold" dir="ltr">
+            +{formatQty(money.surplus)} دج
+          </p>
+        </div>
+      </div>
 
       <Tabs defaultValue="variances" dir="rtl">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -253,7 +276,7 @@ export function SessionView({
           </div>
         </div>
         <TabsContent value="variances" className="mt-4">
-          <VarianceTable rows={variances} editable={isActive && !readOnly} sessionId={session.id} />
+          <VarianceTable rows={variances} prices={prices} editable={isActive && !readOnly} sessionId={session.id} />
         </TabsContent>
         <TabsContent value="sales" className="mt-4">
           <SalesPanel
@@ -311,10 +334,12 @@ const FILTERS: { value: VarianceFilter; label: string }[] = [
 
 function VarianceTable({
   rows,
+  prices,
   editable,
   sessionId,
 }: {
   rows: VarianceRow[];
+  prices: Map<string, number>;
   editable: boolean;
   sessionId: string;
 }) {
@@ -380,13 +405,14 @@ function VarianceTable({
               <th className="px-4 py-3 text-end font-bold">المتوقع</th>
               <th className="px-4 py-3 text-end font-bold">المحسوب</th>
               <th className="px-4 py-3 text-end font-bold">الفارق (المحسوب − المبيعات)</th>
+              <th className="px-4 py-3 text-end font-bold">قيمة الفارق (دج)</th>
               {editable && <th className="px-4 py-3" />}
             </tr>
           </thead>
           <tbody className="divide-y">
             {shown.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-10 text-center text-muted-foreground">
+                <td colSpan={9} className="p-10 text-center text-muted-foreground">
                   لا توجد منتجات في هذا التصنيف.
                 </td>
               </tr>
@@ -444,6 +470,11 @@ function VarianceTable({
                     {r.variance > 0 ? "+" : ""}
                     {formatQty(r.variance)}
                   </span>
+                </td>
+                <td className="px-4 py-3 text-end font-mono text-xs" dir="ltr">
+                  {r.entries > 0 && r.variance !== 0
+                    ? formatQty(Math.round(r.variance * (prices.get(r.barcode) ?? 0) * 100) / 100)
+                    : "—"}
                 </td>
                 {editable && (
                   <td className="px-2 py-3">
