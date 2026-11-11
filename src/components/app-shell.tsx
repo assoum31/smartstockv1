@@ -10,6 +10,7 @@ import {
   Package,
   RefreshCw,
   ScanLine,
+  ShoppingCart,
   Settings,
   Users,
   type LucideIcon,
@@ -29,7 +30,7 @@ import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
-  to: "/admin" | "/dashboard" | "/scan" | "/products" | "/team";
+  to: "/admin" | "/dashboard" | "/scan" | "/products" | "/team" | "/pos";
   label: string;
   icon: LucideIcon;
 };
@@ -40,6 +41,7 @@ function navFor(me: Me): NavItem[] {
     return [
       { to: "/dashboard", label: "لوحة الجرد", icon: LayoutDashboard },
       { to: "/scan", label: "السكان", icon: ScanLine },
+      { to: "/pos", label: "البيع", icon: ShoppingCart },
       { to: "/products", label: "المنتجات", icon: Package },
       { to: "/team", label: "الفريق", icon: Users },
     ];

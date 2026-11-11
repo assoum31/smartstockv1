@@ -27,6 +27,7 @@ export function WorkerProgress({
   );
   const maxLines = Math.max(1, ...rows.map((r) => r.lines));
   const started = rows.filter((r) => r.lines > 0).length;
+  const totalQty = rows.reduce((n, r) => n + r.quantity, 0);
 
   return (
     <div className="surface-card overflow-hidden">
@@ -89,6 +90,12 @@ export function WorkerProgress({
               <div>
                 <dt className="text-[10px] font-bold text-muted-foreground">قطع</dt>
                 <dd className="font-mono font-bold">{formatQty(r.quantity)}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-bold text-muted-foreground">المساهمة</dt>
+                <dd className="font-mono font-bold text-primary">
+                  {totalQty > 0 ? Math.round((r.quantity / totalQty) * 100) : 0}%
+                </dd>
               </div>
             </dl>
             <p className="flex w-full items-center gap-1 text-[11px] text-muted-foreground sm:w-auto">

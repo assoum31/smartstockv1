@@ -117,7 +117,9 @@ export type Database = {
       }
       products: {
         Row: {
+          alt_barcodes: string[]
           barcode: string
+          carton_size: number
           created_at: string
           default_location: string | null
           id: string
@@ -129,7 +131,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alt_barcodes?: string[]
           barcode: string
+          carton_size?: number
           created_at?: string
           default_location?: string | null
           id?: string
@@ -141,7 +145,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alt_barcodes?: string[]
           barcode?: string
+          carton_size?: number
           created_at?: string
           default_location?: string | null
           id?: string
