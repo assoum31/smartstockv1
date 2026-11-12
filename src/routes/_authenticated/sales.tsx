@@ -5,6 +5,7 @@ import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Undo2 } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
+import { useStoreSettings } from "@/lib/store-settings";
 import { printTicket } from "@/lib/print-ticket";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
 
@@ -85,7 +86,7 @@ function SalesPage() {
                     ))}
                   </tbody>
                 </table>
-                <Button size="sm" variant="outline" className="mt-3" onClick={() => printTicket(tenant.name, t)}>
+                <Button size="sm" variant="outline" className="mt-3" onClick={() => printTicket(tenant.name, t, storeSettings)}>
                   <Printer /> إعادة الطباعة
                 </Button>
                 <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
