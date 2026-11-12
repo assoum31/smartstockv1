@@ -5,7 +5,7 @@ import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Undo2 } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
-import { codesHtml, ticketCode } from "@/lib/receipt-code";
+import { printTicket } from "@/lib/print-ticket";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -19,23 +19,6 @@ export const Route = createFileRoute("/_authenticated/sales")({
 });
 
 const today = () => new Date().toISOString().slice(0, 10);
-
-function printTicket(storeName: string, t: SaleTicket) {
-  const w = window.open("", "_blank", "width=380,height=600");
-  if (!w) return;
-  const rows = t.items
-    .map((l) => `<tr><td>${l.product_name}<br/><small>${l.quantity} × ${money(Number(l.unit_price))}</small></td><td style="text-align:left">${money(Number(l.quantity) * Number(l.unit_price))}</td></tr>`)
-    .join("");
-  w.document.write(`<html dir="rtl"><head><meta charset="utf-8"/><title>Ticket</title><style>
-    body{font-family:sans-serif;width:72mm;margin:0 auto;font-size:12px}table{width:100%;border-collapse:collapse}
-    td{padding:3px 0;border-bottom:1px dashed #999}h2,p{text-align:center;margin:4px 0}</style></head><body>
-    <h2>${storeName}</h2><p>بون رقم ${String(t.ticket_number).padStart(4, "0")} (نسخة)</p>
-    <p>${new Date(t.created_at).toLocaleString("fr-FR")}</p><table>${rows}</table>
-    <h2>المجموع: ${money(Number(t.total_amount))} دج</h2>${codesHtml(ticketCode(t.ticket_number))}<p>شكراً لزيارتكم</p></body></html>`);
-  w.document.close();
-  w.focus();
-  w.print();
-}
 
 function SalesPage() {
   const { tenant } = Route.useRouteContext();
