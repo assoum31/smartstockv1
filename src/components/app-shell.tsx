@@ -72,9 +72,7 @@ function navFor(me: Me): NavItem[] {
   if (me.canSell)
     items.push(
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
-      { ...pos[0], dock: true },
-      { ...pos[1], dock: true },
-      { ...pos[2], dock: true },
+      ...pos.map((i) => ({ ...i, dock: true })),
     );
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
