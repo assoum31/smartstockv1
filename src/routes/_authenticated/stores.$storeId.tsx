@@ -84,7 +84,7 @@ function StoreInventoryPage() {
         }
         actions={
           sessions.length > 0 && (
-            <Select value={session?.id ?? ""} onValueChange={setSelectedId} dir="rtl">
+            <Select value={session?.id ?? ""} onValueChange={setSelectedId}>
               <SelectTrigger className="h-9 w-56 bg-card">
                 <SelectValue placeholder="اختر جلسة" />
               </SelectTrigger>

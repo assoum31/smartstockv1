@@ -85,7 +85,7 @@ export function RecountBanner({ userId }: { userId: string }) {
         ))}
       </div>
       <Dialog open={Boolean(open)} onOpenChange={(o) => !o && setOpen(null)}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-right sm:text-right"><DialogTitle>إعادة العد</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>الباركود *</Label><Input dir="ltr" value={f.barcode} onChange={(e) => setF({ ...f, barcode: e.target.value })} /></div>

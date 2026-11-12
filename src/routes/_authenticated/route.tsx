@@ -20,7 +20,7 @@ function AuthenticatedLayout() {
   const { me } = Route.useRouteContext();
   if (me.blocked) {
     return (
-      <div className="bg-ledger flex min-h-screen items-center justify-center p-6" dir="rtl">
+      <div className="bg-ledger flex min-h-screen items-center justify-center p-6">
         <div className="surface-card max-w-sm p-8 text-center">
           <ShieldOff className="mx-auto h-10 w-10 text-destructive" />
           <h1 className="mt-4 text-xl font-extrabold">الحساب موقوف</h1>

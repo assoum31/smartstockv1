@@ -25,7 +25,7 @@ export function PinReveal({ info, onClose }: { info: PinInfo | null; onClose: ()
     : "";
   return (
     <Dialog open={Boolean(info)} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />

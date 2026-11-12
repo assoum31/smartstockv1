@@ -267,7 +267,7 @@ export function SessionView({
         </div>
       </div>
 
-      <Tabs defaultValue="variances" dir="rtl">
+      <Tabs defaultValue="variances">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="no-scrollbar h-auto w-full min-w-0 justify-start gap-1 overflow-x-auto rounded-xl p-1 sm:w-auto">
             <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="variances">الفوارق لكل منتج</TabsTrigger>
@@ -523,7 +523,7 @@ function VarianceTable({
       </div>
 
       <AlertDialog open={Boolean(removing)} onOpenChange={(o) => !o && setRemoving(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader className="text-right sm:text-right">
             <AlertDialogTitle>حذف عدّ هذا المنتج من الجرد؟</AlertDialogTitle>
             <AlertDialogDescription>
@@ -619,7 +619,7 @@ function LogsTable({
             className="h-9 ps-9"
           />
         </div>
-        <Select value={worker} onValueChange={setWorker} dir="rtl">
+        <Select value={worker} onValueChange={setWorker}>
           <SelectTrigger className="h-9 w-48">
             <SelectValue />
           </SelectTrigger>
@@ -788,7 +788,7 @@ function LogsTable({
       </div>
 
       <AlertDialog open={Boolean(deleting)} onOpenChange={(o) => !o && setDeleting(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader className="text-right sm:text-right">
             <AlertDialogTitle>حذف سطر العدّ؟</AlertDialogTitle>
             <AlertDialogDescription>

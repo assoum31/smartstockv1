@@ -36,7 +36,7 @@ const CHOICES = [
 
 function LoginChooser() {
   return (
-    <div className="bg-ledger flex min-h-screen items-center justify-center p-4" dir="rtl">
+    <div className="bg-ledger flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
           <BrandMark className="h-12 w-12 shrink-0 shadow-lift rounded-xl" />

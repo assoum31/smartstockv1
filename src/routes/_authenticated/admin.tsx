@@ -195,7 +195,7 @@ function StoreRow({
           </Button>
         )}
         <AlertDialog open={stopOpen} onOpenChange={setStopOpen}>
-          <AlertDialogContent dir="rtl">
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>إيقاف متجر {store.name}؟</AlertDialogTitle>
               <AlertDialogDescription>
@@ -255,7 +255,7 @@ function StoreRow({
       </CollapsibleContent>
 
       <Dialog open={adding} onOpenChange={setAdding}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-right sm:text-right">
             <DialogTitle>عضو جديد — {store.name}</DialogTitle>
           </DialogHeader>
@@ -316,7 +316,7 @@ function CreateStoreDialog({
         if (!o) reset();
       }}
     >
-      <DialogContent dir="rtl" className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle>متجر جديد</DialogTitle>
           <DialogDescription>

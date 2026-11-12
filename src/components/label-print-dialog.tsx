@@ -91,7 +91,7 @@ export function LabelPrintDialog({
     }
     const win = window.open("", "_blank");
     if (!win) return void toast.error("اسمح بالنوافذ المنبثقة للطباعة");
-    win.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>ملصقات</title><style>
+    win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>ملصقات</title><style>
 @page{size:${w}mm ${h}mm;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif}
@@ -105,7 +105,7 @@ body{font-family:Arial,sans-serif}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-primary" />

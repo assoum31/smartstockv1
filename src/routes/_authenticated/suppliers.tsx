@@ -99,7 +99,7 @@ function SuppliersPage() {
       )}
 
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-right sm:text-right">
             <DialogTitle>{draft?.id ? "تعديل المورد" : "مورد جديد"}</DialogTitle>
           </DialogHeader>

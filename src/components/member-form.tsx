@@ -112,10 +112,10 @@ export function RoleSelect({
   return (
     <>
       <Select value={value} onValueChange={(v) => onChange(v as MemberRole)}>
-        <SelectTrigger className="h-11" dir="rtl">
+        <SelectTrigger className="h-11">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent dir="rtl">
+        <SelectContent>
           {opts.map((o) => (
             <SelectItem key={o.role} value={o.role}>
               {o.label}

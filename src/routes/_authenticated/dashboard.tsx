@@ -90,7 +90,7 @@ function DashboardPage() {
         actions={
           <>
             {sessions.length > 0 && (
-              <Select value={sessionId ?? ""} onValueChange={setSelectedId} dir="rtl">
+              <Select value={sessionId ?? ""} onValueChange={setSelectedId}>
                 <SelectTrigger className="h-9 w-56 bg-card">
                   <SelectValue placeholder="اختر جلسة" />
                 </SelectTrigger>
@@ -154,7 +154,7 @@ function DashboardPage() {
       />
 
       <AlertDialog open={closing} onOpenChange={setClosing}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader className="text-right sm:text-right">
             <AlertDialogTitle>إغلاق جلسة الجرد؟</AlertDialogTitle>
             <AlertDialogDescription>
@@ -198,7 +198,7 @@ function StartSessionDialog({
   const [loading, setLoading] = useState(false);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle>جلسة جرد جديدة</DialogTitle>
         </DialogHeader>

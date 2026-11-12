@@ -48,7 +48,7 @@ function printReturn(r: { kind: Kind; number: number; party: string; lines: Line
   const rows = r.lines
     .map((l) => `<tr><td>${l.product_name}<br><small>${l.quantity} × ${money(l.unit_price)}</small></td><td style="text-align:left">${money(l.quantity * l.unit_price)}</td></tr>`)
     .join("");
-  w.document.write(`<html dir="rtl"><head><title>Bon de retour</title><style>@page{size:80mm auto;margin:3mm}body{font-family:sans-serif;font-size:12px;width:74mm}table{width:100%;border-collapse:collapse}td{padding:3px 0;border-bottom:1px dashed #999}h2,p{text-align:center;margin:4px 0}</style></head><body>
+  w.document.write(`<html><head><title>Bon de retour</title><style>@page{size:80mm auto;margin:3mm}body{font-family:sans-serif;font-size:12px;width:74mm}table{width:100%;border-collapse:collapse}td{padding:3px 0;border-bottom:1px dashed #999}h2,p{text-align:center;margin:4px 0}</style></head><body>
   <h2>${r.store}</h2><p><b>${r.kind === "customer" ? "BON DE RETOUR CLIENT" : "BON DE RETOUR FOURNISSEUR"}</b></p>
   <p>رقم ${String(r.number).padStart(4, "0")} · ${new Date().toLocaleString("fr-FR")}</p>
   ${r.party ? `<p>${r.party}</p>` : ""}${r.reason ? `<p>السبب: ${r.reason}</p>` : ""}
