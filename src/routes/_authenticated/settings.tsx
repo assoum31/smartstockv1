@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Languages, Check } from "lucide-react";
+import { KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone } from "lucide-react";
+import { setTheme, useTheme, type ThemePref } from "@/lib/theme";
 import { useI18n, setLang, setDirOverride, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -68,6 +69,7 @@ function SettingsPage() {
         subtitle={`${me.fullName} · ${ROLE_LABEL[me.roles[0] ?? "worker"]}`}
       />
       <LanguageCard t={t} lang={lang} dirOverride={dirOverride} />
+      <ThemeCard t={t} />
       {me.isManager && me.tenant && <CompanySettingsCard tenantId={me.tenant.id} />}
       <form onSubmit={submit} className="surface-card space-y-4 p-6">
         <h2 className="flex items-center gap-2 text-lg font-extrabold">
@@ -182,6 +184,43 @@ function LanguageCard({
             </button>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function ThemeCard({ t }: { t: ReturnType<typeof useI18n>["t"] }) {
+  const theme = useTheme();
+  const opts: { v: ThemePref; label: string; Icon: typeof Sun }[] = [
+    { v: "light", label: t("themeLight"), Icon: Sun },
+    { v: "dark", label: t("themeDark"), Icon: Moon },
+    { v: "system", label: t("themeSystem"), Icon: MonitorSmartphone },
+  ];
+  return (
+    <section className="surface-card space-y-5 p-5 sm:p-6">
+      <div>
+        <h2 className="flex items-center gap-2 text-lg font-extrabold">
+          <Moon className="h-5 w-5 text-primary" />
+          {t("appearance")}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("themeHint")}</p>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {opts.map(({ v, label, Icon }) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setTheme(v)}
+            className={cn(
+              "relative flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-3 transition-all active:scale-95",
+              theme === v ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+            )}
+          >
+            {theme === v && <Check className="absolute top-1.5 end-1.5 h-4 w-4 text-primary" />}
+            <Icon className="h-5 w-5" />
+            <span className="text-sm font-extrabold">{label}</span>
+          </button>
+        ))}
       </div>
     </section>
   );

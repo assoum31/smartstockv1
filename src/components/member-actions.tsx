@@ -110,7 +110,7 @@ export function MemberActions({
         </Button>
       )}
       <AlertDialog open={stopOpen} onOpenChange={setStopOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>إيقاف حساب {m.full_name}؟</AlertDialogTitle>
             <AlertDialogDescription>
@@ -180,7 +180,7 @@ function EditMemberDialog({
           onOpenChange(o);
         }}
       >
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-right sm:text-right">
             <DialogTitle>تعديل {m.full_name}</DialogTitle>
           </DialogHeader>
@@ -233,7 +233,7 @@ function EditMemberDialog({
         </DialogContent>
       </Dialog>
       <AlertDialog open={confirmDel} onOpenChange={setConfirmDel}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>حذف {m.full_name} نهائيا؟</AlertDialogTitle>
             <AlertDialogDescription>

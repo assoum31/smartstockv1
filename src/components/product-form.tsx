@@ -60,7 +60,7 @@ export function ProductFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle>{product ? "تعديل المنتج" : "منتج جديد"}</DialogTitle>
         </DialogHeader>

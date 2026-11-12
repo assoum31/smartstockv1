@@ -326,7 +326,7 @@ function ProductsPage() {
         open={Boolean(parsed)}
         onOpenChange={(o) => !o && progress === null && setParsed(null)}
       >
-        <DialogContent dir="rtl" className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader className="text-right sm:text-right">
             <DialogTitle className="flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5 text-primary" />

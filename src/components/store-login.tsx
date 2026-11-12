@@ -192,7 +192,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
   ) : null;
 
   return (
-    <div className="bg-ledger flex min-h-screen items-center justify-center p-4" dir="rtl">
+    <div className="bg-ledger flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
           <BrandMark className="h-12 w-12 shrink-0 shadow-lift rounded-xl" />
@@ -215,7 +215,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
               <p className="text-xs text-muted-foreground">{text.subtitle}</p>
             </div>
           </div>
-          <Tabs defaultValue="login" dir="rtl" onValueChange={() => setError("")}>
+          <Tabs defaultValue="login" onValueChange={() => setError("")}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">
                 <LogIn className="h-4 w-4" />

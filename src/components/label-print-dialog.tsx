@@ -105,7 +105,7 @@ body{font-family:Arial,sans-serif}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-right sm:text-right">
           <DialogTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-primary" />

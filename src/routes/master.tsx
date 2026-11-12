@@ -116,7 +116,7 @@ function MasterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink p-4" dir="rtl">
+    <div className="flex min-h-screen items-center justify-center bg-ink p-4">
       <div className="surface-card w-full max-w-sm p-6 sm:p-8">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-warning">
           <Crown className="h-6 w-6" />

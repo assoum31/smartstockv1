@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { initI18n, useI18n } from "@/lib/i18n";
+import { initTheme } from "@/lib/theme";
+import { DirectionProvider } from "@radix-ui/react-direction";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -142,7 +144,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
@@ -161,6 +163,7 @@ function RootComponent() {
 
   useEffect(() => {
     initI18n();
+    initTheme();
   }, []);
 
   useEffect(() => {
@@ -184,9 +187,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <DirectionProvider dir={dir}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" dir={dir} richColors />
+      </DirectionProvider>
     </QueryClientProvider>
   );
 }

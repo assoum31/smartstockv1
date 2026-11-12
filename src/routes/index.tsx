@@ -66,7 +66,7 @@ function Landing() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background">
       <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
         <section className="bg-ledger flex flex-col px-6 py-8 sm:px-12">
           <header className="flex items-center justify-between">

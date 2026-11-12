@@ -77,7 +77,7 @@ function TeamPage() {
       </div>
 
       <Dialog open={adding} onOpenChange={setAdding}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader className="text-right sm:text-right">
             <DialogTitle>إضافة عضو للفريق</DialogTitle>
           </DialogHeader>
