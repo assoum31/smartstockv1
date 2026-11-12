@@ -33,8 +33,8 @@ import { formatQty } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/products")({
   beforeLoad: ({ context }) => {
-    if (!context.me.isManager || !context.me.tenant) throw redirect({ to: context.me.homePath });
-    return { tenant: context.me.tenant };
+    if (!context.me.canSeeProducts || !context.me.tenant) throw redirect({ to: context.me.homePath });
+    return { tenant: context.me.tenant, isManager: context.me.isManager };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
   head: () => ({ meta: [{ title: "المنتجات | SMART STOCK" }] }),
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_authenticated/products")({
 const IMPORT_CHUNK = 500;
 
 function ProductsPage() {
-  const { tenant } = Route.useRouteContext();
+  const { tenant, isManager } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const [search, setSearch] = useState("");
@@ -157,10 +157,12 @@ function ProductsPage() {
               <Printer />
               ملصقات الباركود
             </Button>
-            <Button onClick={() => fileRef.current?.click()}>
-              <Upload />
-              استيراد Excel
-            </Button>
+            {isManager && (
+              <Button onClick={() => fileRef.current?.click()}>
+                <Upload />
+                استيراد Excel
+              </Button>
+            )}
             <input
               ref={fileRef}
               type="file"
