@@ -78,6 +78,13 @@
       "when": 1794516618128,
       "tag": "0010_activity_log_ticket_returns",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794519247734,
+      "tag": "0011_store_settings",
+      "breakpoints": true
     }
   ]
 }

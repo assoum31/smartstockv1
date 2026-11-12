@@ -683,6 +683,71 @@ export type Database = {
           },
         ]
       }
+      store_settings: {
+        Row: {
+          address: string | null
+          ai: string | null
+          company_name: string | null
+          email: string | null
+          invoice_footer: string | null
+          label_height: number
+          label_width: number
+          logo: string | null
+          nif: string | null
+          nis: string | null
+          phone: string | null
+          rc: string | null
+          tenant_id: string
+          ticket_footer: string | null
+          ticket_width: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          ai?: string | null
+          company_name?: string | null
+          email?: string | null
+          invoice_footer?: string | null
+          label_height?: number
+          label_width?: number
+          logo?: string | null
+          nif?: string | null
+          nis?: string | null
+          phone?: string | null
+          rc?: string | null
+          tenant_id: string
+          ticket_footer?: string | null
+          ticket_width?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          ai?: string | null
+          company_name?: string | null
+          email?: string | null
+          invoice_footer?: string | null
+          label_height?: number
+          label_width?: number
+          logo?: string | null
+          nif?: string | null
+          nis?: string | null
+          phone?: string | null
+          rc?: string | null
+          tenant_id?: string
+          ticket_footer?: string | null
+          ticket_width?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
