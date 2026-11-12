@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Camera, CameraOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";

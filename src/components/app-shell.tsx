@@ -3,6 +3,9 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
+  ClipboardList,
+  PackagePlus,
+  Truck,
   Building2,
   CloudOff,
   LayoutDashboard,
@@ -33,22 +36,49 @@ import { useLiveNotes, useSeenAt } from "@/lib/notifications";
 import { useI18n, type TKey } from "@/lib/i18n";
 
 type NavItem = {
-  to: "/admin" | "/dashboard" | "/scan" | "/products" | "/team" | "/pos";
+  to:
+    | "/admin"
+    | "/dashboard"
+    | "/scan"
+    | "/products"
+    | "/team"
+    | "/pos"
+    | "/sales"
+    | "/suppliers"
+    | "/receipts";
   label: TKey;
   icon: LucideIcon;
+  /** Shown in the phone bottom bar; the rest live in the account menu. */
+  dock?: boolean;
 };
 
 function navFor(me: Me): NavItem[] {
-  if (me.isMaster) return [{ to: "/admin", label: "stores", icon: Building2 }];
+  if (me.isMaster) return [{ to: "/admin", label: "stores", icon: Building2, dock: true }];
+  const pos: NavItem[] = [
+    { to: "/sales", label: "salesLog", icon: ClipboardList },
+    { to: "/receipts", label: "receipts", icon: PackagePlus },
+    { to: "/suppliers", label: "suppliers", icon: Truck },
+  ];
   if (me.isManager)
     return [
-      { to: "/dashboard", label: "dashboard", icon: LayoutDashboard },
-      { to: "/scan", label: "scan", icon: ScanLine },
-      { to: "/pos", label: "pos", icon: ShoppingCart },
-      { to: "/products", label: "products", icon: Package },
-      { to: "/team", label: "team", icon: Users },
+      { to: "/dashboard", label: "dashboard", icon: LayoutDashboard, dock: true },
+      { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
+      { to: "/scan", label: "scan", icon: ScanLine, dock: true },
+      { to: "/products", label: "products", icon: Package, dock: true },
+      { to: "/team", label: "team", icon: Users, dock: true },
+      ...pos,
     ];
-  return [{ to: "/scan", label: "scan", icon: ScanLine }];
+  const items: NavItem[] = [];
+  if (me.canSell)
+    items.push(
+      { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
+      { ...pos[0], dock: true },
+      { ...pos[1], dock: true },
+      { ...pos[2], dock: true },
+    );
+  if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
+  if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
+  return items.length ? items : [{ to: "/scan", label: "scan", icon: ScanLine, dock: true }];
 }
 
 export function SyncBadge() {
@@ -111,6 +141,8 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = navFor(me);
+  const dockItems = items.filter((i) => i.dock).slice(0, 5);
+  const menuItems = items.filter((i) => !dockItems.includes(i));
   const { t, dir } = useI18n();
 
   useEffect(() => {
@@ -191,6 +223,14 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
                   </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {menuItems.map((item) => (
+                  <DropdownMenuItem key={item.to} asChild className="md:hidden">
+                    <Link to={item.to}>
+                      <item.icon className="h-4 w-4" />
+                      {t(item.label)}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
                 <DropdownMenuItem asChild>
                   <Link to="/settings">
                     <Settings className="h-4 w-4" />
@@ -212,18 +252,18 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
 
       <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-8">{children}</main>
 
-      {items.length > 1 && (
+      {dockItems.length > 1 && (
         <nav
           aria-label="main"
           className="fixed inset-x-3 bottom-3 z-30 mb-[env(safe-area-inset-bottom)] rounded-2xl border bg-card/90 shadow-lift backdrop-blur-lg md:hidden"
         >
           <div
             className="mx-auto grid max-w-md items-end px-1"
-            style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
+            style={{ gridTemplateColumns: `repeat(${dockItems.length}, 1fr)` }}
           >
-            {items.map((item) => {
+            {dockItems.map((item) => {
               const active = pathname.startsWith(item.to);
-              const hero = item.to === "/scan";
+              const hero = item.to === (me.canSell ? "/pos" : "/scan");
               if (hero)
                 return (
                   <Link
