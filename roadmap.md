@@ -15,3 +15,4 @@
 - [x] Rename app to SMART STOCK + new home headline/subtitle
 - [x] Scan: show + edit purchase/selling price when product is known; prices editable inline on products page
 - [x] Notification bell in header + /notifications page for managers
+- [x] Scan page: search products by name or barcode
