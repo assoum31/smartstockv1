@@ -20,8 +20,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedPosRouteImport } from './routes/_authenticated/pos'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedReceiptsRouteImport } from './routes/_authenticated/receipts'
+import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores.$storeId'
 
@@ -80,6 +83,16 @@ const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReceiptsRoute = AuthenticatedReceiptsRouteImport.update({
+  id: '/receipts',
+  path: '/receipts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSalesRoute = AuthenticatedSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -88,6 +101,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
@@ -113,8 +131,11 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pos': typeof AuthenticatedPosRoute
   '/products': typeof AuthenticatedProductsRoute
+  '/receipts': typeof AuthenticatedReceiptsRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
@@ -129,8 +150,11 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/pos': typeof AuthenticatedPosRoute
   '/products': typeof AuthenticatedProductsRoute
+  '/receipts': typeof AuthenticatedReceiptsRoute
+  '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
@@ -147,8 +171,11 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/pos': typeof AuthenticatedPosRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/receipts': typeof AuthenticatedReceiptsRoute
+  '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
@@ -165,8 +192,11 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pos'
     | '/products'
+    | '/receipts'
+    | '/sales'
     | '/scan'
     | '/settings'
+    | '/suppliers'
     | '/team'
     | '/stores/$storeId'
   fileRoutesByTo: FileRoutesByTo
@@ -181,8 +211,11 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pos'
     | '/products'
+    | '/receipts'
+    | '/sales'
     | '/scan'
     | '/settings'
+    | '/suppliers'
     | '/team'
     | '/stores/$storeId'
   id:
@@ -198,8 +231,11 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/pos'
     | '/_authenticated/products'
+    | '/_authenticated/receipts'
+    | '/_authenticated/sales'
     | '/_authenticated/scan'
     | '/_authenticated/settings'
+    | '/_authenticated/suppliers'
     | '/_authenticated/team'
     | '/_authenticated/stores/$storeId'
   fileRoutesById: FileRoutesById
@@ -292,6 +328,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/receipts': {
+      id: '/_authenticated/receipts'
+      path: '/receipts'
+      fullPath: '/receipts'
+      preLoaderRoute: typeof AuthenticatedReceiptsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales': {
+      id: '/_authenticated/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/scan': {
       id: '/_authenticated/scan'
       path: '/scan'
@@ -304,6 +354,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/suppliers': {
+      id: '/_authenticated/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthenticatedSuppliersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/team': {
@@ -329,8 +386,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedPosRoute: typeof AuthenticatedPosRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedReceiptsRoute: typeof AuthenticatedReceiptsRoute
+  AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
 }
@@ -341,8 +401,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedPosRoute: AuthenticatedPosRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedReceiptsRoute: AuthenticatedReceiptsRoute,
+  AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
 }

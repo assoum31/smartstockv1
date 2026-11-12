@@ -38,3 +38,4 @@ use the editor.
 - There is exactly one master; it signs in only on the unlinked /master page (store login refuses the master code). Its first sign-in with the default credentials goes through `claimMaster`, which forces a new password, so the default never becomes a real password.
 - Login/master submit buttons stay disabled until the page is interactive, so a click never triggers a plain page reload.
 - The camera barcode library is loaded with a dynamic import inside an effect, because it touches browser APIs and would break server rendering.
+- Store roles are manager, cashier, worker, pricer (stored in user_roles); `Me.canSell`/`canSeeProducts` drive route guards and nav, and sales/goods receipts go only through DB functions that also move product stock, so client code never edits quantities directly.

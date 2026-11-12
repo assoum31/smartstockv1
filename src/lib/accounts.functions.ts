@@ -310,7 +310,7 @@ export const createMember = createServerFn({ method: "POST" })
       .object({
         username: usernameSchema,
         fullName: fullNameSchema,
-        role: z.enum(["worker", "manager"]),
+        role: z.enum(["worker", "manager", "cashier", "pricer"]),
         storeId: z.string().uuid().optional(),
       })
       .parse(d),

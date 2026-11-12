@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Camera, CameraOff, Minus, Plus, Printer, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import { errorText } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
-    if (!context.me.isManager || !context.me.tenant) throw redirect({ to: context.me.homePath });
+    if (!context.me.canSell || !context.me.tenant) throw redirect({ to: context.me.homePath });
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) =>
@@ -118,10 +118,10 @@ function PosPage() {
   };
 
   const checkout = async (print: boolean) => {
-    if (!session || cart.length === 0) return;
+    if (cart.length === 0) return;
     setSaving(true);
     const { data: id, error } = await supabase.rpc("create_sales_ticket", {
-      _session_id: session.id,
+      _session_id: (session?.id ?? null) as never,
       _items: cart as never,
       _notes: "نقطة البيع",
     });
@@ -136,28 +136,13 @@ function PosPage() {
     toast.success(`تم البيع ${number ? `· بون ${number}` : ""}`);
     setCart([]);
     setPaid("");
-    void queryClient.invalidateQueries({ queryKey: ["sales-tickets", session.id] });
+    void queryClient.invalidateQueries({ queryKey: ["sales-tickets"] });
     inputRef.current?.focus();
   };
 
-  if (!session) {
-    return (
-      <div className="surface-card mx-auto max-w-md p-10 text-center">
-        <ShoppingCart className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-        <p className="text-lg font-extrabold">افتح جلسة جرد أولاً</p>
-        <p className="mb-4 text-sm text-muted-foreground">
-          المبيعات تُسجَّل داخل الجلسة الجارية لتُخصم من المحسوب.
-        </p>
-        <Button asChild>
-          <Link to="/dashboard">لوحة الجرد</Link>
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
-      <PageHeader title="نقطة البيع" subtitle={`الجلسة: ${session.name}`} />
+      <PageHeader title="نقطة البيع" subtitle={session ? `الجلسة: ${session.name}` : "بيع مباشر · المخزون يُحدَّث تلقائياً"} />
       <div className="grid gap-5 lg:grid-cols-[1fr_24rem]">
         <div className="space-y-3">
           <form

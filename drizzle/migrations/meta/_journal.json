@@ -50,6 +50,13 @@
       "when": 1794493277981,
       "tag": "0006_add_cashier_pricer_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794493731763,
+      "tag": "0007_pos_suppliers_receipts",
+      "breakpoints": true
     }
   ]
 }

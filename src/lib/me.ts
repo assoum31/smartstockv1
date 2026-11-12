@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "master" | "manager" | "worker";
+export type Role = "master" | "manager" | "worker" | "cashier" | "pricer";
 
 export interface Me {
   userId: string;
@@ -11,12 +11,16 @@ export interface Me {
   tenant: { id: string; code: string; name: string } | null;
   isMaster: boolean;
   isManager: boolean;
+  /** Manager or cashier: point of sale, sales log, suppliers, goods receipts. */
+  canSell: boolean;
+  /** Manager, cashier or price checker: product catalogue. */
+  canSeeProducts: boolean;
   /** Account or store switched off by an admin. */
   blocked: boolean;
-  homePath: "/admin" | "/dashboard" | "/scan";
+  homePath: "/admin" | "/dashboard" | "/scan" | "/pos" | "/products";
 }
 
-const CACHE_KEY = "stocki_me_v2";
+const CACHE_KEY = "stocki_me_v3";
 
 function readCache(userId: string): Me | null {
   try {
@@ -72,6 +76,8 @@ export async function fetchMe(): Promise<Me | null> {
   const isMaster = roles.includes("master");
   const isManager = roles.includes("manager");
   // A store member whose store is switched off can't see their store row.
+  const canSell = isManager || roles.includes("cashier");
+  const canSeeProducts = canSell || roles.includes("pricer");
   const blocked = !profile.is_active || (!isMaster && !tenant);
 
   const me: Me = {
@@ -82,8 +88,18 @@ export async function fetchMe(): Promise<Me | null> {
     tenant,
     isMaster,
     isManager,
+    canSell,
+    canSeeProducts,
     blocked,
-    homePath: isMaster ? "/admin" : isManager ? "/dashboard" : "/scan",
+    homePath: isMaster
+      ? "/admin"
+      : isManager
+        ? "/dashboard"
+        : roles.includes("cashier")
+          ? "/pos"
+          : roles.includes("pricer") && !roles.includes("worker")
+            ? "/products"
+            : "/scan",
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(me));
   return me;
@@ -99,4 +115,6 @@ export const ROLE_LABEL: Record<Role, string> = {
   master: "المدير العام",
   manager: "مسير المتجر",
   worker: "عامل جرد",
+  cashier: "بائع / كاشير",
+  pricer: "مصحح الأسعار",
 };
