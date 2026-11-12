@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronDown, Printer, Search } from "lucide-react";
+import { Banknote, ChevronDown, Package, Printer, Receipt, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
@@ -61,9 +61,9 @@ function SalesPage() {
     <div className="space-y-5">
       <PageHeader title="سجل المبيعات" subtitle="كل البونات المسجلة في المتجر" />
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="عدد البونات" value={list.length} />
-        <StatCard label="القطع المباعة" value={articles} />
-        <StatCard label="المداخيل (دج)" value={money(total)} />
+        <StatCard icon={Receipt} label="عدد البونات" value={list.length} />
+        <StatCard icon={Package} label="القطع المباعة" value={articles} />
+        <StatCard icon={Banknote} tone="neutral" label="المداخيل (دج)" value={money(total)} />
       </div>
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-48 flex-1">
