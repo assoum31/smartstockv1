@@ -384,3 +384,48 @@ export const setMemberActive = createServerFn({ method: "POST" })
     if (profileErr) throw new Error("failed");
     return { ok: true as const };
   });
+
+export const updateMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) =>
+    z
+      .object({
+        memberId: z.string().uuid(),
+        fullName: fullNameSchema,
+        role: z.enum(["worker", "manager", "cashier", "pricer"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { admin, member } = await authorizeOverMember(context, data.memberId);
+    if (member.id === context.userId) throw new Error("forbidden");
+    const { error: pErr } = await admin
+      .from("profiles")
+      .update({ full_name: data.fullName })
+      .eq("id", member.id);
+    if (pErr) throw new Error("failed");
+    const { error: dErr } = await admin.from("user_roles").delete().eq("user_id", member.id);
+    if (dErr) throw new Error("failed");
+    const { error: rErr } = await admin
+      .from("user_roles")
+      .insert({ user_id: member.id, role: data.role });
+    if (rErr) throw new Error("failed");
+    return { ok: true as const };
+  });
+
+export const deleteMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) => z.object({ memberId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { admin, member } = await authorizeOverMember(context, data.memberId);
+    if (member.id === context.userId) throw new Error("forbidden");
+    await admin.from("worker_activations").delete().eq("user_id", member.id);
+    await admin.from("user_roles").delete().eq("user_id", member.id);
+    const { error } = await admin.auth.admin.deleteUser(member.id);
+    if (error) {
+      console.error("delete member failed", error);
+      throw new Error("failed");
+    }
+    await admin.from("profiles").delete().eq("id", member.id);
+    return { ok: true as const };
+  });

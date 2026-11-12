@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { isValidUsername } from "@/lib/identity";
 
 export type MemberRole = "worker" | "manager" | "cashier" | "pricer";
 
-const ROLE_OPTIONS: { role: MemberRole; label: string; hint: string; managerOnly?: boolean }[] = [
+export const ROLE_OPTIONS: { role: MemberRole; label: string; hint: string; managerOnly?: boolean }[] = [
   { role: "manager", label: "مسير", hint: "كل الصلاحيات: الجرد، الفريق، المنتجات، البيع", managerOnly: true },
   { role: "cashier", label: "بائع / كاشير", hint: "نقطة البيع، سجل المبيعات، الموردين، وصول السلع" },
   { role: "worker", label: "عامل جرد", hint: "يمسح ويعدّ فقط" },
@@ -87,28 +88,42 @@ export function MemberForm({
       <UsernameField value={username} onChange={setUsername} />
       <div className="space-y-1.5">
         <Label>الصلاحية</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {ROLE_OPTIONS.filter((o) => allowManager || !o.managerOnly).map((o) => (
-            <button
-              key={o.role}
-              type="button"
-              onClick={() => setRole(o.role)}
-              className={`rounded-xl border p-3 text-start text-sm font-bold transition-colors ${
-                role === o.role
-                  ? "border-primary bg-accent text-accent-foreground"
-                  : "bg-card text-muted-foreground"
-              }`}
-            >
-              {o.label}
-              <span className="mt-0.5 block text-[11px] font-medium">{o.hint}</span>
-            </button>
-          ))}
-        </div>
+        <RoleSelect value={role} onChange={setRole} allowManager={allowManager} />
       </div>
       {error && <p className="text-sm font-bold text-destructive">{error}</p>}
       <Button type="submit" className="w-full" size="lg" disabled={loading}>
         {loading ? "جاري الإنشاء..." : submitLabel}
       </Button>
     </form>
+  );
+}
+
+export function RoleSelect({
+  value,
+  onChange,
+  allowManager,
+}: {
+  value: MemberRole;
+  onChange: (r: MemberRole) => void;
+  allowManager?: boolean;
+}) {
+  const opts = ROLE_OPTIONS.filter((o) => allowManager || !o.managerOnly);
+  const current = ROLE_OPTIONS.find((o) => o.role === value);
+  return (
+    <>
+      <Select value={value} onValueChange={(v) => onChange(v as MemberRole)}>
+        <SelectTrigger className="h-11" dir="rtl">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent dir="rtl">
+          {opts.map((o) => (
+            <SelectItem key={o.role} value={o.role}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {current && <p className="text-[11px] text-muted-foreground">{current.hint}</p>}
+    </>
   );
 }
