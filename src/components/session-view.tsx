@@ -566,6 +566,7 @@ function LogsTable({
   logs: InventoryLog[];
   editable: boolean;
   sessionId: string;
+  alts: Map<string, string[]>;
 }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");

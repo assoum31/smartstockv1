@@ -65,7 +65,7 @@ function ReturnsPage() {
 
   const q = code.trim().toLowerCase();
   const suggestions = useMemo(
-    () => (q.length < 2 ? [] : products.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.includes(q)).slice(0, 6)),
+    () => (q.length < 2 ? [] : products.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.includes(q) || (p.alt_barcodes ?? []).some((b) => b.includes(q))).slice(0, 6)),
     [products, q],
   );
 
