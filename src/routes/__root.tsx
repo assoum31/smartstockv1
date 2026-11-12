@@ -11,6 +11,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { initI18n, useI18n } from "@/lib/i18n";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -155,6 +156,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const { dir } = useI18n();
+
+  useEffect(() => {
+    initI18n();
+  }, []);
 
   useEffect(() => {
     // Vite reports failed page-code preloads here (e.g. after an update); recover by reloading once.
@@ -179,7 +185,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <Toaster position="top-center" dir="rtl" richColors />
+      <Toaster position="top-center" dir={dir} richColors />
     </QueryClientProvider>
   );
 }
