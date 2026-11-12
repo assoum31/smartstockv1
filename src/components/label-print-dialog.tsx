@@ -160,8 +160,9 @@ body{font-family:Arial,sans-serif}
           </div>
           <Button className="w-full" size="lg" disabled={products.length === 0} onClick={print}>
             <Printer />
-            طباعة {products.length * Math.max(1, copies)} ملصق
+            طباعة / PDF — {products.length * Math.max(1, copies)} ملصق
           </Button>
+          <p className="text-center text-[11px] text-muted-foreground">لحفظ ملف PDF اختر «حفظ كـ PDF» في نافذة الطباعة — كل صفحة ملصق واحد بالمقاس المختار.</p>
         </div>
       </DialogContent>
     </Dialog>
