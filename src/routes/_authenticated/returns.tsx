@@ -58,6 +58,7 @@ function printReturn(r: { kind: Kind; number: number; party: string; lines: Line
 
 function ReturnsPage() {
   const { tenant } = Route.useRouteContext();
+  const storeSettings = useStoreSettings(tenant.id);
   const qc = useQueryClient();
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const { data: suppliers } = useSuspenseQuery(suppliersQuery(tenant.id));

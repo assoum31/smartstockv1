@@ -1,3 +1,4 @@
+import { openPrint, ticketHtml, useStoreSettings } from "@/lib/store-settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -43,6 +44,7 @@ interface CartLine {
 
 function PosPage() {
   const { tenant, userId } = Route.useRouteContext();
+  const storeSettings = useStoreSettings(tenant.id);
   const { data: cash } = useSuspenseQuery(myCashSessionQuery(tenant.id, userId));
   const [discount, setDiscount] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
@@ -115,26 +117,19 @@ function PosPage() {
   const change = paidNum - total;
 
   const printReceipt = (lines: CartLine[], number: string) => {
-    const w = window.open("", "_blank", "width=380,height=600");
-    if (!w) return;
-    const rows = lines
-      .map(
-        (l) =>
-          `<tr><td>${l.product_name}<br><small>${l.quantity} × ${money(l.unit_price)}</small></td><td style="text-align:left">${money(l.quantity * l.unit_price)}</td></tr>`,
-      )
-      .join("");
     const sum = lines.reduce((n, l) => n + l.quantity * l.unit_price, 0) - discAmount;
-    w.document.write(`<html dir="rtl"><head><title>بون ${number}</title><style>
-      @page{size:80mm auto;margin:3mm}body{font-family:sans-serif;font-size:12px;width:74mm}
-      table{width:100%;border-collapse:collapse}td{padding:3px 0;border-bottom:1px dashed #999}
-      h2,p{text-align:center;margin:4px 0}</style></head><body>
-      <h2>${tenant.name}</h2><p>بون رقم ${number}</p><p>${new Date().toLocaleString("fr-FR")}</p>
-      <table>${rows}</table>${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${{ cash: "نقداً", card: "بطاقة / BaridiMob", credit: "على الحساب" }[payment]}</p><h2>المجموع: ${money(sum)} دج</h2>
-      ${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}
-      ${number ? codesHtml(ticketCode(number)) : ""}<p>شكراً لزيارتكم</p></body></html>`);
-    w.document.close();
-    w.focus();
-    w.print();
+    const pay = { cash: "نقداً", card: "بطاقة / BaridiMob", credit: "على الحساب" }[payment];
+    openPrint(
+      ticketHtml(storeSettings, tenant.name, {
+        title: `بون رقم ${number}`,
+        date: new Date().toLocaleString("fr-FR"),
+        lines,
+        total: sum,
+        code: number ? ticketCode(number) : undefined,
+        extra: `${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${pay}</p>${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}`,
+      }),
+      "width=380,height=600",
+    );
   };
 
   const checkout = async (print: boolean) => {
