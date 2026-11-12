@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      goods_receipt_items: {
+        Row: {
+          barcode: string
+          id: string
+          product_name: string
+          purchase_price: number
+          quantity: number
+          receipt_id: string
+          selling_price: number
+          tenant_id: string
+        }
+        Insert: {
+          barcode: string
+          id?: string
+          product_name: string
+          purchase_price?: number
+          quantity: number
+          receipt_id: string
+          selling_price?: number
+          tenant_id: string
+        }
+        Update: {
+          barcode?: string
+          id?: string
+          product_name?: string
+          purchase_price?: number
+          quantity?: number
+          receipt_id?: string
+          selling_price?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          notes: string | null
+          receipt_number: number
+          reference: string | null
+          supplier_id: string | null
+          supplier_name: string | null
+          tenant_id: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          notes?: string | null
+          receipt_number: number
+          reference?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          tenant_id: string
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          notes?: string | null
+          receipt_number?: number
+          reference?: string | null
+          supplier_id?: string | null
+          supplier_name?: string | null
+          tenant_id?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_logs: {
         Row: {
           barcode: string
@@ -212,7 +317,7 @@ export type Database = {
           id: string
           product_name: string
           quantity: number
-          session_id: string
+          session_id: string | null
           tenant_id: string
           ticket_id: string
           unit_price: number
@@ -222,7 +327,7 @@ export type Database = {
           id?: string
           product_name: string
           quantity: number
-          session_id: string
+          session_id?: string | null
           tenant_id: string
           ticket_id: string
           unit_price?: number
@@ -232,7 +337,7 @@ export type Database = {
           id?: string
           product_name?: string
           quantity?: number
-          session_id?: string
+          session_id?: string | null
           tenant_id?: string
           ticket_id?: string
           unit_price?: number
@@ -268,7 +373,7 @@ export type Database = {
           created_by_name: string
           id: string
           notes: string | null
-          session_id: string
+          session_id: string | null
           tenant_id: string
           ticket_number: number
           total_amount: number
@@ -279,7 +384,7 @@ export type Database = {
           created_by_name: string
           id?: string
           notes?: string | null
-          session_id: string
+          session_id?: string | null
           tenant_id: string
           ticket_number: number
           total_amount?: number
@@ -290,7 +395,7 @@ export type Database = {
           created_by_name?: string
           id?: string
           notes?: string | null
-          session_id?: string
+          session_id?: string | null
           tenant_id?: string
           ticket_number?: number
           total_amount?: number
@@ -344,6 +449,44 @@ export type Database = {
           },
           {
             foreignKeyName: "session_stock_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          tenant_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -444,9 +587,19 @@ export type Database = {
       }
     }
     Functions: {
+      can_sell: { Args: never; Returns: boolean }
       close_inventory_session: {
         Args: { _session_id: string }
         Returns: undefined
+      }
+      create_goods_receipt: {
+        Args: {
+          _items: Json
+          _notes?: string
+          _reference?: string
+          _supplier_id: string
+        }
+        Returns: string
       }
       create_sales_ticket: {
         Args: { _items: Json; _notes?: string; _session_id: string }
@@ -459,6 +612,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_store_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
       import_sales_ticket: {
