@@ -82,10 +82,10 @@ function ActivityPage() {
   const exportXlsx = () =>
     void downloadWorkbook(`smartstock_activity_${from || "all"}_${to || "all"}.xlsx`, [{
       name: "Journal",
-      rows: list.map((r) => ({
-        Date: new Date(r.created_at).toLocaleString("fr-FR"), Employé: r.actor_name, Catégorie: CATS[r.category] ?? r.category,
-        Action: r.action, Référence: r.ref ?? "", Montant: r.amount ?? "", Détails: detail(r.details), Sensible: r.sensitive ? "oui" : "",
-      })),
+      headers: ["Date", "Employé", "Catégorie", "Action", "Référence", "Montant", "Détails", "Sensible"],
+      rows: list.map((r) => [new Date(r.created_at).toLocaleString("fr-FR"), r.actor_name, CATS[r.category] ?? r.category,
+        r.action, r.ref ?? "", r.amount === null ? null : Number(r.amount), detail(r.details), r.sensitive ? "oui" : ""]),
+      textColumns: [4],
     }]);
 
   const sel = "h-11 rounded-md border bg-background px-3 text-sm";
