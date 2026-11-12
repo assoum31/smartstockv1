@@ -247,10 +247,17 @@ export function SessionView({
             +{formatQty(money.surplus)} دج
           </p>
         </div>
-        <div className="surface-card col-span-2 border-s-4 border-s-success p-4">
+        <div className="surface-card border-s-4 border-s-success p-4">
           <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر البيع)</p>
           <p className="font-mono text-2xl font-extrabold text-success" dir="ltr">
             +{formatQty(moneySell.surplus)} دج
+          </p>
+        </div>
+        <div className="surface-card border-s-4 border-s-primary p-4">
+          <p className="text-xs font-bold text-muted-foreground">ربح الفائض (البيع − الشراء)</p>
+          <p className="font-mono text-2xl font-extrabold text-primary" dir="ltr">
+            {moneySell.surplus - money.surplus < 0 ? "−" : "+"}
+            {formatQty(Math.abs(moneySell.surplus - money.surplus))} دج
           </p>
         </div>
       </div>
