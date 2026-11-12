@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/returns")({
       context.queryClient.ensureQueryData(returnsQuery(context.tenant.id)),
     ]),
   validateSearch: (s: Record<string, unknown>): { ticket?: number | undefined } => ({
-    ticket: Number(s.ticket) > 0 ? Number(s.ticket) : undefined,
+    ticket: Number(s["ticket"]) > 0 ? Number(s["ticket"]) : undefined,
   }),
   head: () => ({ meta: [{ title: "بونات الإرجاع | SMART STOCK" }] }),
   component: ReturnsPage,

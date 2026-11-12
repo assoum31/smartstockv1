@@ -70,12 +70,12 @@ function ActivityPage() {
   const detail = (d: unknown) => {
     const o = (d ?? {}) as Record<string, unknown>;
     const parts: string[] = [];
-    if (o.product) parts.push(String(o.product));
-    if (o.supplier) parts.push(`المورد: ${o.supplier}`);
-    if (o.ticket) parts.push(`وصل ${o.ticket}`);
-    if (o.reason) parts.push(String(o.reason));
-    if (o.role) parts.push(String(o.role));
-    if (o.new_selling !== undefined) parts.push(`شراء ${o.old_purchase}→${o.new_purchase} · بيع ${o.old_selling}→${o.new_selling}`);
+    if (o["product"]) parts.push(String(o["product"]));
+    if (o["supplier"]) parts.push(`المورد: ${o["supplier"]}`);
+    if (o["ticket"]) parts.push(`وصل ${o["ticket"]}`);
+    if (o["reason"]) parts.push(String(o["reason"]));
+    if (o["role"]) parts.push(String(o["role"]));
+    if (o["new_selling"] !== undefined) parts.push(`شراء ${o["old_purchase"]}→${o["new_purchase"]} · بيع ${o["old_selling"]}→${o["new_selling"]}`);
     return parts.join(" · ");
   };
 
