@@ -42,7 +42,7 @@ function NotificationsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="التنبيهات" description="ملاحظات فريق الجرد أثناء المسح، تصل مباشرة." />
+      <PageHeader title="التنبيهات" subtitle="ملاحظات فريق الجرد أثناء المسح، تصل مباشرة." />
       <div className="relative">
         <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="ابحث بالعامل، المنتج، الملاحظة..." value={q} onChange={(e) => setQ(e.target.value)} className="h-11 bg-card ps-9" />
