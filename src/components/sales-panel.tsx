@@ -431,7 +431,7 @@ function ImportSalesButtons({ session }: { session: InventorySession }) {
       <Button
         variant="outline"
         onClick={() =>
-          downloadWorkbook("stocki-modele-ventes.xlsx", [
+          downloadWorkbook("smartstock-modele-ventes.xlsx", [
             {
               name: "ventes",
               headers: ["ticket", "date", "barcode", "name", "quantity", "unit_price", "note"],

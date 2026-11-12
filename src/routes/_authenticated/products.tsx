@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
+import { PriceCell } from "@/components/price-cell";
 import { LabelPrintDialog, type LabelProduct } from "@/components/label-print-dialog";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { chunk, parseProductRows, type ProductImportResult } from "@/lib/inventory-rules";
@@ -109,7 +110,7 @@ function ProductsPage() {
             <Button
               variant="outline"
               onClick={() =>
-                downloadWorkbook("stocki-modele-produits.xlsx", [
+                downloadWorkbook("smartstock-modele-produits.xlsx", [
                   {
                     name: "produits",
                     headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
@@ -126,7 +127,7 @@ function ProductsPage() {
               variant="outline"
               disabled={products.length === 0}
               onClick={() =>
-                downloadWorkbook("stocki-produits.xlsx", [
+                downloadWorkbook("smartstock-produits.xlsx", [
                   {
                     name: "produits",
                     headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
@@ -211,7 +212,6 @@ function ProductsPage() {
                   <th className="px-4 py-3 text-end font-bold">الكمية النظامية</th>
                   <th className="px-4 py-3 text-end font-bold">سعر الشراء</th>
                   <th className="px-4 py-3 text-end font-bold">سعر البيع</th>
-                  <th className="px-4 py-3 text-end font-bold">الهامش</th>
                   <th className="px-4 py-3 text-end font-bold">الكرتون</th>
                   <th className="px-2 py-3" />
                 </tr>
@@ -234,19 +234,8 @@ function ProductsPage() {
                     <td className="px-4 py-3 text-end font-mono font-bold">
                       {formatQty(Number(p.system_quantity))}
                     </td>
-                    <td className="px-4 py-3 text-end font-mono">{formatQty(Number(p.purchase_price))}</td>
-                    <td className="px-4 py-3 text-end font-mono font-bold">{formatQty(Number(p.selling_price))}</td>
-                    <td
-                      className={`px-4 py-3 text-end font-mono text-xs ${
-                        Number(p.selling_price) > 0 && Number(p.selling_price) <= Number(p.purchase_price)
-                          ? "font-bold text-destructive"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {Number(p.selling_price) > 0
-                        ? `${Math.round(((Number(p.selling_price) - Number(p.purchase_price)) / Number(p.selling_price)) * 100)}%`
-                        : "—"}
-                    </td>
+                    <td className="px-4 py-2"><div className="flex justify-end"><PriceCell barcode={p.barcode} purchase={Number(p.purchase_price)} selling={Number(p.selling_price)} field="purchase" onSaved={() => void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] })} /></div></td>
+                    <td className="px-4 py-2"><div className="flex justify-end"><PriceCell barcode={p.barcode} purchase={Number(p.purchase_price)} selling={Number(p.selling_price)} field="selling" onSaved={() => void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] })} /></div></td>
                     <td className="px-4 py-3 text-end font-mono text-xs">
                       {Number(p.carton_size) > 1 ? `× ${formatQty(Number(p.carton_size))}` : "—"}
                     </td>

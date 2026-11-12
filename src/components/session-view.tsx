@@ -137,7 +137,7 @@ export function SessionView({
   const counted = variances.filter((v) => v.entries > 0).length;
 
   const exportExcel = () => {
-    void downloadWorkbook(`stocki_${session.name.replace(/\s+/g, "_")}.xlsx`, [
+    void downloadWorkbook(`smartstock_${session.name.replace(/\s+/g, "_")}.xlsx`, [
       {
         name: "Ecarts",
         headers: [
