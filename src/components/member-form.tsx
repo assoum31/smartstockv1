@@ -88,7 +88,7 @@ export function MemberForm({
       <UsernameField value={username} onChange={setUsername} />
       <div className="space-y-1.5">
         <Label>الصلاحية</Label>
-        <RoleSelect value={role} onChange={setRole} allowManager={allowManager} />
+        <RoleSelect value={role} onChange={setRole} allowManager={Boolean(allowManager)} />
       </div>
       {error && <p className="text-sm font-bold text-destructive">{error}</p>}
       <Button type="submit" className="w-full" size="lg" disabled={loading}>
