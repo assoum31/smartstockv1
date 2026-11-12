@@ -39,3 +39,4 @@ use the editor.
 - Login/master submit buttons stay disabled until the page is interactive, so a click never triggers a plain page reload.
 - The camera barcode library is loaded with a dynamic import inside an effect, because it touches browser APIs and would break server rendering.
 - Store roles are manager, cashier, worker, pricer (stored in user_roles); `Me.canSell`/`canSeeProducts` drive route guards and nav, and sales/goods receipts go only through DB functions that also move product stock, so client code never edits quantities directly.
+- Every sensitive action is written to `activity_log` by database triggers (never by client code), so the log can't be skipped or edited; ticket-linked returns go through `create_ticket_return`, which caps quantities at sold minus already returned.
