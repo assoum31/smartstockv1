@@ -85,6 +85,7 @@ function ScanPage() {
   const [torchOn, setTorchOn] = useState(false);
   const [torchSupported, setTorchSupported] = useState(false);
   const [target, setTarget] = useState<Entry | null>(null);
+  const [search, setSearch] = useState("");
   const barcodeRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
 
@@ -175,6 +176,28 @@ function ScanPage() {
     () => entries.filter((e) => e.counted_by === me.userId).slice(0, 8),
     [entries, me.userId],
   );
+  const sq = search.trim().toLowerCase();
+  const searchResults = useMemo(
+    () =>
+      sq.length < 2
+        ? []
+        : products
+            .filter(
+              (p) =>
+                p.name.toLowerCase().includes(sq) ||
+                p.barcode.toLowerCase().includes(sq) ||
+                (p.alt_barcodes ?? []).some((b) => b.toLowerCase().includes(sq)),
+            )
+            .slice(0, 8),
+    [products, sq],
+  );
+  const pickProduct = (p: (typeof products)[number]) => {
+    setBarcode(p.barcode);
+    setProductName(p.name);
+    setAutoName(true);
+    setSearch("");
+    window.setTimeout(() => qtyRef.current?.select(), 250);
+  };
   const failed = useMemo(() => entries.filter((e) => e.failed), [entries]);
   const locations = useMemo(() => {
     const set = new Set<string>();
@@ -372,6 +395,57 @@ function ScanPage() {
         )}
 
         <form onSubmit={submit} className="surface-card space-y-4 p-4 sm:p-5">
+          <div className="relative space-y-1.5">
+            <Label htmlFor="product-search">بحث بالاسم أو الباركود</Label>
+            <div className="flex gap-2">
+              <Input
+                id="product-search"
+                autoComplete="off"
+                placeholder="اكتب اسم المنتج أو جزءاً من الباركود"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (searchResults[0]) pickProduct(searchResults[0]);
+                  }
+                }}
+                className="h-11"
+              />
+              {search && (
+                <Button type="button" variant="outline" className="h-11" onClick={() => setSearch("")}>
+                  مسح
+                </Button>
+              )}
+            </div>
+            {sq.length >= 2 && (
+              <div className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-xl border bg-popover text-popover-foreground shadow-lg">
+                {searchResults.length === 0 ? (
+                  <p className="p-3 text-sm text-muted-foreground">لا توجد نتائج</p>
+                ) : (
+                  searchResults.map((p) => (
+                    <button
+                      key={p.barcode}
+                      type="button"
+                      onClick={() => pickProduct(p)}
+                      className="flex w-full items-center justify-between gap-2 border-b p-3 text-start last:border-b-0 hover:bg-accent"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold">{p.name}</span>
+                        <span className="barcode-chip text-xs">{p.barcode}</span>
+                      </span>
+                      <span className="shrink-0 text-end text-xs text-muted-foreground">
+                        بيع: {Number(p.selling_price)}
+                        <br />
+                        شراء: {Number(p.purchase_price)}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="barcode">الباركود</Label>
             <Input
