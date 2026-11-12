@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
 import { History, Undo2 } from "lucide-react";
 import { useEffect } from "react";
@@ -11,7 +12,6 @@ import {
   Building2,
   CloudOff,
   LayoutDashboard,
-  Layers,
   LogOut,
   Package,
   RefreshCw,
@@ -173,9 +173,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
       <header className="sticky top-0 z-30 border-b border-ink-foreground/10 bg-ink/95 text-ink-foreground backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:px-6">
           <Link to={me.homePath} className="flex min-w-0 items-center gap-2">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lift">
-              <Layers className="h-5 w-5" />
-            </span>
+            <BrandMark className="h-9 w-9 shrink-0 shadow-lift rounded-xl" />
             <span className="min-w-0 leading-tight">
               <span className="block text-sm font-extrabold tracking-wide sm:text-base">
                 SMART <span className="text-warning">STOCK</span>

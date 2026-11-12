@@ -1,10 +1,10 @@
+import { BrandMark } from "@/components/brand-logo";
 import { useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ClipboardList,
   CloudOff,
-  Layers,
   ScanLine,
   Scale,
   ShieldCheck,
@@ -71,9 +71,7 @@ function Landing() {
         <section className="bg-ledger flex flex-col px-6 py-8 sm:px-12">
           <header className="flex items-center justify-between">
             <span className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-warning">
-                <Layers className="h-5 w-5" />
-              </span>
+              <BrandMark className="h-9 w-9 shrink-0 shadow-lift rounded-xl" />
               <span className="text-xl font-extrabold">
                 SMART <span className="text-primary">STOCK</span>
               </span>

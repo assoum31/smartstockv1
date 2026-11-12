@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SalesCharts } from "@/components/sales-charts";
 import { PageHeader } from "@/components/stat-card";
 import { DashboardSkeleton, SessionView } from "@/components/session-view";
 import { activeSessionQuery, sessionsQuery, teamQuery } from "@/lib/queries";
@@ -116,6 +117,8 @@ function DashboardPage() {
           </>
         }
       />
+
+      <SalesCharts tenantId={tenant.id} />
 
       {!session ? (
         <div className="surface-card bg-ledger flex flex-col items-center gap-3 p-12 text-center">

@@ -1,8 +1,9 @@
+import { BrandMark } from "@/components/brand-logo";
 import { useEffect, useState } from "react";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ClipboardList, KeyRound, Layers, LogIn, ScanLine, Store } from "lucide-react";
+import { ClipboardList, KeyRound, LogIn, ScanLine, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -194,9 +195,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
     <div className="bg-ledger flex min-h-screen items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-warning">
-            <Layers className="h-6 w-6" />
-          </span>
+          <BrandMark className="h-12 w-12 shrink-0 shadow-lift rounded-xl" />
           <span className="text-2xl font-extrabold">
             SMART <span className="text-primary">STOCK</span>
           </span>

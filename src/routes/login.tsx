@@ -1,5 +1,6 @@
+import { BrandMark } from "@/components/brand-logo";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardList, Layers, ScanLine } from "lucide-react";
+import { ArrowLeft, ClipboardList, ScanLine } from "lucide-react";
 
 const TITLE = "تسجيل الدخول | SMART STOCK";
 const DESCRIPTION = "اختر صفحة الدخول: مسير المتجر أو عامل الجرد.";
@@ -38,9 +39,7 @@ function LoginChooser() {
     <div className="bg-ledger flex min-h-screen items-center justify-center p-4" dir="rtl">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2.5">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-warning">
-            <Layers className="h-6 w-6" />
-          </span>
+          <BrandMark className="h-12 w-12 shrink-0 shadow-lift rounded-xl" />
           <span className="text-2xl font-extrabold">
             SMART <span className="text-primary">STOCK</span>
           </span>
