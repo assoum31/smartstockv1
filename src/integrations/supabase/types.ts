@@ -811,6 +811,10 @@ export type Database = {
       is_manager: { Args: never; Returns: boolean }
       open_cash_session: { Args: { _opening: number }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
+      set_product_alt_barcodes: {
+        Args: { _alts: string[]; _barcode: string }
+        Returns: string[]
+      }
       set_product_prices: {
         Args: { _barcode: string; _purchase: number; _selling: number }
         Returns: undefined

@@ -64,6 +64,13 @@
       "when": 1794503188944,
       "tag": "0008_returns_product_fields_pos_pro",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794514007508,
+      "tag": "0009_set_product_alt_barcodes",
+      "breakpoints": true
     }
   ]
 }
