@@ -43,6 +43,13 @@
       "when": 1794487311621,
       "tag": "0005_set_product_second_barcode",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794493277981,
+      "tag": "0006_add_cashier_pricer_roles",
+      "breakpoints": true
     }
   ]
 }
