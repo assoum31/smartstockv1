@@ -57,6 +57,13 @@
       "when": 1794493731763,
       "tag": "0007_pos_suppliers_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794503188944,
+      "tag": "0008_returns_product_fields_pos_pro",
+      "breakpoints": true
     }
   ]
 }

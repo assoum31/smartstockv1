@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      cash_sessions: {
+        Row: {
+          closed_at: string | null
+          closing_amount: number | null
+          id: string
+          opened_at: string
+          opened_by: string
+          opened_by_name: string
+          opening_amount: number
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closing_amount?: number | null
+          id?: string
+          opened_at?: string
+          opened_by: string
+          opened_by_name: string
+          opening_amount?: number
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          closing_amount?: number | null
+          id?: string
+          opened_at?: string
+          opened_by?: string
+          opened_by_name?: string
+          opening_amount?: number
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           barcode: string
@@ -227,7 +271,10 @@ export type Database = {
           carton_size: number
           created_at: string
           default_location: string | null
+          famille: string | null
           id: string
+          min_stock: number
+          model: string | null
           name: string
           purchase_price: number
           selling_price: number
@@ -241,7 +288,10 @@ export type Database = {
           carton_size?: number
           created_at?: string
           default_location?: string | null
+          famille?: string | null
           id?: string
+          min_stock?: number
+          model?: string | null
           name: string
           purchase_price?: number
           selling_price?: number
@@ -255,7 +305,10 @@ export type Database = {
           carton_size?: number
           created_at?: string
           default_location?: string | null
+          famille?: string | null
           id?: string
+          min_stock?: number
+          model?: string | null
           name?: string
           purchase_price?: number
           selling_price?: number
@@ -368,33 +421,42 @@ export type Database = {
       }
       sales_tickets: {
         Row: {
+          cash_session_id: string | null
           created_at: string
           created_by: string | null
           created_by_name: string
+          discount: number
           id: string
           notes: string | null
+          payment_method: string
           session_id: string | null
           tenant_id: string
           ticket_number: number
           total_amount: number
         }
         Insert: {
+          cash_session_id?: string | null
           created_at?: string
           created_by?: string | null
           created_by_name: string
+          discount?: number
           id?: string
           notes?: string | null
+          payment_method?: string
           session_id?: string | null
           tenant_id: string
           ticket_number: number
           total_amount?: number
         }
         Update: {
+          cash_session_id?: string | null
           created_at?: string
           created_by?: string | null
           created_by_name?: string
+          discount?: number
           id?: string
           notes?: string | null
+          payment_method?: string
           session_id?: string | null
           tenant_id?: string
           ticket_number?: number
@@ -449,6 +511,111 @@ export type Database = {
           },
           {
             foreignKeyName: "session_stock_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_return_items: {
+        Row: {
+          barcode: string
+          id: string
+          product_name: string
+          quantity: number
+          return_id: string
+          tenant_id: string
+          unit_price: number
+        }
+        Insert: {
+          barcode: string
+          id?: string
+          product_name: string
+          quantity: number
+          return_id: string
+          tenant_id: string
+          unit_price?: number
+        }
+        Update: {
+          barcode?: string
+          id?: string
+          product_name?: string
+          quantity?: number
+          return_id?: string
+          tenant_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "stock_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_return_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_returns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          kind: string
+          reason: string | null
+          return_number: number
+          supplier_id: string | null
+          supplier_name: string | null
+          tenant_id: string
+          ticket_ref: string | null
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          kind: string
+          reason?: string | null
+          return_number: number
+          supplier_id?: string | null
+          supplier_name?: string | null
+          tenant_id: string
+          ticket_ref?: string | null
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          kind?: string
+          reason?: string | null
+          return_number?: number
+          supplier_id?: string | null
+          supplier_name?: string | null
+          tenant_id?: string
+          ticket_ref?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_returns_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_returns_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -588,6 +755,10 @@ export type Database = {
     }
     Functions: {
       can_sell: { Args: never; Returns: boolean }
+      close_cash_session: {
+        Args: { _closing: number; _id: string }
+        Returns: undefined
+      }
       close_inventory_session: {
         Args: { _session_id: string }
         Returns: undefined
@@ -603,6 +774,16 @@ export type Database = {
       }
       create_sales_ticket: {
         Args: { _items: Json; _notes?: string; _session_id: string }
+        Returns: string
+      }
+      create_stock_return: {
+        Args: {
+          _items: Json
+          _kind: string
+          _reason?: string
+          _supplier_id?: string
+          _ticket_ref?: string
+        }
         Returns: string
       }
       current_tenant_id: { Args: never; Returns: string }
@@ -628,6 +809,7 @@ export type Database = {
         Returns: string
       }
       is_manager: { Args: never; Returns: boolean }
+      open_cash_session: { Args: { _opening: number }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_prices: {
         Args: { _barcode: string; _purchase: number; _selling: number }
@@ -635,6 +817,10 @@ export type Database = {
       }
       set_product_second_barcode: {
         Args: { _barcode: string; _second: string }
+        Returns: undefined
+      }
+      set_ticket_payment: {
+        Args: { _discount: number; _payment: string; _ticket_id: string }
         Returns: undefined
       }
       start_inventory_session: { Args: { _name: string }; Returns: string }
