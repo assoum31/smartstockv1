@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Bell,
   Building2,
   CloudOff,
   LayoutDashboard,
@@ -28,6 +29,7 @@ import {
 import { ROLE_LABEL, type Me } from "@/lib/me";
 import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
 import { cn } from "@/lib/utils";
+import { useLiveNotes, useSeenAt } from "@/lib/notifications";
 
 type NavItem = {
   to: "/admin" | "/dashboard" | "/scan" | "/products" | "/team" | "/pos";
@@ -81,6 +83,23 @@ export function SyncBadge() {
       {pending > 0 && <span className="font-mono">· {pending}</span>}
       {failed > 0 && <span className="font-mono">· {failed} مرفوض</span>}
     </button>
+  );
+}
+
+function NotificationBell({ tenantId }: { tenantId: string }) {
+  const { data = [] } = useLiveNotes(tenantId);
+  const { seenAt } = useSeenAt();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const unread = pathname === "/notifications" ? 0 : data.filter((n) => n.counted_at > seenAt).length;
+  return (
+    <Link to="/notifications" aria-label="التنبيهات" className="relative flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">
+      <Bell className="h-5 w-5" />
+      {unread > 0 && (
+        <span className="absolute -top-0.5 -end-0.5 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-bold leading-5 text-destructive-foreground">
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -145,6 +164,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
 
           <div className="ms-auto flex items-center gap-2">
             <SyncBadge />
+            {me.isManager && me.tenant && <NotificationBell tenantId={me.tenant.id} />}
             <DropdownMenu dir="rtl">
               <DropdownMenuTrigger asChild>
                 <Button variant="inkGhost" className="h-10 gap-2 px-2">
