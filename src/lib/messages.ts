@@ -28,6 +28,8 @@ export function errorText(e: unknown): string {
   if (/session_not_active/.test(msg)) return "لا يمكن تسجيل بيع إلا في جلسة مفتوحة.";
   if (/empty_ticket/.test(msg)) return "البون فارغ، أضف منتجاً واحداً على الأقل.";
   if (/invalid_item/.test(msg)) return "كمية أو سعر غير صالح في البون.";
+  if (/return_exceeds_sold/.test(msg)) return "الكمية المرجعة أكبر من المباعة في هذا الوصل.";
+  if (/ticket_not_found/.test(msg)) return "الوصل غير موجود.";
   if (/fetch|network/i.test(msg)) return "لا يوجد اتصال بالإنترنت.";
   return FAILED;
 }

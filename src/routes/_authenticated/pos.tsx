@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/stat-card";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { codesHtml, ticketCode } from "@/lib/receipt-code";
 import { activeSessionQuery, productsQuery, type Product } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
@@ -130,7 +131,7 @@ function PosPage() {
       <h2>${tenant.name}</h2><p>بون رقم ${number}</p><p>${new Date().toLocaleString("fr-FR")}</p>
       <table>${rows}</table>${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${{ cash: "نقداً", card: "بطاقة / BaridiMob", credit: "على الحساب" }[payment]}</p><h2>المجموع: ${money(sum)} دج</h2>
       ${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}
-      <p>شكراً لزيارتكم</p></body></html>`);
+      ${number ? codesHtml(ticketCode(number)) : ""}<p>شكراً لزيارتكم</p></body></html>`);
     w.document.close();
     w.focus();
     w.print();

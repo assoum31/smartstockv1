@@ -5,6 +5,9 @@ import { Banknote, ChevronDown, Package, Printer, Receipt, Search } from "lucide
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
+import { Link } from "@tanstack/react-router";
+import { Undo2 } from "lucide-react";
+import { codesHtml, ticketCode } from "@/lib/receipt-code";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -30,7 +33,7 @@ function printTicket(storeName: string, t: SaleTicket) {
     td{padding:3px 0;border-bottom:1px dashed #999}h2,p{text-align:center;margin:4px 0}</style></head><body>
     <h2>${storeName}</h2><p>بون رقم ${String(t.ticket_number).padStart(4, "0")} (نسخة)</p>
     <p>${new Date(t.created_at).toLocaleString("fr-FR")}</p><table>${rows}</table>
-    <h2>المجموع: ${money(Number(t.total_amount))} دج</h2><p>شكراً لزيارتكم</p></body></html>`);
+    <h2>المجموع: ${money(Number(t.total_amount))} دج</h2>${codesHtml(ticketCode(t.ticket_number))}<p>شكراً لزيارتكم</p></body></html>`);
   w.document.close();
   w.focus();
   w.print();
@@ -103,6 +106,9 @@ function SalesPage() {
                 </table>
                 <Button size="sm" variant="outline" className="mt-3" onClick={() => printTicket(tenant.name, t)}>
                   <Printer /> إعادة الطباعة
+                </Button>
+                <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
+                  <Link to="/returns" search={{ ticket: t.ticket_number }}><Undo2 /> إرجاع الوصل</Link>
                 </Button>
               </div>
             )}
