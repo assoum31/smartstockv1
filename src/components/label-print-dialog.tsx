@@ -35,7 +35,9 @@ export function LabelPrintDialog({
   products,
   open,
   onOpenChange,
+  defaultSize,
 }: {
+  defaultSize?: { w: number; h: number };
   products: LabelProduct[];
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -49,14 +51,17 @@ export function LabelPrintDialog({
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-      if (saved?.w && saved?.h) {
+      if (defaultSize) {
+        setW(defaultSize.w);
+        setH(defaultSize.h);
+      } else if (saved?.w && saved?.h) {
         setW(saved.w);
         setH(saved.h);
       }
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [defaultSize?.w, defaultSize?.h, open]);
 
   const print = async () => {
     if (w < 15 || h < 10) return void toast.error("المقاس صغير جداً");
@@ -155,8 +160,9 @@ body{font-family:Arial,sans-serif}
           </div>
           <Button className="w-full" size="lg" disabled={products.length === 0} onClick={print}>
             <Printer />
-            طباعة {products.length * Math.max(1, copies)} ملصق
+            طباعة / PDF — {products.length * Math.max(1, copies)} ملصق
           </Button>
+          <p className="text-center text-[11px] text-muted-foreground">لحفظ ملف PDF اختر «حفظ كـ PDF» في نافذة الطباعة — كل صفحة ملصق واحد بالمقاس المختار.</p>
         </div>
       </DialogContent>
     </Dialog>

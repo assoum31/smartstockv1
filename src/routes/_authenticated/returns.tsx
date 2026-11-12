@@ -13,6 +13,7 @@ import { money, returnsQuery, suppliersQuery, type SaleTicket, type StockReturn 
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
 import { codesHtml, parseTicketCode, returnCode } from "@/lib/receipt-code";
+import { useStoreSettings } from "@/lib/store-settings";
 import { printTicket } from "@/lib/print-ticket";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 
@@ -57,6 +58,7 @@ function printReturn(r: { kind: Kind; number: number; party: string; lines: Line
 
 function ReturnsPage() {
   const { tenant } = Route.useRouteContext();
+  const storeSettings = useStoreSettings(tenant.id);
   const qc = useQueryClient();
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const { data: suppliers } = useSuspenseQuery(suppliersQuery(tenant.id));
@@ -184,7 +186,7 @@ function ReturnsPage() {
             <p className="mb-2 font-mono font-extrabold">{money(Number(found.total_amount))} دج</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => startTicketReturn(false)}><Undo2 />إرجاع</Button>
-              <Button size="sm" variant="outline" onClick={() => printTicket(tenant.name, found)}><Printer />إعادة الطباعة</Button>
+              <Button size="sm" variant="outline" onClick={() => printTicket(tenant.name, found, storeSettings)}><Printer />إعادة الطباعة</Button>
               <Button size="sm" variant="outline" onClick={() => startTicketReturn(true)}>تعديل</Button>
             </div>
           </div>

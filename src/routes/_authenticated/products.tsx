@@ -26,6 +26,7 @@ import {
 import { PageHeader } from "@/components/stat-card";
 import { ProductFormDialog } from "@/components/product-form";
 import { Pencil, Plus } from "lucide-react";
+import { useStoreSettings } from "@/lib/store-settings";
 import { PriceCell } from "@/components/price-cell";
 import { LabelPrintDialog, type LabelProduct } from "@/components/label-print-dialog";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
@@ -48,6 +49,7 @@ const IMPORT_CHUNK = 500;
 function ProductsPage() {
   const { tenant, isManager } = Route.useRouteContext();
   const queryClient = useQueryClient();
+  const storeSettings = useStoreSettings(tenant.id);
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -306,6 +308,7 @@ function ProductsPage() {
         products={labelItems ?? []}
         open={Boolean(labelItems)}
         onOpenChange={(o) => !o && setLabelItems(null)}
+        defaultSize={{ w: storeSettings.label_width, h: storeSettings.label_height }}
       />
 
       <Dialog

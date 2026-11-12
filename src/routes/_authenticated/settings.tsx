@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CompanySettingsCard } from "@/components/company-settings-card";
 import { PageHeader } from "@/components/stat-card";
 import { MIN_PASSWORD_LENGTH } from "@/lib/identity";
 import { ROLE_LABEL } from "@/lib/me";
@@ -67,6 +68,7 @@ function SettingsPage() {
         subtitle={`${me.fullName} · ${ROLE_LABEL[me.roles[0] ?? "worker"]}`}
       />
       <LanguageCard t={t} lang={lang} dirOverride={dirOverride} />
+      {me.isManager && me.tenant && <CompanySettingsCard tenantId={me.tenant.id} />}
       <form onSubmit={submit} className="surface-card space-y-4 p-6">
         <h2 className="flex items-center gap-2 text-lg font-extrabold">
           <KeyRound className="h-5 w-5 text-primary" />

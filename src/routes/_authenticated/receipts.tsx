@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronDown, PackagePlus, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, Download, FileSpreadsheet, PackagePlus, Plus, Printer, Search, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import { productsQuery } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { money, receiptsQuery, suppliersQuery } from "@/lib/pos-queries";
 import { errorText } from "@/lib/messages";
+import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
+import { parseReceiptRows, RECEIPT_TEMPLATE_HEADERS } from "@/lib/receipt-import";
+import { a4DocHtml, openPrint, useStoreSettings } from "@/lib/store-settings";
 
 export const Route = createFileRoute("/_authenticated/receipts")({
   beforeLoad: ({ context }) => {
@@ -51,6 +54,92 @@ function ReceiptsPage() {
   const [lines, setLines] = useState<Line[]>([]);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const storeSettings = useStoreSettings(tenant.id);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState<string | null>(null);
+
+  const brCode = (n: number) => `BR-${String(n).padStart(4, "0")}`;
+
+  const printReceiptDoc = (r: (typeof receipts)[number]) =>
+    openPrint(
+      a4DocHtml(storeSettings, tenant.name, {
+        title: "وصل استلام سلع",
+        number: brCode(r.receipt_number),
+        date: new Date(r.created_at).toLocaleString("fr-FR"),
+        party: r.supplier_name,
+        reference: r.reference,
+        notes: r.notes,
+        lines: r.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: Number(i.quantity), price: Number(i.purchase_price) })),
+      }),
+    ) || toast.error("اسمح بالنوافذ المنبثقة للطباعة");
+
+  const downloadTemplate = () =>
+    void downloadWorkbook("smartstock-modele-factures.xlsx", [
+      {
+        name: "Factures",
+        headers: RECEIPT_TEMPLATE_HEADERS,
+        rows: [
+          [suppliers[0]?.name ?? "Fournisseur A", "F-001", "6130000000001", "Produit exemple", 10, 100, 150],
+          [suppliers[0]?.name ?? "Fournisseur A", "F-001", "6130000000002", "Produit exemple 2", 5, 200, 280],
+        ],
+        textColumns: [1, 2],
+      },
+    ]);
+
+  const exportHistory = () =>
+    void downloadWorkbook("smartstock-receptions.xlsx", [
+      {
+        name: "Réceptions",
+        headers: ["N°", "التاريخ", "المورد", "رقم الفاتورة", "المستخدم", "عدد المنتجات", "المجموع"],
+        rows: receipts.map((r) => [brCode(r.receipt_number), new Date(r.created_at).toLocaleString("fr-FR"), r.supplier_name ?? "", r.reference ?? "", r.created_by_name, r.items.length, Number(r.total_amount)]),
+      },
+      {
+        name: "Lignes",
+        headers: ["N°", "المورد", "رقم الفاتورة", "الباركود", "اسم المنتج", "الكمية", "سعر الشراء", "سعر البيع"],
+        rows: receipts.flatMap((r) => r.items.map((i) => [brCode(r.receipt_number), r.supplier_name ?? "", r.reference ?? "", i.barcode, i.product_name, Number(i.quantity), Number(i.purchase_price), Number(i.selling_price)])),
+        textColumns: [3],
+      },
+    ]);
+
+  const importFile = async (file: File) => {
+    let rows: Record<string, unknown>[];
+    try {
+      rows = await readSheetAsText(file);
+    } catch {
+      return void toast.error("تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
+    }
+    const { receipts: parsed, errors } = parseReceiptRows(rows);
+    if (parsed.length === 0) return void toast.error(errors[0] ?? "لا توجد أسطر صالحة في الملف");
+    let ok = 0;
+    const failed: string[] = [];
+    for (const [i, r] of parsed.entries()) {
+      setImporting(`${i + 1} / ${parsed.length}`);
+      const sup = suppliers.find((x) => x.name.trim().toLowerCase() === r.supplier.toLowerCase());
+      const items = r.items.map((it) => {
+        const p = findProductByBarcode(products, it.barcode);
+        return {
+          barcode: p?.barcode ?? it.barcode,
+          product_name: it.product_name || p?.name || it.barcode,
+          quantity: it.quantity,
+          purchase_price: it.purchase_price || Number(p?.purchase_price ?? 0),
+          selling_price: it.selling_price || Number(p?.selling_price ?? 0),
+        };
+      });
+      const { error } = await supabase.rpc("create_goods_receipt", {
+        _supplier_id: (sup?.id ?? null) as never,
+        _items: items as never,
+        _reference: r.reference,
+        _notes: sup || !r.supplier ? "" : `المورد: ${r.supplier}`,
+      });
+      if (error) failed.push(`${r.reference || r.supplier || "?"}: ${errorText(error)}`);
+      else ok++;
+    }
+    setImporting(null);
+    if (ok) toast.success(`تم استيراد ${ok} وصل/فاتورة وتحديث المخزون`);
+    if (failed.length || errors.length) toast.error([...failed, ...errors].slice(0, 4).join("\n"));
+    void qc.invalidateQueries({ queryKey: ["goods-receipts", tenant.id] });
+    void qc.invalidateQueries({ queryKey: ["products", tenant.id] });
+  };
 
   const q = code.trim().toLowerCase();
   const suggestions = useMemo(
@@ -119,7 +208,21 @@ function ReceiptsPage() {
       <PageHeader
         title="وصول السلع"
         subtitle="إدخال البضاعة القادمة من الموردين"
-        actions={!creating && <Button onClick={() => setCreating(true)}><Plus /> وصل استلام جديد</Button>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={downloadTemplate}><FileSpreadsheet /> نموذج Excel</Button>
+            <Button variant="outline" disabled={!!importing} onClick={() => fileRef.current?.click()}>
+              <Upload /> {importing ? `استيراد ${importing}` : "استيراد فواتير Excel"}
+            </Button>
+            <Button variant="outline" disabled={receipts.length === 0} onClick={exportHistory}><Download /> تصدير السجل</Button>
+            {!creating && <Button onClick={() => setCreating(true)}><Plus /> وصل استلام جديد</Button>}
+            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void importFile(f);
+            }} />
+          </div>
+        }
       />
 
       {creating && (
@@ -208,6 +311,7 @@ function ReceiptsPage() {
             </button>
             {open === r.id && (
               <div className="border-t bg-muted/30 p-3 text-sm">
+                <Button size="sm" variant="outline" className="mb-2" onClick={() => printReceiptDoc(r)}><Printer /> طباعة / PDF (A4)</Button>
                 {r.notes && <p className="mb-2 text-muted-foreground">{r.notes}</p>}
                 {r.items.map((i) => (
                   <div key={i.id} className="flex justify-between gap-2 border-b py-1.5 last:border-0">
