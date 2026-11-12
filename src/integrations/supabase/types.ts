@@ -414,6 +414,73 @@ export type Database = {
           },
         ]
       }
+      recount_requests: {
+        Row: {
+          assigned_to: string | null
+          barcode: string
+          created_at: string
+          done_at: string | null
+          id: string
+          log_id: string | null
+          product_name: string
+          requested_by: string | null
+          requested_by_name: string
+          session_id: string | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          barcode: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          log_id?: string | null
+          product_name: string
+          requested_by?: string | null
+          requested_by_name?: string
+          session_id?: string | null
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          barcode?: string
+          created_at?: string
+          done_at?: string | null
+          id?: string
+          log_id?: string | null
+          product_name?: string
+          requested_by?: string | null
+          requested_by_name?: string
+          session_id?: string | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recount_requests_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recount_requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recount_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_ticket_items: {
         Row: {
           barcode: string
@@ -888,6 +955,17 @@ export type Database = {
         Args: { _session_id: string }
         Returns: undefined
       }
+      complete_recount: {
+        Args: {
+          _barcode: string
+          _location: string
+          _name: string
+          _notes: string
+          _qty: number
+          _req_id: string
+        }
+        Returns: undefined
+      }
       create_goods_receipt: {
         Args: {
           _items: Json
@@ -916,6 +994,10 @@ export type Database = {
         Returns: string
       }
       current_tenant_id: { Args: never; Returns: string }
+      delete_goods_receipt: {
+        Args: { _receipt_id: string }
+        Returns: undefined
+      }
       delete_sales_ticket: { Args: { _ticket_id: string }; Returns: undefined }
       has_role: {
         Args: {
@@ -951,6 +1033,7 @@ export type Database = {
         Returns: undefined
       }
       open_cash_session: { Args: { _opening: number }; Returns: string }
+      request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_alt_barcodes: {
         Args: { _alts: string[]; _barcode: string }

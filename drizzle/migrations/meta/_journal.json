@@ -85,6 +85,13 @@
       "when": 1794519247734,
       "tag": "0011_store_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794521672624,
+      "tag": "0012_manager_deletes_recount",
+      "breakpoints": true
     }
   ]
 }

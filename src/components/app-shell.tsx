@@ -1,3 +1,4 @@
+import { RecountBanner } from "@/components/recount-banner";
 import { History, Undo2 } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -168,6 +169,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
 
   return (
     <div className="min-h-screen bg-background pb-32 md:pb-0">
+      {!me.isMaster && <RecountBanner userId={me.userId} />}
       <header className="sticky top-0 z-30 border-b border-ink-foreground/10 bg-ink/95 text-ink-foreground backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:px-6">
           <Link to={me.homePath} className="flex min-w-0 items-center gap-2">

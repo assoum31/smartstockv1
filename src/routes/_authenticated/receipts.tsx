@@ -41,7 +41,8 @@ interface Line {
 }
 
 function ReceiptsPage() {
-  const { tenant } = Route.useRouteContext();
+  const { tenant, me } = Route.useRouteContext();
+  const isManager = me.isManager;
   const qc = useQueryClient();
   const { data: receipts } = useSuspenseQuery(receiptsQuery(tenant.id));
   const { data: suppliers } = useSuspenseQuery(suppliersQuery(tenant.id));
@@ -312,6 +313,15 @@ function ReceiptsPage() {
             {open === r.id && (
               <div className="border-t bg-muted/30 p-3 text-sm">
                 <Button size="sm" variant="outline" className="mb-2" onClick={() => printReceiptDoc(r)}><Printer /> طباعة / PDF (A4)</Button>
+                {isManager && (
+                  <Button size="sm" variant="outline" className="mb-2 ms-2 text-destructive" onClick={async () => {
+                    if (!window.confirm("حذف هذا الوصل؟ ستُنقص كمياته من المخزون.")) return;
+                    const { error } = await supabase.rpc("delete_goods_receipt", { _receipt_id: r.id });
+                    if (error) return void toast.error(errorText(error));
+                    toast.success("تم حذف الوصل");
+                    void qc.invalidateQueries();
+                  }}><Trash2 /> حذف</Button>
+                )}
                 {r.notes && <p className="mb-2 text-muted-foreground">{r.notes}</p>}
                 {r.items.map((i) => (
                   <div key={i.id} className="flex justify-between gap-2 border-b py-1.5 last:border-0">

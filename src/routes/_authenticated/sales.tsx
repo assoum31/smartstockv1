@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Undo2 } from "lucide-react";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { errorText } from "@/lib/messages";
+import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
@@ -22,7 +25,9 @@ export const Route = createFileRoute("/_authenticated/sales")({
 const today = () => new Date().toISOString().slice(0, 10);
 
 function SalesPage() {
-  const { tenant } = Route.useRouteContext();
+  const { tenant, me } = Route.useRouteContext();
+  const isManager = me.isManager;
+  const qc = useQueryClient();
   const storeSettings = useStoreSettings(tenant.id);
   const { data: tickets } = useSuspenseQuery(storeSalesQuery(tenant.id));
   const [day, setDay] = useState(today());
@@ -93,6 +98,15 @@ function SalesPage() {
                 <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
                   <Link to="/returns" search={{ ticket: t.ticket_number }}><Undo2 /> إرجاع الوصل</Link>
                 </Button>
+                {isManager && (
+                  <Button size="sm" variant="outline" className="mt-3 ms-2 text-destructive" onClick={async () => {
+                    if (!window.confirm("حذف هذا البون؟ ستعود كمياته إلى المخزون.")) return;
+                    const { error } = await supabase.rpc("delete_sales_ticket", { _ticket_id: t.id });
+                    if (error) return void toast.error(errorText(error));
+                    toast.success("تم حذف البون");
+                    void qc.invalidateQueries();
+                  }}><Trash2 /> حذف</Button>
+                )}
               </div>
             )}
           </div>
