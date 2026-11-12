@@ -323,7 +323,7 @@ function ScanPage() {
     setNotes("");
     setPurchasePrice("");
     setSellingPrice("");
-    setSecondBarcode("");
+    setAltCodes([""]);
     setUnit("piece");
     setTarget(null);
     barcodeRef.current?.focus();
