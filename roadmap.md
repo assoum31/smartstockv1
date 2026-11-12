@@ -16,3 +16,5 @@
 - [x] Scan: show + edit purchase/selling price when product is known; prices editable inline on products page
 - [x] Notification bell in header + /notifications page for managers
 - [x] Scan page: search products by name or barcode
+- [x] Return a sale ticket from the sales log (limited to sold qty), barcode + QR on printed slips, ticket lookup/scan on returns page
+- [x] Mobile bottom bar redesign + activity log page (own for staff, whole store for managers, filters, Excel)

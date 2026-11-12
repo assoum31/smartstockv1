@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string
+          amount: number | null
+          category: string
+          created_at: string
+          details: Json
+          id: string
+          ref: string | null
+          sensitive: boolean
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string
+          amount?: number | null
+          category: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ref?: string | null
+          sensitive?: boolean
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          amount?: number | null
+          category?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ref?: string | null
+          sensitive?: boolean
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_sessions: {
         Row: {
           closed_at: string | null
@@ -575,6 +625,7 @@ export type Database = {
           supplier_id: string | null
           supplier_name: string | null
           tenant_id: string
+          ticket_id: string | null
           ticket_ref: string | null
           total_amount: number
         }
@@ -589,6 +640,7 @@ export type Database = {
           supplier_id?: string | null
           supplier_name?: string | null
           tenant_id: string
+          ticket_id?: string | null
           ticket_ref?: string | null
           total_amount?: number
         }
@@ -603,6 +655,7 @@ export type Database = {
           supplier_id?: string | null
           supplier_name?: string | null
           tenant_id?: string
+          ticket_id?: string | null
           ticket_ref?: string | null
           total_amount?: number
         }
@@ -619,6 +672,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_returns_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "sales_tickets"
             referencedColumns: ["id"]
           },
         ]
@@ -786,6 +846,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_ticket_return: {
+        Args: { _items: Json; _reason?: string; _ticket_id: string }
+        Returns: string
+      }
       current_tenant_id: { Args: never; Returns: string }
       delete_sales_ticket: { Args: { _ticket_id: string }; Returns: undefined }
       has_role: {
@@ -809,6 +873,18 @@ export type Database = {
         Returns: string
       }
       is_manager: { Args: never; Returns: boolean }
+      log_activity: {
+        Args: {
+          _action: string
+          _amount: number
+          _category: string
+          _details: Json
+          _ref: string
+          _sensitive: boolean
+          _tenant: string
+        }
+        Returns: undefined
+      }
       open_cash_session: { Args: { _opening: number }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_alt_barcodes: {

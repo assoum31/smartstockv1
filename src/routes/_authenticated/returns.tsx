@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Lock, Minus, Plus, Printer, Search, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,9 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/stat-card";
 import { productsQuery } from "@/lib/queries";
-import { money, returnsQuery, suppliersQuery, type StockReturn } from "@/lib/pos-queries";
+import { money, returnsQuery, suppliersQuery, type SaleTicket, type StockReturn } from "@/lib/pos-queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
+import { codesHtml, parseTicketCode, returnCode } from "@/lib/receipt-code";
+import { printTicket } from "@/lib/print-ticket";
+import { BarcodeScanner } from "@/components/barcode-scanner";
+
 
 export const Route = createFileRoute("/_authenticated/returns")({
   beforeLoad: ({ context }) => {
@@ -24,6 +28,9 @@ export const Route = createFileRoute("/_authenticated/returns")({
       context.queryClient.ensureQueryData(suppliersQuery(context.tenant.id)),
       context.queryClient.ensureQueryData(returnsQuery(context.tenant.id)),
     ]),
+  validateSearch: (s: Record<string, unknown>): { ticket?: number | undefined } => ({
+    ticket: Number(s["ticket"]) > 0 ? Number(s["ticket"]) : undefined,
+  }),
   head: () => ({ meta: [{ title: "بونات الإرجاع | SMART STOCK" }] }),
   component: ReturnsPage,
 });
@@ -44,7 +51,7 @@ function printReturn(r: { kind: Kind; number: number; party: string; lines: Line
   <h2>${r.store}</h2><p><b>${r.kind === "customer" ? "BON DE RETOUR CLIENT" : "BON DE RETOUR FOURNISSEUR"}</b></p>
   <p>رقم ${String(r.number).padStart(4, "0")} · ${new Date().toLocaleString("fr-FR")}</p>
   ${r.party ? `<p>${r.party}</p>` : ""}${r.reason ? `<p>السبب: ${r.reason}</p>` : ""}
-  <table>${rows}</table><h2>المبلغ المسترجع: ${money(sum)} دج</h2><p>SMART STOCK</p></body></html>`);
+  <table>${rows}</table><h2>المبلغ المسترجع: ${money(sum)} دج</h2>${codesHtml(returnCode(r.kind, r.number))}<p>SMART STOCK</p></body></html>`);
   w.document.close(); w.focus(); w.print();
 }
 
@@ -62,6 +69,44 @@ function ReturnsPage() {
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | Kind>("all");
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const [ticketQ, setTicketQ] = useState(search.ticket ? String(search.ticket) : "");
+  const [ticketCam, setTicketCam] = useState(false);
+  const [found, setFound] = useState<(SaleTicket & { left: Record<string, number> }) | null>(null);
+  const [linked, setLinked] = useState<{ id: string; number: number; edit: boolean } | null>(null);
+
+  const lookup = async (raw: string) => {
+    const n = parseTicketCode(raw);
+    if (!n) return void toast.error("رقم وصل غير صالح");
+    const { data, error } = await supabase
+      .from("sales_tickets").select("*, items:sales_ticket_items(*)")
+      .eq("tenant_id", tenant.id).eq("ticket_number", n).maybeSingle();
+    if (error) return void toast.error(errorText(error));
+    if (!data) { setFound(null); return void toast.error("الوصل غير موجود"); }
+    const { data: prev } = await supabase.from("stock_returns").select("items:stock_return_items(barcode, quantity)").eq("ticket_id", data.id);
+    const left: Record<string, number> = {};
+    for (const i of (data as SaleTicket).items) left[i.barcode] = (left[i.barcode] ?? 0) + Number(i.quantity);
+    for (const r of prev ?? []) for (const i of r.items) left[i.barcode] = (left[i.barcode] ?? 0) - Number(i.quantity);
+    setFound({ ...(data as SaleTicket), left });
+  };
+  useEffect(() => { if (search.ticket) void lookup(String(search.ticket)); }, [search.ticket]);
+
+  const startTicketReturn = (edit: boolean) => {
+    if (!found) return;
+    setKind("customer");
+    const ls: Line[] = [];
+    for (const i of found.items) {
+      const q = Math.max(0, found.left[i.barcode] ?? 0);
+      if (q > 0 && !ls.some((l) => l.barcode === i.barcode))
+        ls.push({ barcode: i.barcode, product_name: i.product_name, quantity: q, unit_price: Number(i.unit_price) });
+    }
+    if (!ls.length) return void toast.error("كل منتجات هذا الوصل أُرجعت من قبل");
+    setLines(ls);
+    setTicketRef(String(found.ticket_number).padStart(4, "0"));
+    setLinked({ id: found.id, number: found.ticket_number, edit });
+    if (edit) toast.info("أرجع المنتجات الخاطئة، ثم ستنتقل لنقطة البيع لعمل وصل جديد");
+  };
 
   const q = code.trim().toLowerCase();
   const suggestions = useMemo(
@@ -86,13 +131,15 @@ function ReturnsPage() {
     if (!lines.length) return;
     if (kind === "supplier" && !supplierId) return void toast.error("اختر المورد");
     setSaving(true);
-    const { data: id, error } = await supabase.rpc("create_stock_return", {
-      _kind: kind,
-      _items: lines as never,
-      _supplier_id: (kind === "supplier" ? supplierId : null) as never,
-      _ticket_ref: ticketRef,
-      _reason: reason,
-    });
+    const { data: id, error } = linked && kind === "customer"
+      ? await supabase.rpc("create_ticket_return", { _ticket_id: linked.id, _items: lines as never, _reason: reason })
+      : await supabase.rpc("create_stock_return", {
+          _kind: kind,
+          _items: lines as never,
+          _supplier_id: (kind === "supplier" ? supplierId : null) as never,
+          _ticket_ref: ticketRef,
+          _reason: reason,
+        });
     setSaving(false);
     if (error) return void toast.error(errorText(error));
     const { data } = await supabase.from("stock_returns").select("return_number").eq("id", id as string).maybeSingle();
@@ -100,6 +147,9 @@ function ReturnsPage() {
     printReturn({ kind, number: data?.return_number ?? 0, party, lines, store: tenant.name, reason });
     toast.success("تم تسجيل الإرجاع وتحديث المخزون");
     setLines([]); setTicketRef(""); setReason("");
+    const wasEdit = linked?.edit;
+    setLinked(null); setFound(null);
+    if (wasEdit) void navigate({ to: "/pos" });
     void qc.invalidateQueries({ queryKey: ["stock-returns"] });
     void qc.invalidateQueries({ queryKey: ["products", tenant.id] });
   };
@@ -109,9 +159,40 @@ function ReturnsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="بونات الإرجاع" subtitle="إرجاع زبون يعيد السلعة للمخزون · إرجاع مورد يخصمها منه" />
+      <div className="surface-card space-y-3 p-4">
+        <Label>ابحث عن وصل بيع (رقم أو سكان الباركود / QR)</Label>
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); void lookup(ticketQ); }}>
+          <Input className="h-11 flex-1" inputMode="text" placeholder="مثلاً 12 أو T0012" value={ticketQ} onChange={(e) => setTicketQ(e.target.value)} />
+          <Button type="submit" className="h-11"><Search />بحث</Button>
+          <Button type="button" variant="outline" className="h-11" onClick={() => setTicketCam((c) => !c)}>{ticketCam ? "إيقاف" : "كاميرا"}</Button>
+        </form>
+        {ticketCam && <BarcodeScanner onDetected={(c) => { setTicketCam(false); setTicketQ(c); void lookup(c); }} />}
+        {found && (
+          <div className="rounded-xl border p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-bold">وصل #{String(found.ticket_number).padStart(4, "0")} · {found.created_by_name}</p>
+              <span className="text-xs text-muted-foreground">{new Date(found.created_at).toLocaleString("fr-FR")}</span>
+            </div>
+            <ul className="my-2 text-sm">
+              {found.items.map((i) => (
+                <li key={i.id} className="flex justify-between border-b py-1 last:border-0">
+                  <span>{i.product_name} <span className="text-xs text-muted-foreground">(متبقي للإرجاع: {Math.max(0, found.left[i.barcode] ?? 0)})</span></span>
+                  <span className="font-mono">{Number(i.quantity)} × {money(Number(i.unit_price))}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mb-2 font-mono font-extrabold">{money(Number(found.total_amount))} دج</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => startTicketReturn(false)}><Undo2 />إرجاع</Button>
+              <Button size="sm" variant="outline" onClick={() => printTicket(tenant.name, found)}><Printer />إعادة الطباعة</Button>
+              <Button size="sm" variant="outline" onClick={() => startTicketReturn(true)}>تعديل</Button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-2">
         {(["customer", "supplier"] as Kind[]).map((k) => (
-          <Button key={k} variant={kind === k ? "default" : "outline"} className="h-12" onClick={() => { setKind(k); setLines([]); }}>
+          <Button key={k} variant={kind === k ? "default" : "outline"} className="h-12" onClick={() => { setKind(k); setLines([]); setLinked(null); }}>
             <Undo2 />
             {k === "customer" ? "Retour client" : "Retour fournisseur"}
           </Button>
@@ -131,7 +212,7 @@ function ReturnsPage() {
           ) : (
             <div className="space-y-1.5">
               <Label>رقم بون البيع الأصلي (اختياري)</Label>
-              <Input className="h-11" value={ticketRef} onChange={(e) => setTicketRef(e.target.value)} />
+              <Input className="h-11" value={ticketRef} disabled={!!linked} onChange={(e) => setTicketRef(e.target.value)} />
             </div>
           )}
           <div className="space-y-1.5">

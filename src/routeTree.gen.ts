@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as MasterRouteImport } from './routes/master'
 import { Route as WorkerRouteImport } from './routes/worker'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -57,6 +58,11 @@ const WorkerRoute = WorkerRouteImport.update({
   id: '/worker',
   path: '/worker',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/manager': typeof ManagerRoute
   '/master': typeof MasterRoute
   '/worker': typeof WorkerRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/manager': typeof ManagerRoute
   '/master': typeof MasterRoute
   '/worker': typeof WorkerRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/manager': typeof ManagerRoute
   '/master': typeof MasterRoute
   '/worker': typeof WorkerRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/master'
     | '/worker'
+    | '/activity'
     | '/admin'
     | '/dashboard'
     | '/notifications'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/master'
     | '/worker'
+    | '/activity'
     | '/admin'
     | '/dashboard'
     | '/notifications'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/master'
     | '/worker'
+    | '/_authenticated/activity'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/notifications'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/worker'
       preLoaderRoute: typeof WorkerRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -400,6 +419,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -416,6 +436,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,

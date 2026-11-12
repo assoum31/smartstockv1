@@ -1,4 +1,4 @@
-import { Undo2 } from "lucide-react";
+import { History, Undo2 } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -47,8 +47,10 @@ type NavItem = {
     | "/sales"
     | "/suppliers"
     | "/receipts"
-    | "/returns";
+    | "/returns"
+    | "/activity";
   label: TKey;
+  short?: TKey;
   icon: LucideIcon;
   /** Shown in the phone bottom bar; the rest live in the account menu. */
   dock?: boolean;
@@ -57,11 +59,12 @@ type NavItem = {
 function navFor(me: Me): NavItem[] {
   if (me.isMaster) return [{ to: "/admin", label: "stores", icon: Building2, dock: true }];
   const pos: NavItem[] = [
-    { to: "/sales", label: "salesLog", icon: ClipboardList },
-    { to: "/receipts", label: "receipts", icon: PackagePlus },
+    { to: "/sales", label: "salesLog", short: "salesShort", icon: ClipboardList },
+    { to: "/returns", label: "returns", short: "returnsShort", icon: Undo2 },
+    { to: "/receipts", label: "receipts", short: "receiptsShort", icon: PackagePlus },
     { to: "/suppliers", label: "suppliers", icon: Truck },
-    { to: "/returns", label: "returns", icon: Undo2 },
   ];
+  const activity: NavItem = { to: "/activity", label: "activity", short: "activityShort", icon: History };
   if (me.isManager)
     return [
       { to: "/dashboard", label: "dashboard", icon: LayoutDashboard, dock: true },
@@ -70,16 +73,19 @@ function navFor(me: Me): NavItem[] {
       { to: "/products", label: "products", icon: Package, dock: true },
       { to: "/team", label: "team", icon: Users, dock: true },
       ...pos,
+      activity,
     ];
   const items: NavItem[] = [];
   if (me.canSell)
     items.push(
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
-      ...pos.map((i) => ({ ...i, dock: true })),
+      ...pos.map((i) => ({ ...i, dock: i.to === "/sales" || i.to === "/returns" })),
     );
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
-  return items.length ? items : [{ to: "/scan", label: "scan", icon: ScanLine, dock: true }];
+  if (!items.length) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
+  items.push({ ...activity, dock: items.filter((i) => i.dock).length < 5 });
+  return items;
 }
 
 export function SyncBadge() {
@@ -201,6 +207,11 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
 
           <div className="ms-auto flex items-center gap-1.5">
             <SyncBadge />
+            {!me.isMaster && (
+              <Link to="/activity" aria-label={t("activity")} className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">
+                <History className="h-5 w-5" />
+              </Link>
+            )}
             {me.isManager && me.tenant && <NotificationBell tenantId={me.tenant.id} />}
             <DropdownMenu dir={dir}>
               <DropdownMenuTrigger asChild>
@@ -259,48 +270,31 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
           className="fixed inset-x-3 bottom-3 z-30 mb-[env(safe-area-inset-bottom)] rounded-2xl border bg-card/90 shadow-lift backdrop-blur-lg md:hidden"
         >
           <div
-            className="mx-auto grid max-w-md items-end px-1"
+            className="mx-auto grid max-w-md items-center px-1"
             style={{ gridTemplateColumns: `repeat(${dockItems.length}, 1fr)` }}
           >
             {dockItems.map((item) => {
               const active = pathname.startsWith(item.to);
               const hero = item.to === (me.canSell ? "/pos" : "/scan");
-              if (hero)
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className="flex flex-col items-center gap-1 pb-2 text-[11px] font-bold text-primary active:scale-95 transition-transform"
-                  >
-                    <span
-                      className={cn(
-                        "-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lift ring-4 ring-background",
-                        active && "bg-ink text-ink-foreground",
-                      )}
-                    >
-                      <item.icon className="h-6 w-6" />
-                    </span>
-                    {t(item.label)}
-                  </Link>
-                );
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-bold transition-all active:scale-95",
+                    "flex h-16 min-w-0 flex-col items-center justify-center gap-1 text-[10.5px] font-bold leading-none transition-all active:scale-95",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
                   <span
                     className={cn(
-                      "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
-                      active && "bg-primary/12",
+                      "flex h-8 w-11 items-center justify-center rounded-xl transition-colors",
+                      hero ? "bg-primary text-primary-foreground shadow-lift" : active && "bg-primary/12",
+                      hero && active && "ring-2 ring-primary/30 ring-offset-2 ring-offset-card",
                     )}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
                   </span>
-                  {t(item.label)}
+                  <span className="w-full truncate px-0.5 text-center">{t(item.short ?? item.label)}</span>
                 </Link>
               );
             })}

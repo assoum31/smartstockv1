@@ -71,6 +71,13 @@
       "when": 1794514007508,
       "tag": "0009_set_product_alt_barcodes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794516618128,
+      "tag": "0010_activity_log_ticket_returns",
+      "breakpoints": true
     }
   ]
 }
