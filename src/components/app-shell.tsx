@@ -12,7 +12,6 @@ import {
   Building2,
   CloudOff,
   LayoutDashboard,
-  Layers,
   LogOut,
   Package,
   RefreshCw,

@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ClipboardList,
   CloudOff,
-  Layers,
   ScanLine,
   Scale,
   ShieldCheck,

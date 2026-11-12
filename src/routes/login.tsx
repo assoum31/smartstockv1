@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardList, Layers, ScanLine } from "lucide-react";
+import { ArrowLeft, ClipboardList, ScanLine } from "lucide-react";
 
 const TITLE = "تسجيل الدخول | SMART STOCK";
 const DESCRIPTION = "اختر صفحة الدخول: مسير المتجر أو عامل الجرد.";

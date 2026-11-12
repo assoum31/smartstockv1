@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ClipboardList, KeyRound, Layers, LogIn, ScanLine, Store } from "lucide-react";
+import { ClipboardList, KeyRound, LogIn, ScanLine, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
