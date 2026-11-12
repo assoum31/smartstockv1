@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { setPageLanguage } from "@/lib/dom-translate";
 
 export type Lang = "ar" | "fr" | "en";
 export type Dir = "rtl" | "ltr";
@@ -35,15 +36,20 @@ const dict = {
   rtl: { ar: "من اليمين لليسار", fr: "Droite à gauche", en: "Right to left" },
   ltr: { ar: "من اليسار لليمين", fr: "Gauche à droite", en: "Left to right" },
   langHint: {
-    ar: "تتغير القوائم والإعدادات فوراً.",
-    fr: "Les menus et paramètres changent immédiatement.",
-    en: "Menus and settings change instantly.",
+    ar: "تتغير كل الشاشات فوراً.",
+    fr: "Tous les écrans changent immédiatement.",
+    en: "Every screen changes instantly.",
   },
   changePassword: { ar: "تغيير كلمة المرور", fr: "Changer le mot de passe", en: "Change password" },
   currentPassword: { ar: "كلمة المرور الحالية", fr: "Mot de passe actuel", en: "Current password" },
   newPassword: { ar: "كلمة المرور الجديدة", fr: "Nouveau mot de passe", en: "New password" },
   confirmPassword: { ar: "تأكيدها", fr: "Confirmer", en: "Confirm" },
   savePassword: { ar: "حفظ كلمة المرور", fr: "Enregistrer", en: "Save password" },
+  appearance: { ar: "المظهر", fr: "Apparence", en: "Appearance" },
+  themeLight: { ar: "نهاري", fr: "Clair", en: "Light" },
+  themeDark: { ar: "ليلي", fr: "Sombre", en: "Dark" },
+  themeSystem: { ar: "حسب الهاتف", fr: "Selon l'appareil", en: "Match device" },
+  themeHint: { ar: "الوضع الليلي أسود بالكامل، مريح للعين ويوفر بطارية الهاتف.", fr: "Le mode sombre est noir intégral, reposant et économe en batterie.", en: "Dark mode is true black: easy on the eyes and saves battery." },
   saving: { ar: "جاري الحفظ...", fr: "Enregistrement…", en: "Saving…" },
 } satisfies Record<string, Record<Lang, string>>;
 export type TKey = keyof typeof dict;
@@ -57,6 +63,7 @@ function apply() {
   if (typeof document === "undefined") return;
   document.documentElement.lang = state.lang;
   document.documentElement.dir = dirOf(state);
+  setPageLanguage(state.lang);
 }
 function dirOf(s: State): Dir {
   return s.dirOverride ?? (s.lang === "ar" ? "rtl" : "ltr");
