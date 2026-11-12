@@ -322,9 +322,9 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
       purchase_price,
       selling_price,
       carton_size: kCarton && price(kCarton) > 0 ? price(kCarton) : 1,
-      ...(kFam ? { famille: String(raw[kFam] ?? "").trim() || null } : {}),
-      ...(kModel ? { model: String(raw[kModel] ?? "").trim() || null } : {}),
-      ...(kMin ? { min_stock: price(kMin) } : {}),
+      ...(kFam ? { famille: String(r[kFam] ?? "").trim() || null } : {}),
+      ...(kModel ? { model: String(r[kModel] ?? "").trim() || null } : {}),
+      ...(kMin ? { min_stock: Number.isFinite(price(kMin)) ? price(kMin) : 0 } : {}),
       alt_barcodes: kAlt ? parseAltBarcodes(r[kAlt], barcode) : [],
     });
   });

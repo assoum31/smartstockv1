@@ -24,6 +24,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
+import { ProductFormDialog } from "@/components/product-form";
+import { Pencil, Plus } from "lucide-react";
 import { PriceCell } from "@/components/price-cell";
 import { LabelPrintDialog, type LabelProduct } from "@/components/label-print-dialog";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
@@ -52,19 +54,24 @@ function ProductsPage() {
   const [parsed, setParsed] = useState<(ProductImportResult & { fileName: string }) | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [labelItems, setLabelItems] = useState<LabelProduct[] | null>(null);
+  const [editing, setEditing] = useState<import("@/lib/queries").Product | "new" | null>(null);
+  const [fam, setFam] = useState("");
+  const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter(Boolean) as string[])].sort(), [products]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const base = fam ? products.filter((p) => p.famille === fam) : products;
     const list = q
-      ? products.filter(
+      ? base.filter(
           (p) =>
             p.barcode.toLowerCase().includes(q) ||
             (p.alt_barcodes ?? []).some((b) => b.includes(q)) ||
-            p.name.toLowerCase().includes(q),
+            p.name.toLowerCase().includes(q) ||
+            (p.model ?? "").toLowerCase().includes(q),
         )
-      : products;
+      : base;
     return list.slice(0, 200);
-  }, [products, search]);
+  }, [products, search, fam]);
 
   const onFile = async (file: File) => {
     try {
@@ -113,8 +120,8 @@ function ProductsPage() {
                 downloadWorkbook("smartstock-modele-produits.xlsx", [
                   {
                     name: "produits",
-                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
-                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24, 850, 1000, 12, "0061112457817, 0061112457824"]],
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes", "famille", "model", "min_stock"],
+                    rows: [["0061112457800", "زيت زيتون 1L", "Rayon B2", 24, 850, 1000, 12, "0061112457817, 0061112457824", "Alimentation", "Huile", 5]],
                     textColumns: [0],
                   },
                 ])
@@ -130,7 +137,7 @@ function ProductsPage() {
                 downloadWorkbook("smartstock-produits.xlsx", [
                   {
                     name: "produits",
-                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes"],
+                    headers: ["barcode", "name", "location", "system_quantity", "purchase_price", "selling_price", "carton_size", "alt_barcodes", "famille", "model", "min_stock"],
                     rows: products.map((p) => [
                       p.barcode,
                       p.name,
@@ -140,6 +147,9 @@ function ProductsPage() {
                       Number(p.selling_price),
                       Number(p.carton_size),
                       (p.alt_barcodes ?? []).join(", "),
+                      p.famille ?? "",
+                      p.model ?? "",
+                      Number(p.min_stock),
                     ]),
                     textColumns: [0],
                   },
@@ -158,7 +168,13 @@ function ProductsPage() {
               ملصقات الباركود
             </Button>
             {isManager && (
-              <Button onClick={() => fileRef.current?.click()}>
+              <Button onClick={() => setEditing("new")}>
+                <Plus />
+                منتج جديد
+              </Button>
+            )}
+            {isManager && (
+              <Button variant="outline" onClick={() => fileRef.current?.click()}>
                 <Upload />
                 استيراد Excel
               </Button>
@@ -192,6 +208,14 @@ function ProductsPage() {
           className="h-11 bg-card ps-9"
         />
       </div>
+      {familles.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <Button size="sm" variant={fam ? "outline" : "default"} onClick={() => setFam("")}>الكل</Button>
+          {familles.map((f) => (
+            <Button key={f} size="sm" variant={fam === f ? "default" : "outline"} onClick={() => setFam(f)}>{f}</Button>
+          ))}
+        </div>
+      )}
 
       <div className="surface-card overflow-hidden">
         {products.length === 0 ? (
@@ -221,7 +245,12 @@ function ProductsPage() {
               <tbody className="divide-y">
                 {filtered.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/40">
-                    <td className="px-4 py-3 font-bold">{p.name}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-bold">{p.name}</p>
+                      {(p.famille || p.model) && (
+                        <p className="text-xs text-muted-foreground">{[p.famille, p.model].filter(Boolean).join(" · ")}</p>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="barcode-chip rounded-md bg-secondary px-2 py-0.5 text-xs">
                         {p.barcode}
@@ -233,7 +262,7 @@ function ProductsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{p.default_location || "—"}</td>
-                    <td className="px-4 py-3 text-end font-mono font-bold">
+                    <td className={`px-4 py-3 text-end font-mono font-bold ${Number(p.min_stock) > 0 && Number(p.system_quantity) <= Number(p.min_stock) ? "text-destructive" : ""}`}>
                       {formatQty(Number(p.system_quantity))}
                     </td>
                     <td className="px-4 py-2"><div className="flex justify-end"><PriceCell barcode={p.barcode} purchase={Number(p.purchase_price)} selling={Number(p.selling_price)} field="purchase" onSaved={() => void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] })} /></div></td>
@@ -241,7 +270,12 @@ function ProductsPage() {
                     <td className="px-4 py-3 text-end font-mono text-xs">
                       {Number(p.carton_size) > 1 ? `× ${formatQty(Number(p.carton_size))}` : "—"}
                     </td>
-                    <td className="px-2 py-3">
+                    <td className="flex px-2 py-3">
+                      {isManager && (
+                        <Button size="icon" variant="ghost" aria-label="تعديل" onClick={() => setEditing(p)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="ghost" aria-label="طباعة ملصق" onClick={() => setLabelItems([p])}>
                         <Printer className="h-4 w-4" />
                       </Button>
@@ -258,6 +292,15 @@ function ProductsPage() {
           </div>
         )}
       </div>
+
+      <ProductFormDialog
+        product={editing === "new" ? null : editing}
+        open={editing !== null}
+        familles={familles}
+        tenantId={tenant.id}
+        onOpenChange={(o) => !o && setEditing(null)}
+        onSaved={() => { setEditing(null); void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] }); }}
+      />
 
       <LabelPrintDialog
         products={labelItems ?? []}
