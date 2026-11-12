@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/stat-card";
 import { BarcodeScanner } from "@/components/barcode-scanner";
-import { codesHtml, ticketCode } from "@/lib/receipt-code";
+import { ticketCode } from "@/lib/receipt-code";
 import { activeSessionQuery, productsQuery, type Product } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
