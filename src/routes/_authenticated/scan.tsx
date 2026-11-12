@@ -191,6 +191,7 @@ function ScanPage() {
             .slice(0, 8),
     [products, sq],
   );
+  const [secondBarcode, setSecondBarcode] = useState("");
   const pickProduct = (p: (typeof products)[number]) => {
     setBarcode(p.barcode);
     setProductName(p.name);
@@ -220,6 +221,7 @@ function ScanPage() {
         setAutoName(true);
         if (!location && p.default_location) setLocation(p.default_location);
       }
+      setSecondBarcode(p?.alt_barcodes?.[0] ?? "");
       setPurchasePrice(p ? String(Number(p.purchase_price)) : "");
       setSellingPrice(p ? String(Number(p.selling_price)) : "");
       setCartonSize(String(Number(p?.carton_size) > 0 ? Number(p?.carton_size) : 1));
@@ -284,6 +286,15 @@ function ScanPage() {
         else void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
       }
     }
+    if (known) {
+      const sb = secondBarcode.trim();
+      if (sb !== (known.alt_barcodes?.[0] ?? "")) {
+        const { error } = await supabase.rpc("set_product_second_barcode", { _barcode: clean, _second: sb });
+        if (error)
+          toast.error(error.message.includes("barcode_in_use") ? "الكودبار الثاني مستعمل لمنتج آخر." : error.message.includes("same_as_main") ? "الكودبار الثاني يطابق الرئيسي." : "تعذر حفظ الكودبار الثاني.");
+        else void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+      }
+    }
     const editing = target;
     await enqueueCount({
       client_id: editing?.client_id ?? newClientId(),
@@ -309,6 +320,7 @@ function ScanPage() {
     setNotes("");
     setPurchasePrice("");
     setSellingPrice("");
+    setSecondBarcode("");
     setUnit("piece");
     setTarget(null);
     barcodeRef.current?.focus();
@@ -466,6 +478,22 @@ function ScanPage() {
               </p>
             )}
           </div>
+
+          {productMap.has(clean) && (
+            <div className="space-y-1.5">
+              <Label htmlFor="second-barcode">الكودبار الثاني (اختياري)</Label>
+              <Input
+                id="second-barcode"
+                dir="ltr"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="باركود بديل للمنتج"
+                value={secondBarcode}
+                onChange={(e) => setSecondBarcode(e.target.value)}
+                className="barcode-chip h-11 text-center font-bold"
+              />
+            </div>
+          )}
 
           {duplicates.length > 0 && (
             <div className="space-y-2 rounded-xl border-2 border-warning bg-warning/10 p-3">
