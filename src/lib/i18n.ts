@@ -12,6 +12,7 @@ const dict = {
   pos: { ar: "البيع", fr: "Vente", en: "Sales" },
   salesLog: { ar: "سجل المبيعات", fr: "Journal des ventes", en: "Sales log" },
   suppliers: { ar: "الموردون", fr: "Fournisseurs", en: "Suppliers" },
+  returns: { ar: "بونات الإرجاع", fr: "Bons de retour", en: "Returns" },
   receipts: { ar: "وصول السلع", fr: "Réceptions", en: "Receipts" },
   products: { ar: "المنتجات", fr: "Produits", en: "Products" },
   team: { ar: "الفريق", fr: "Équipe", en: "Team" },

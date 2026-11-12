@@ -1,3 +1,4 @@
+import { Undo2 } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,7 +46,8 @@ type NavItem = {
     | "/pos"
     | "/sales"
     | "/suppliers"
-    | "/receipts";
+    | "/receipts"
+    | "/returns";
   label: TKey;
   icon: LucideIcon;
   /** Shown in the phone bottom bar; the rest live in the account menu. */
@@ -58,6 +60,7 @@ function navFor(me: Me): NavItem[] {
     { to: "/sales", label: "salesLog", icon: ClipboardList },
     { to: "/receipts", label: "receipts", icon: PackagePlus },
     { to: "/suppliers", label: "suppliers", icon: Truck },
+    { to: "/returns", label: "returns", icon: Undo2 },
   ];
   if (me.isManager)
     return [

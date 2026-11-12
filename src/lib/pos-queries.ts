@@ -49,3 +49,36 @@ export const receiptsQuery = (tenantId: string) =>
       return data as GoodsReceipt[];
     },
   });
+
+export type StockReturn = Tables<"stock_returns"> & { items: Tables<"stock_return_items">[] };
+export const returnsQuery = (tenantId: string) =>
+  queryOptions({
+    queryKey: ["stock-returns", tenantId],
+    queryFn: async (): Promise<StockReturn[]> => {
+      const { data, error } = await supabase
+        .from("stock_returns")
+        .select("*, items:stock_return_items(*)")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data as StockReturn[];
+    },
+  });
+
+export type CashSession = Tables<"cash_sessions">;
+export const myCashSessionQuery = (tenantId: string, userId: string) =>
+  queryOptions({
+    queryKey: ["cash-session", tenantId, userId],
+    queryFn: async (): Promise<CashSession | null> => {
+      const { data, error } = await supabase
+        .from("cash_sessions")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .eq("opened_by", userId)
+        .eq("status", "open")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
