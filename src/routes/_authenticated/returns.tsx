@@ -33,7 +33,7 @@ interface Line { barcode: string; product_name: string; quantity: number; unit_p
 
 const REASONS = ["تالف", "انتهاء الصلاحية", "خطأ في الطلبية", "تغيير رأي الزبون", "أخرى"];
 
-function printReturn(r: { kind: Kind; number: number; party: string; lines: Line[]; store: string; reason?: string }) {
+function printReturn(r: { kind: Kind; number: number; party: string; lines: Line[]; store: string; reason?: string | undefined }) {
   const w = window.open("", "_blank", "width=380,height=600");
   if (!w) return;
   const sum = r.lines.reduce((n, l) => n + l.quantity * l.unit_price, 0);
