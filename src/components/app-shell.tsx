@@ -30,27 +30,29 @@ import { ROLE_LABEL, type Me } from "@/lib/me";
 import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 import { useLiveNotes, useSeenAt } from "@/lib/notifications";
+import { useI18n, type TKey } from "@/lib/i18n";
 
 type NavItem = {
   to: "/admin" | "/dashboard" | "/scan" | "/products" | "/team" | "/pos";
-  label: string;
+  label: TKey;
   icon: LucideIcon;
 };
 
 function navFor(me: Me): NavItem[] {
-  if (me.isMaster) return [{ to: "/admin", label: "المتاجر", icon: Building2 }];
+  if (me.isMaster) return [{ to: "/admin", label: "stores", icon: Building2 }];
   if (me.isManager)
     return [
-      { to: "/dashboard", label: "لوحة الجرد", icon: LayoutDashboard },
-      { to: "/scan", label: "السكان", icon: ScanLine },
-      { to: "/pos", label: "البيع", icon: ShoppingCart },
-      { to: "/products", label: "المنتجات", icon: Package },
-      { to: "/team", label: "الفريق", icon: Users },
+      { to: "/dashboard", label: "dashboard", icon: LayoutDashboard },
+      { to: "/scan", label: "scan", icon: ScanLine },
+      { to: "/pos", label: "pos", icon: ShoppingCart },
+      { to: "/products", label: "products", icon: Package },
+      { to: "/team", label: "team", icon: Users },
     ];
-  return [{ to: "/scan", label: "السكان", icon: ScanLine }];
+  return [{ to: "/scan", label: "scan", icon: ScanLine }];
 }
 
 export function SyncBadge() {
+  const { t } = useI18n();
   const { online, syncing, queue } = useSyncState();
   const pending = queue.filter((q) => q.status === "pending").length;
   const failed = queue.filter((q) => q.status === "failed").length;
@@ -58,7 +60,7 @@ export function SyncBadge() {
     return (
       <span className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-bold text-success">
         <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-success" />
-        متصل
+        {t("online")}
       </span>
     );
   }
@@ -79,9 +81,9 @@ export function SyncBadge() {
       ) : (
         <CloudOff className="h-3 w-3" />
       )}
-      {!online ? "بدون اتصال" : "قيد الإرسال"}
+      {!online ? t("offline") : t("sending")}
       {pending > 0 && <span className="font-mono">· {pending}</span>}
-      {failed > 0 && <span className="font-mono">· {failed} مرفوض</span>}
+      {failed > 0 && <span className="font-mono">· {failed} {t("rejected")}</span>}
     </button>
   );
 }
@@ -89,10 +91,11 @@ export function SyncBadge() {
 function NotificationBell({ tenantId }: { tenantId: string }) {
   const { data = [] } = useLiveNotes(tenantId);
   const { seenAt } = useSeenAt();
+  const { t } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const unread = pathname === "/notifications" ? 0 : data.filter((n) => n.counted_at > seenAt).length;
   return (
-    <Link to="/notifications" aria-label="التنبيهات" className="relative flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">
+    <Link to="/notifications" aria-label={t("notifications")} className="relative flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">
       <Bell className="h-5 w-5" />
       {unread > 0 && (
         <span className="absolute -top-0.5 -end-0.5 min-w-5 rounded-full bg-destructive px-1 text-center text-[10px] font-bold leading-5 text-destructive-foreground">
@@ -108,6 +111,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = navFor(me);
+  const { t, dir } = useI18n();
 
   useEffect(() => {
     startOfflineSync();
@@ -124,24 +128,24 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <header className="sticky top-0 z-30 bg-ink text-ink-foreground">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link to={me.homePath} className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+    <div className="min-h-screen bg-background pb-28 md:pb-0">
+      <header className="sticky top-0 z-30 border-b border-ink-foreground/10 bg-ink/95 text-ink-foreground backdrop-blur pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:px-6">
+          <Link to={me.homePath} className="flex min-w-0 items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lift">
               <Layers className="h-5 w-5" />
             </span>
-            <span className="leading-tight">
-              <span className="block text-base font-extrabold">
+            <span className="min-w-0 leading-tight">
+              <span className="block text-sm font-extrabold tracking-wide sm:text-base">
                 SMART <span className="text-warning">STOCK</span>
               </span>
-              <span className="block max-w-[10rem] truncate text-[11px] text-ink-muted">
-                {me.tenant ? me.tenant.name : "الإدارة العامة"}
+              <span className="block max-w-[8rem] truncate text-[11px] text-ink-muted sm:max-w-[12rem]">
+                {me.tenant ? me.tenant.name : t("hq")}
               </span>
             </span>
           </Link>
 
-          <nav className="hidden flex-1 items-center gap-1 md:flex">
+          <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {items.map((item) => {
               const active = pathname.startsWith(item.to);
               return (
@@ -149,26 +153,26 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-colors",
+                    "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-colors",
                     active
-                      ? "bg-ink-foreground/12 text-ink-foreground"
-                      : "text-ink-muted hover:text-ink-foreground",
+                      ? "bg-primary text-primary-foreground"
+                      : "text-ink-muted hover:bg-ink-foreground/10 hover:text-ink-foreground",
                   )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="ms-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-1.5">
             <SyncBadge />
             {me.isManager && me.tenant && <NotificationBell tenantId={me.tenant.id} />}
-            <DropdownMenu dir="rtl">
+            <DropdownMenu dir={dir}>
               <DropdownMenuTrigger asChild>
-                <Button variant="inkGhost" className="h-10 gap-2 px-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-foreground/15 text-sm font-bold">
+                <Button variant="inkGhost" className="h-10 gap-2 rounded-full px-1 sm:px-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-warning text-sm font-extrabold text-warning-foreground">
                     {me.fullName.charAt(0)}
                   </span>
                   <span className="hidden text-start sm:block">
@@ -190,7 +194,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
                 <DropdownMenuItem asChild>
                   <Link to="/settings">
                     <Settings className="h-4 w-4" />
-                    الإعدادات
+                    {t("settings")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -198,7 +202,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
                   className="text-destructive focus:text-destructive"
                 >
                   <LogOut className="h-4 w-4" />
-                  تسجيل الخروج
+                  {t("signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -206,27 +210,56 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-8">{children}</main>
 
       {items.length > 1 && (
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur md:hidden">
+        <nav
+          aria-label="main"
+          className="fixed inset-x-3 bottom-3 z-30 mb-[env(safe-area-inset-bottom)] rounded-2xl border bg-card/90 shadow-lift backdrop-blur-lg md:hidden"
+        >
           <div
-            className="mx-auto grid max-w-md"
+            className="mx-auto grid max-w-md items-end px-1"
             style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
           >
             {items.map((item) => {
               const active = pathname.startsWith(item.to);
+              const hero = item.to === "/scan";
+              if (hero)
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="flex flex-col items-center gap-1 pb-2 text-[11px] font-bold text-primary active:scale-95 transition-transform"
+                  >
+                    <span
+                      className={cn(
+                        "-mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lift ring-4 ring-background",
+                        active && "bg-ink text-ink-foreground",
+                      )}
+                    >
+                      <item.icon className="h-6 w-6" />
+                    </span>
+                    {t(item.label)}
+                  </Link>
+                );
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-[11px] font-bold",
+                    "flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-bold transition-all active:scale-95",
                     active ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
+                  <span
+                    className={cn(
+                      "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
+                      active && "bg-primary/12",
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                  </span>
+                  {t(item.label)}
                 </Link>
               );
             })}
