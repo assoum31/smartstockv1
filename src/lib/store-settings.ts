@@ -58,7 +58,7 @@ export interface TicketLine { product_name: string; quantity: number; unit_price
 
 /** Thermal ticket (58/60/80 mm) using the store's saved width. */
 export function ticketHtml(s: StoreSettings, fallbackName: string, opts: {
-  title: string; date: string; lines: TicketLine[]; extra?: string; total: number; code?: string;
+  title: string; date: string; lines: TicketLine[]; extra?: string | undefined; total: number; code?: string | undefined;
 }) {
   const w = s.ticket_width || 80;
   const inner = w - 6;
