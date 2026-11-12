@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Lock, Minus, Plus, Printer, Search, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,15 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/stat-card";
 import { productsQuery } from "@/lib/queries";
-import { money, returnsQuery, suppliersQuery, type StockReturn } from "@/lib/pos-queries";
+import { money, returnsQuery, suppliersQuery, type SaleTicket, type StockReturn } from "@/lib/pos-queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
 import { codesHtml, parseTicketCode, returnCode } from "@/lib/receipt-code";
 import { printTicket } from "@/lib/print-ticket";
 import { BarcodeScanner } from "@/components/barcode-scanner";
-import type { SaleTicket } from "@/lib/pos-queries";
-import { useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+
 
 export const Route = createFileRoute("/_authenticated/returns")({
   beforeLoad: ({ context }) => {
