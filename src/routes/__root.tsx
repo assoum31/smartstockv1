@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { initI18n, useI18n } from "@/lib/i18n";
 import { initTheme } from "@/lib/theme";
+import { DirectionProvider } from "@radix-ui/react-direction";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -186,9 +187,11 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <DirectionProvider dir={dir}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" dir={dir} richColors />
+      </DirectionProvider>
     </QueryClientProvider>
   );
 }

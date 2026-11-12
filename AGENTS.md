@@ -40,3 +40,5 @@ use the editor.
 - The camera barcode library is loaded with a dynamic import inside an effect, because it touches browser APIs and would break server rendering.
 - Store roles are manager, cashier, worker, pricer (stored in user_roles); `Me.canSell`/`canSeeProducts` drive route guards and nav, and sales/goods receipts go only through DB functions that also move product stock, so client code never edits quantities directly.
 - Every sensitive action is written to `activity_log` by database triggers (never by client code), so the log can't be skipped or edited; ticket-linked returns go through `create_ticket_return`, which caps quantities at sold minus already returned.
+- Screen text is written in Arabic in the code; French/English come from `src/lib/translations.ts` applied to the page by `src/lib/dom-translate.ts` after hydration, so new Arabic UI text needs a matching entry there. Pages must not hard-code `dir`; the root sets it from the language. Print windows stay Arabic RTL.
+- Day/night mode toggles the `.dark` class on <html> (`src/lib/theme.ts`); colors come only from the tokens in styles.css, so components need no dark-specific classes.
