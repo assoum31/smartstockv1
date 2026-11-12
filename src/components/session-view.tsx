@@ -1,3 +1,4 @@
+import { RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -752,6 +753,20 @@ function LogsTable({
                           }}
                         >
                           <Edit3 />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 hover:text-warning"
+                          aria-label="إعادة العد"
+                          title="إعادة العد"
+                          onClick={async () => {
+                            const { error } = await supabase.rpc("request_recount", { _log_id: l.id });
+                            if (error) return void toast.error(errorText(error));
+                            toast.success(`أُرسل طلب إعادة العد إلى ${l.counted_by_name}`);
+                          }}
+                        >
+                          <RotateCcw />
                         </Button>
                         <Button
                           size="icon"
