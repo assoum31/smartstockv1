@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Banknote, ChevronDown, Package, Printer, Receipt, Search } from "lucide-react";
+import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
-import { Link } from "@tanstack/react-router";
-import { Undo2 } from "lucide-react";
 import { codesHtml, ticketCode } from "@/lib/receipt-code";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
 
