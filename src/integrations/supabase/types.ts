@@ -483,7 +483,7 @@ export type Database = {
       start_inventory_session: { Args: { _name: string }; Returns: string }
     }
     Enums: {
-      app_role: "master" | "manager" | "worker"
+      app_role: "master" | "manager" | "worker" | "cashier" | "pricer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -611,7 +611,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["master", "manager", "worker"],
+      app_role: ["master", "manager", "worker", "cashier", "pricer"],
     },
   },
 } as const
