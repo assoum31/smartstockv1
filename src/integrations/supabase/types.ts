@@ -476,6 +476,10 @@ export type Database = {
         Args: { _barcode: string; _purchase: number; _selling: number }
         Returns: undefined
       }
+      set_product_second_barcode: {
+        Args: { _barcode: string; _second: string }
+        Returns: undefined
+      }
       start_inventory_session: { Args: { _name: string }; Returns: string }
     }
     Enums: {
