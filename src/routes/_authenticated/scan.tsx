@@ -77,6 +77,8 @@ function ScanPage() {
   const [location, setLocation] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [notes, setNotes] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
   const [unit, setUnit] = useState<"piece" | "carton">("piece");
   const [cartonSize, setCartonSize] = useState("1");
   const [cameraOn, setCameraOn] = useState(true);
@@ -195,6 +197,8 @@ function ScanPage() {
         setAutoName(true);
         if (!location && p.default_location) setLocation(p.default_location);
       }
+      setPurchasePrice(p ? String(Number(p.purchase_price)) : "");
+      setSellingPrice(p ? String(Number(p.selling_price)) : "");
       setCartonSize(String(Number(p?.carton_size) > 0 ? Number(p?.carton_size) : 1));
       // Same product already counted at this location? Default to editing that line.
       const sameSpot = entries.find(
@@ -241,6 +245,22 @@ function ScanPage() {
       counted_at: new Date().toISOString(),
       notes: notes.trim() || null,
     };
+    const known = productMap.get(clean);
+    if (known) {
+      const pp = Number(purchasePrice.replace(",", "."));
+      const sp = Number(sellingPrice.replace(",", "."));
+      if (!Number.isFinite(pp) || pp < 0 || !Number.isFinite(sp) || sp < 0)
+        return void toast.error("سعر غير صالح.");
+      if (pp !== Number(known.purchase_price) || sp !== Number(known.selling_price)) {
+        const { error } = await supabase.rpc("set_product_prices", {
+          _barcode: clean,
+          _purchase: pp,
+          _selling: sp,
+        });
+        if (error) toast.error("تعذر حفظ الأسعار.");
+        else void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+      }
+    }
     const editing = target;
     await enqueueCount({
       client_id: editing?.client_id ?? newClientId(),
@@ -264,6 +284,8 @@ function ScanPage() {
     setAutoName(false);
     setQuantity("1");
     setNotes("");
+    setPurchasePrice("");
+    setSellingPrice("");
     setUnit("piece");
     setTarget(null);
     barcodeRef.current?.focus();
@@ -452,6 +474,25 @@ function ScanPage() {
               className="h-11 font-bold"
             />
           </div>
+
+          {productMap.has(clean) ? (
+            <div className="grid grid-cols-2 gap-3 rounded-xl bg-accent/40 p-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="purchase-price">سعر الشراء</Label>
+                <Input id="purchase-price" dir="ltr" inputMode="decimal" value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)} className="h-11 text-end font-mono font-bold" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="selling-price">سعر البيع</Label>
+                <Input id="selling-price" dir="ltr" inputMode="decimal" value={sellingPrice}
+                  onChange={(e) => setSellingPrice(e.target.value)} className="h-11 text-end font-mono font-bold" />
+              </div>
+            </div>
+          ) : clean ? (
+            <p className="rounded-xl bg-warning/15 p-2 text-xs font-bold text-warning-foreground">
+              منتج غير مسجل في المخزون، لا توجد أسعار.
+            </p>
+          ) : null}
 
           <div className="space-y-1.5">
             <Label htmlFor="location">الموقع (الرف)</Label>

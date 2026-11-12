@@ -29,6 +29,13 @@
       "when": 1794356209738,
       "tag": "0003_carton_and_alt_barcodes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794479223230,
+      "tag": "0004_set_product_prices",
+      "breakpoints": true
     }
   ]
 }
