@@ -130,6 +130,11 @@ export function SessionView({
     [products],
   );
   const money = useMemo(() => varianceValue(variances, prices), [variances, prices]);
+  const sellPrices = useMemo(
+    () => new Map(products.map((p) => [p.barcode, Number(p.selling_price) || 0])),
+    [products],
+  );
+  const moneySell = useMemo(() => varianceValue(variances, sellPrices), [variances, sellPrices]);
   const workers = useMemo(() => new Set(logs.map((l) => l.counted_by_name)).size, [logs]);
   const totalQty = logs.reduce((n, l) => n + Number(l.counted_quantity || 0), 0);
   const gaps = variances.filter((v) => v.variance !== 0 && v.entries > 0).length;
@@ -240,6 +245,12 @@ export function SessionView({
           <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر الشراء)</p>
           <p className="font-mono text-2xl font-extrabold" dir="ltr">
             +{formatQty(money.surplus)} دج
+          </p>
+        </div>
+        <div className="surface-card col-span-2 border-s-4 border-s-success p-4">
+          <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر البيع)</p>
+          <p className="font-mono text-2xl font-extrabold text-success" dir="ltr">
+            +{formatQty(moneySell.surplus)} دج
           </p>
         </div>
       </div>
