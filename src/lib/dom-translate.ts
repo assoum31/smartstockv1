@@ -66,9 +66,26 @@ function walk(root: Node) {
 }
 
 let observer: MutationObserver | null = null;
+let ready = false;
+/** Wait until the server-rendered page has finished hydrating before touching its text. */
+function whenHydrated(fn: () => void) {
+  const idle = () => (window.requestIdleCallback ?? ((f: () => void) => setTimeout(f, 200)))(() => setTimeout(fn, 150));
+  if (document.readyState === "complete") idle();
+  else window.addEventListener("load", idle, { once: true });
+}
+
 export function setPageLanguage(l: Lang) {
   lang = l;
   if (typeof document === "undefined") return;
+  if (!ready) {
+    if (l === "ar") return;
+    ready = true;
+    return whenHydrated(() => start());
+  }
+  start();
+}
+
+function start() {
   if (!observer) {
     observer = new MutationObserver((muts) => {
       for (const m of muts) {
