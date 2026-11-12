@@ -15,6 +15,7 @@ import {
   Trash2,
   Flashlight,
   FlashlightOff,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -191,7 +192,7 @@ function ScanPage() {
             .slice(0, 8),
     [products, sq],
   );
-  const [secondBarcode, setSecondBarcode] = useState("");
+  const [altCodes, setAltCodes] = useState<string[]>([""]);
   const pickProduct = (p: (typeof products)[number]) => {
     setBarcode(p.barcode);
     setProductName(p.name);
@@ -221,7 +222,7 @@ function ScanPage() {
         setAutoName(true);
         if (!location && p.default_location) setLocation(p.default_location);
       }
-      setSecondBarcode(p?.alt_barcodes?.[0] ?? "");
+      setAltCodes(p?.alt_barcodes?.length ? [...p.alt_barcodes] : [""]);
       setPurchasePrice(p ? String(Number(p.purchase_price)) : "");
       setSellingPrice(p ? String(Number(p.selling_price)) : "");
       setCartonSize(String(Number(p?.carton_size) > 0 ? Number(p?.carton_size) : 1));
@@ -287,12 +288,15 @@ function ScanPage() {
       }
     }
     if (known) {
-      const sb = secondBarcode.trim();
-      if (sb !== (known.alt_barcodes?.[0] ?? "")) {
-        const { error } = await supabase.rpc("set_product_second_barcode", { _barcode: clean, _second: sb });
-        if (error)
-          toast.error(error.message.includes("barcode_in_use") ? "الكودبار الثاني مستعمل لمنتج آخر." : error.message.includes("same_as_main") ? "الكودبار الثاني يطابق الرئيسي." : "تعذر حفظ الكودبار الثاني.");
-        else void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+      const wanted = Array.from(new Set(altCodes.map((b) => b.trim()).filter((b) => b && b !== clean)));
+      const current = known.alt_barcodes ?? [];
+      if (wanted.join("|") !== current.join("|")) {
+        // Best effort: never blocks saving the count; invalid/duplicate codes are skipped by the DB.
+        void supabase
+          .rpc("set_product_alt_barcodes", { _barcode: clean, _alts: wanted })
+          .then(({ error }) => {
+            if (!error) void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+          });
       }
     }
     const editing = target;
@@ -320,7 +324,7 @@ function ScanPage() {
     setNotes("");
     setPurchasePrice("");
     setSellingPrice("");
-    setSecondBarcode("");
+    setAltCodes([""]);
     setUnit("piece");
     setTarget(null);
     barcodeRef.current?.focus();
@@ -481,17 +485,43 @@ function ScanPage() {
 
           {productMap.has(clean) && (
             <div className="space-y-1.5">
-              <Label htmlFor="second-barcode">الكودبار الثاني (اختياري)</Label>
-              <Input
-                id="second-barcode"
-                dir="ltr"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="باركود بديل للمنتج"
-                value={secondBarcode}
-                onChange={(e) => setSecondBarcode(e.target.value)}
-                className="barcode-chip h-11 text-center font-bold"
-              />
+              <div className="flex items-center justify-between">
+                <Label>الأكواد البديلة (اختياري)</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAltCodes((a) => [...a, ""])}
+                >
+                  <Plus className="size-4" /> كود آخر
+                </Button>
+              </div>
+              {altCodes.map((code, i) => (
+                <div key={i} className="flex gap-2">
+                  <Input
+                    dir="ltr"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    aria-label={`كود بديل ${i + 1}`}
+                    placeholder={`كود بديل ${i + 1}`}
+                    value={code}
+                    onChange={(e) => setAltCodes((a) => a.map((x, j) => (j === i ? e.target.value : x)))}
+                    className="barcode-chip h-11 flex-1 text-center font-bold"
+                  />
+                  {altCodes.length > 1 && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-11 w-11"
+                      aria-label="حذف الكود"
+                      onClick={() => setAltCodes((a) => a.filter((_, j) => j !== i))}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
 

@@ -125,6 +125,10 @@ export function SessionView({
     [snapshot, logs, sales.items, sales.tickets],
   );
   const { data: products = [] } = useQuery(productsQuery(tenantId));
+  const alts = useMemo(
+    () => new Map(products.map((p) => [p.barcode, (p.alt_barcodes ?? []).map((b) => b.toLowerCase())])),
+    [products],
+  );
   const prices = useMemo(
     () => new Map(products.map((p) => [p.barcode, Number(p.purchase_price) || 0])),
     [products],
@@ -294,7 +298,7 @@ export function SessionView({
           </div>
         </div>
         <TabsContent value="variances" className="mt-4">
-          <VarianceTable rows={variances} prices={prices} editable={isActive && !readOnly} sessionId={session.id} />
+          <VarianceTable alts={alts} rows={variances} prices={prices} editable={isActive && !readOnly} sessionId={session.id} />
         </TabsContent>
         <TabsContent value="sales" className="mt-4">
           <SalesPanel
@@ -310,7 +314,7 @@ export function SessionView({
           <WorkerProgress tenantId={tenantId} logs={logs} live={isActive} />
         </TabsContent>
         <TabsContent value="logs" className="mt-4">
-          <LogsTable logs={logs} editable={isActive && !readOnly} sessionId={session.id} />
+          <LogsTable alts={alts} logs={logs} editable={isActive && !readOnly} sessionId={session.id} />
         </TabsContent>
         <TabsContent value="alerts" className="mt-4">
           <div className="space-y-2">
@@ -351,6 +355,7 @@ const FILTERS: { value: VarianceFilter; label: string }[] = [
 ];
 
 function VarianceTable({
+  alts,
   rows,
   prices,
   editable,
@@ -360,6 +365,7 @@ function VarianceTable({
   prices: Map<string, number>;
   editable: boolean;
   sessionId: string;
+  alts: Map<string, string[]>;
 }) {
   const queryClient = useQueryClient();
   const [removing, setRemoving] = useState<VarianceRow | null>(null);
@@ -377,7 +383,7 @@ function VarianceTable({
       })
       .filter(
         (r) =>
-          !q || r.barcode.toLowerCase().includes(q) || r.product_name.toLowerCase().includes(q),
+          !q || r.barcode.toLowerCase().includes(q) || r.product_name.toLowerCase().includes(q) || (alts.get(r.barcode) ?? []).some((b) => b.includes(q)),
       )
       .slice(0, 300);
   }, [rows, filter, search]);
@@ -552,6 +558,7 @@ function VarianceTable({
 }
 
 function LogsTable({
+  alts,
   logs,
   editable,
   sessionId,
@@ -559,6 +566,7 @@ function LogsTable({
   logs: InventoryLog[];
   editable: boolean;
   sessionId: string;
+  alts: Map<string, string[]>;
 }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -576,7 +584,7 @@ function LogsTable({
       .filter((l) => worker === "all" || l.counted_by_name === worker)
       .filter(
         (l) =>
-          !q || l.barcode.toLowerCase().includes(q) || l.product_name.toLowerCase().includes(q),
+          !q || l.barcode.toLowerCase().includes(q) || l.product_name.toLowerCase().includes(q) || (alts.get(l.barcode) ?? []).some((b) => b.includes(q)),
       )
       .slice(0, 300);
   }, [logs, search, worker]);
