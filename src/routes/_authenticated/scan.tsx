@@ -15,6 +15,7 @@ import {
   Trash2,
   Flashlight,
   FlashlightOff,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
