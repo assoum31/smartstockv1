@@ -167,6 +167,9 @@ export interface ProductImportRow {
   purchase_price: number;
   selling_price: number;
   carton_size: number;
+  famille?: string | null;
+  model?: string | null;
+  min_stock?: number;
   alt_barcodes: string[];
 }
 
@@ -212,6 +215,9 @@ const HEADER_ALIASES: Record<keyof ProductImportRow, string[]> = {
   ],
   purchase_price: ["purchase_price", "prix achat", "prix_achat", "prix d'achat", "cost", "سعر الشراء"],
   selling_price: ["selling_price", "prix vente", "prix_vente", "prix de vente", "price", "prix", "سعر البيع"],
+  famille: ["famille", "family", "category", "categorie", "catégorie", "العائلة", "الصنف"],
+  model: ["model", "modele", "modèle", "marque", "brand", "الموديل", "الماركة"],
+  min_stock: ["min_stock", "stock_min", "seuil", "alerte", "مخزون الأمان"],
   carton_size: ["carton_size", "colisage", "carton", "pack", "سعة الكرتون", "الكرتون"],
   alt_barcodes: ["alt_barcodes", "codes alternatifs", "barcodes", "باركودات بديلة", "باركود بديل"],
 };
@@ -269,6 +275,9 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
   const kBuy = findKey(headers, "purchase_price");
   const kSell = findKey(headers, "selling_price");
   const kCarton = findKey(headers, "carton_size");
+  const kFam = findKey(headers, "famille");
+  const kModel = findKey(headers, "model");
+  const kMin = findKey(headers, "min_stock");
   const kAlt = findKey(headers, "alt_barcodes");
   if (!kBarcode || !kName) {
     return {
@@ -313,6 +322,9 @@ export function parseProductRows(raw: Record<string, unknown>[]): ProductImportR
       purchase_price,
       selling_price,
       carton_size: kCarton && price(kCarton) > 0 ? price(kCarton) : 1,
+      ...(kFam ? { famille: String(raw[kFam] ?? "").trim() || null } : {}),
+      ...(kModel ? { model: String(raw[kModel] ?? "").trim() || null } : {}),
+      ...(kMin ? { min_stock: price(kMin) } : {}),
       alt_barcodes: kAlt ? parseAltBarcodes(r[kAlt], barcode) : [],
     });
   });

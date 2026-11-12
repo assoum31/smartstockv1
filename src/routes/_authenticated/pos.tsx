@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, Camera, CameraOff, Minus, PauseCircle, Plus, Printer, Search, Trash2, Undo2, Wallet } from "lucide-react";
@@ -376,7 +376,7 @@ function CloseCash({ cashId, opening, value, setValue, onDone }: { cashId: strin
     const by = (m: string) => (t ?? []).filter((x) => x.payment_method === m).reduce((n, x) => n + Number(x.total_amount), 0);
     setSummary({ cash: by("cash"), card: by("card"), credit: by("credit"), returns: (r ?? []).reduce((n, x) => n + Number(x.total_amount), 0) });
   };
-  if (!summary) void load();
+  useEffect(() => { void load(); }, [cashId]);
   const expected = summary ? opening + summary.cash - summary.returns : 0;
   return (
     <div className="w-full space-y-2 rounded-xl bg-muted/50 p-3">
