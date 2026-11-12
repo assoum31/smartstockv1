@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
 import { ProductFormDialog } from "@/components/product-form";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useStoreSettings } from "@/lib/store-settings";
 import { PriceCell } from "@/components/price-cell";
 import { LabelPrintDialog, type LabelProduct } from "@/components/label-print-dialog";
@@ -276,6 +276,17 @@ function ProductsPage() {
                       {isManager && (
                         <Button size="icon" variant="ghost" aria-label="تعديل" onClick={() => setEditing(p)}>
                           <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {isManager && (
+                        <Button size="icon" variant="ghost" className="hover:text-destructive" aria-label="حذف" onClick={async () => {
+                          if (!window.confirm(`حذف المنتج «${p.name}» نهائياً؟`)) return;
+                          const { error } = await supabase.from("products").delete().eq("id", p.id);
+                          if (error) return void toast.error(error.message);
+                          toast.success("تم حذف المنتج");
+                          void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+                        }}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                       <Button size="icon" variant="ghost" aria-label="طباعة ملصق" onClick={() => setLabelItems([p])}>
