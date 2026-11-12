@@ -239,27 +239,27 @@ export function SessionView({
         <StatCard label="القائمون بالجرد" value={workers} icon={Users} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="surface-card border-s-4 border-s-destructive p-4">
-          <p className="text-xs font-bold text-muted-foreground">قيمة العجز (بسعر الشراء)</p>
-          <p className="font-mono text-2xl font-extrabold text-destructive" dir="ltr">
+        <div className="surface-card min-w-0 border-s-4 border-s-destructive p-4">
+          <p className="text-[11px] sm:text-xs font-bold leading-tight text-muted-foreground">قيمة العجز (بسعر الشراء)</p>
+          <p className="font-mono text-base sm:text-2xl font-extrabold whitespace-nowrap truncate text-destructive" dir="ltr">
             −{formatQty(money.shortage)} دج
           </p>
         </div>
-        <div className="surface-card border-s-4 border-s-warning p-4">
-          <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر الشراء)</p>
-          <p className="font-mono text-2xl font-extrabold" dir="ltr">
+        <div className="surface-card min-w-0 border-s-4 border-s-warning p-4">
+          <p className="text-[11px] sm:text-xs font-bold leading-tight text-muted-foreground">قيمة الفائض (بسعر الشراء)</p>
+          <p className="font-mono text-base sm:text-2xl font-extrabold whitespace-nowrap truncate" dir="ltr">
             +{formatQty(money.surplus)} دج
           </p>
         </div>
-        <div className="surface-card border-s-4 border-s-success p-4">
-          <p className="text-xs font-bold text-muted-foreground">قيمة الفائض (بسعر البيع)</p>
-          <p className="font-mono text-2xl font-extrabold text-success" dir="ltr">
+        <div className="surface-card min-w-0 border-s-4 border-s-success p-4">
+          <p className="text-[11px] sm:text-xs font-bold leading-tight text-muted-foreground">قيمة الفائض (بسعر البيع)</p>
+          <p className="font-mono text-base sm:text-2xl font-extrabold whitespace-nowrap truncate text-success" dir="ltr">
             +{formatQty(moneySell.surplus)} دج
           </p>
         </div>
-        <div className="surface-card border-s-4 border-s-primary p-4">
-          <p className="text-xs font-bold text-muted-foreground">ربح الفائض (البيع − الشراء)</p>
-          <p className="font-mono text-2xl font-extrabold text-primary" dir="ltr">
+        <div className="surface-card min-w-0 border-s-4 border-s-primary p-4">
+          <p className="text-[11px] sm:text-xs font-bold leading-tight text-muted-foreground">ربح الفائض (البيع − الشراء)</p>
+          <p className="font-mono text-base sm:text-2xl font-extrabold whitespace-nowrap truncate text-primary" dir="ltr">
             {moneySell.surplus - money.surplus < 0 ? "−" : "+"}
             {formatQty(Math.abs(moneySell.surplus - money.surplus))} دج
           </p>
@@ -267,13 +267,13 @@ export function SessionView({
       </div>
 
       <Tabs defaultValue="variances" dir="rtl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <TabsList>
-            <TabsTrigger value="variances">الفوارق لكل منتج</TabsTrigger>
-            <TabsTrigger value="sales">المبيعات ({sales.tickets.length})</TabsTrigger>
-            <TabsTrigger value="workers">تقدم العمال</TabsTrigger>
-            <TabsTrigger value="logs">سجل العدّ</TabsTrigger>
-            <TabsTrigger value="alerts">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="no-scrollbar h-auto w-full min-w-0 justify-start gap-1 overflow-x-auto rounded-xl p-1 sm:w-auto">
+            <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="variances">الفوارق لكل منتج</TabsTrigger>
+            <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="sales">المبيعات ({sales.tickets.length})</TabsTrigger>
+            <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="workers">تقدم العمال</TabsTrigger>
+            <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="logs">سجل العدّ</TabsTrigger>
+            <TabsTrigger className="shrink-0 rounded-lg px-3 py-2 text-xs sm:text-sm" value="alerts">
               التنبيهات
               {logs.filter((l) => l.notes?.trim()).length > 0 && (
                 <span className="ms-1.5 rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">

@@ -161,7 +161,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28 md:pb-0">
+    <div className="min-h-screen bg-background pb-32 md:pb-0">
       <header className="sticky top-0 z-30 border-b border-ink-foreground/10 bg-ink/95 text-ink-foreground backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:px-6">
           <Link to={me.homePath} className="flex min-w-0 items-center gap-2">
@@ -251,7 +251,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-8">{children}</main>
+      <main className="mx-auto max-w-7xl min-w-0 overflow-x-hidden px-3 py-5 sm:px-6 sm:py-8">{children}</main>
 
       {dockItems.length > 1 && (
         <nav
