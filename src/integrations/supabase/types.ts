@@ -472,6 +472,10 @@ export type Database = {
       }
       is_manager: { Args: never; Returns: boolean }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
+      set_product_prices: {
+        Args: { _barcode: string; _purchase: number; _selling: number }
+        Returns: undefined
+      }
       start_inventory_session: { Args: { _name: string }; Returns: string }
     }
     Enums: {
