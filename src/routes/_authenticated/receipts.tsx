@@ -41,7 +41,8 @@ interface Line {
 }
 
 function ReceiptsPage() {
-  const { tenant, isManager } = Route.useRouteContext();
+  const { tenant, me } = Route.useRouteContext();
+  const isManager = me.isManager;
   const qc = useQueryClient();
   const { data: receipts } = useSuspenseQuery(receiptsQuery(tenant.id));
   const { data: suppliers } = useSuspenseQuery(suppliersQuery(tenant.id));

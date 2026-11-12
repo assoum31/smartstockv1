@@ -25,7 +25,8 @@ export const Route = createFileRoute("/_authenticated/sales")({
 const today = () => new Date().toISOString().slice(0, 10);
 
 function SalesPage() {
-  const { tenant, isManager } = Route.useRouteContext();
+  const { tenant, me } = Route.useRouteContext();
+  const isManager = me.isManager;
   const qc = useQueryClient();
   const storeSettings = useStoreSettings(tenant.id);
   const { data: tickets } = useSuspenseQuery(storeSalesQuery(tenant.id));
