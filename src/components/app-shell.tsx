@@ -75,14 +75,19 @@ function navFor(me: Me): NavItem[] {
       { to: "/scan", label: "scan", icon: ScanLine, dock: true },
       { to: "/products", label: "products", icon: Package, dock: true },
       { to: "/team", label: "team", icon: Users },
+      { to: "/audit", label: "audit", icon: ShieldCheck },
+      { to: "/advances", label: "advances", icon: HandCoins },
       ...pos,
       activity,
     ];
   const items: NavItem[] = [];
+  if (me.canAudit) items.push({ to: "/audit", label: "audit", icon: ShieldCheck, dock: true });
+  if (me.canWatchInventory) items.push({ to: "/inventory", label: "inventory", icon: ClipboardList, dock: true });
   if (me.canSell)
     items.push(
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
       ...pos.map((i) => ({ ...i, dock: i.to === "/sales" || i.to === "/returns" })),
+      { to: "/advances", label: "advances", icon: HandCoins },
     );
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });

@@ -32,8 +32,8 @@ import { errorText, formatDateTime } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
   beforeLoad: ({ context }) => {
-    if (!context.me.isManager || !context.me.tenant) throw redirect({ to: context.me.homePath });
-    return { tenant: context.me.tenant };
+    if (!context.me.canWatchInventory || !context.me.tenant) throw redirect({ to: context.me.homePath });
+    return { tenant: context.me.tenant, isManager: context.me.isManager };
   },
   loader: async ({ context }) => {
     await Promise.all([
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/inventory")({
 });
 
 function InventoryPage() {
-  const { tenant } = Route.useRouteContext();
+  const { tenant, isManager } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const { data: active } = useSuspenseQuery(activeSessionQuery(tenant.id));
   const { data: sessions } = useSuspenseQuery(sessionsQuery(tenant.id));
@@ -102,7 +102,7 @@ function InventoryPage() {
                 </SelectContent>
               </Select>
             )}
-            {active ? (
+            {!isManager ? null : active ? (
               <Button variant="outline" onClick={() => setClosing(true)}>
                 <Square />
                 إغلاق الجلسة
@@ -125,7 +125,7 @@ function InventoryPage() {
             عند البداية، تُجمَّد الكميات النظامية لكل المنتجات. الفوارق تُحسب مقابل هذه النسخة طوال
             الجلسة.
           </p>
-          <div className="flex gap-2">
+          <div className={isManager ? "flex gap-2" : "hidden"}>
             <Button onClick={() => setStarting(true)}>
               <Play />
               بدء جلسة جرد
@@ -137,7 +137,7 @@ function InventoryPage() {
         </div>
       ) : (
         <Suspense fallback={<DashboardSkeleton />}>
-          <SessionView session={session} tenantId={tenant.id} storeName={tenant.name} />
+          <SessionView session={session} tenantId={tenant.id} storeName={tenant.name} readOnly={!isManager} />
         </Suspense>
       )}
 

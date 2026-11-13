@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "master" | "manager" | "worker" | "cashier" | "pricer";
+export type Role = "master" | "manager" | "worker" | "cashier" | "pricer" | "observer" | "auditor";
 
 export interface Me {
   userId: string;
@@ -15,12 +15,16 @@ export interface Me {
   canSell: boolean;
   /** Manager, cashier or price checker: product catalogue. */
   canSeeProducts: boolean;
+  /** Manager or inventory observer: read the inventory board. */
+  canWatchInventory: boolean;
+  /** Manager or inventory auditor: audit counted lines. */
+  canAudit: boolean;
   /** Account or store switched off by an admin. */
   blocked: boolean;
-  homePath: "/admin" | "/dashboard" | "/scan" | "/pos" | "/products";
+  homePath: "/admin" | "/dashboard" | "/scan" | "/pos" | "/products" | "/inventory" | "/audit";
 }
 
-const CACHE_KEY = "stocki_me_v3";
+const CACHE_KEY = "stocki_me_v4";
 
 function readCache(userId: string): Me | null {
   try {
@@ -78,6 +82,8 @@ export async function fetchMe(): Promise<Me | null> {
   // A store member whose store is switched off can't see their store row.
   const canSell = isManager || roles.includes("cashier");
   const canSeeProducts = canSell || roles.includes("pricer");
+  const canWatchInventory = isManager || roles.includes("observer");
+  const canAudit = isManager || roles.includes("auditor");
   const blocked = !profile.is_active || (!isMaster && !tenant);
 
   const me: Me = {
@@ -90,6 +96,8 @@ export async function fetchMe(): Promise<Me | null> {
     isManager,
     canSell,
     canSeeProducts,
+    canWatchInventory,
+    canAudit,
     blocked,
     homePath: isMaster
       ? "/admin"
@@ -97,7 +105,11 @@ export async function fetchMe(): Promise<Me | null> {
         ? "/dashboard"
         : roles.includes("cashier")
           ? "/pos"
-          : roles.includes("pricer") && !roles.includes("worker")
+          : roles.includes("auditor")
+            ? "/audit"
+            : roles.includes("observer") && !roles.includes("worker")
+              ? "/inventory"
+              : roles.includes("pricer") && !roles.includes("worker")
             ? "/products"
             : "/scan",
   };
@@ -117,4 +129,6 @@ export const ROLE_LABEL: Record<Role, string> = {
   worker: "عامل جرد",
   cashier: "بائع / كاشير",
   pricer: "مصحح الأسعار",
+  observer: "مراقب الجرد",
+  auditor: "مدقق الجرد",
 };

@@ -160,7 +160,7 @@ function EditMemberDialog({
 }) {
   const updateFn = useServerFn(updateMember);
   const deleteFn = useServerFn(deleteMember);
-  const initialRole = (["manager", "cashier", "pricer", "worker"] as MemberRole[]).find((r) =>
+  const initialRole = (["manager", "cashier", "pricer", "auditor", "observer", "worker"] as MemberRole[]).find((r) =>
     m.roles.includes(r),
   ) ?? "worker";
   const [fullName, setFullName] = useState(m.full_name);
