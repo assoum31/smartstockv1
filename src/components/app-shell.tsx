@@ -74,7 +74,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
       { to: "/scan", label: "scan", icon: ScanLine, dock: true },
       { to: "/products", label: "products", icon: Package, dock: true },
-      { to: "/team", label: "team", icon: Users, dock: true },
+      { to: "/team", label: "team", icon: Users },
       ...pos,
       activity,
     ];

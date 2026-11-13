@@ -343,7 +343,7 @@ function ScanPage() {
           </p>
           {me.isManager && (
             <Button asChild>
-              <Link to="/dashboard">لوحة الجرد</Link>
+              <Link to="/inventory">لوحة الجرد</Link>
             </Button>
           )}
         </div>
