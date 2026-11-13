@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from "react";
-import { setPageLanguage } from "@/lib/dom-translate";
+import { setPageLanguage, translateString } from "@/lib/dom-translate";
+const dzWord = (ar: string) => translateString(ar, "dz");
 
-export type Lang = "ar" | "fr" | "en";
+export type Lang = "ar" | "dz" | "fr" | "en";
 export type Dir = "rtl" | "ltr";
 const KEY = "smartstock:lang";
 const DIR_KEY = "smartstock:dir";
@@ -49,14 +50,14 @@ const dict = {
   savePassword: { ar: "حفظ كلمة المرور", fr: "Enregistrer", en: "Save password" },
   appearance: { ar: "المظهر", fr: "Apparence", en: "Appearance" },
   themeLight: { ar: "نهاري", fr: "Clair", en: "Light" },
-  themeDark: { ar: "ليلي مريح", fr: "Nuit douce", en: "Night comfort" },
+  themeDark: { ar: "ليلي", fr: "Nuit", en: "Night" },
   themeOled: { ar: "أسود", fr: "Noir OLED", en: "OLED black" },
   saveSettings: { ar: "حفظ الإعدادات", fr: "Enregistrer les paramètres", en: "Save settings" },
   settingsSaved: { ar: "تم حفظ الإعدادات", fr: "Paramètres enregistrés", en: "Settings saved" },
   themeSystem: { ar: "حسب الهاتف", fr: "Selon l'appareil", en: "Match device" },
-  themeHint: { ar: "الليلي المريح بألوان هادئة وكتابة خافتة لراحة العين، والأسود بالكامل يوفر البطارية.", fr: "Nuit douce : couleurs apaisées et texte atténué. Noir OLED : noir intégral, économe en batterie.", en: "Night comfort uses soft colors and dimmed text; OLED black is true black and saves battery." },
+  themeHint: { ar: "الليلي بألوان هادئة وكتابة خافتة لراحة العين، والأسود بالكامل يوفر البطارية.", fr: "Nuit : couleurs apaisées et texte atténué. Noir OLED : noir intégral, économe en batterie.", en: "Night uses soft colors and dimmed text; OLED black is true black and saves battery." },
   saving: { ar: "جاري الحفظ...", fr: "Enregistrement…", en: "Saving…" },
-} satisfies Record<string, Record<Lang, string>>;
+} satisfies Record<string, Record<"ar" | "fr" | "en", string>>;
 export type TKey = keyof typeof dict;
 
 type State = { lang: Lang; dirOverride: Dir | null };
@@ -66,12 +67,12 @@ const serverState: State = { lang: "ar", dirOverride: null };
 
 function apply() {
   if (typeof document === "undefined") return;
-  document.documentElement.lang = state.lang;
+  document.documentElement.lang = state.lang === "dz" ? "ar-DZ" : state.lang;
   document.documentElement.dir = dirOf(state);
   setPageLanguage(state.lang);
 }
 function dirOf(s: State): Dir {
-  return s.dirOverride ?? (s.lang === "ar" ? "rtl" : "ltr");
+  return s.dirOverride ?? (s.lang === "ar" || s.lang === "dz" ? "rtl" : "ltr");
 }
 function emit() {
   apply();
@@ -84,7 +85,7 @@ export function initI18n() {
     const l = localStorage.getItem(KEY) as Lang | null;
     const d = localStorage.getItem(DIR_KEY) as Dir | null;
     state = {
-      lang: l === "fr" || l === "en" || l === "ar" ? l : "ar",
+      lang: l === "fr" || l === "en" || l === "ar" || l === "dz" ? l : "ar",
       dirOverride: d === "rtl" || d === "ltr" ? d : null,
     };
   } catch {}
@@ -111,6 +112,6 @@ export function useI18n() {
     lang: s.lang,
     dir: dirOf(s),
     dirOverride: s.dirOverride,
-    t: (k: TKey) => dict[k][s.lang],
+    t: (k: TKey) => (s.lang === "dz" ? dzWord(dict[k].ar) : dict[k][s.lang]),
   };
 }

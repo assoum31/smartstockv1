@@ -72,8 +72,13 @@ function ProductsPage() {
             (p.model ?? "").toLowerCase().includes(q),
         )
       : base;
-    return list.slice(0, 200);
+    return list;
   }, [products, search, fam]);
+  const PER_PAGE = 50;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const curPage = Math.min(page, pageCount);
+  const pageItems = filtered.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
 
   const onFile = async (file: File) => {
     try {

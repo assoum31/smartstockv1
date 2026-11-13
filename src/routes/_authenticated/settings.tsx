@@ -136,7 +136,8 @@ function SettingsPage() {
 }
 
 const LANGS: { code: Lang; name: string; tag: string }[] = [
-  { code: "ar", name: "العربية", tag: "AR" },
+  { code: "ar", name: "العربية الفصحى", tag: "AR" },
+  { code: "dz", name: "الدارجة الجزائرية", tag: "DZ" },
   { code: "fr", name: "Français", tag: "FR" },
   { code: "en", name: "English", tag: "EN" },
 ];
