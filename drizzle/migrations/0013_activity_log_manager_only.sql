@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Read own or managers read store" ON public.activity_log;
+CREATE POLICY "Managers read store activity" ON public.activity_log FOR SELECT TO authenticated USING (tenant_id = public.current_tenant_id() AND public.is_manager());

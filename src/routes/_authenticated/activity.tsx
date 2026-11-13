@@ -26,7 +26,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export const Route = createFileRoute("/_authenticated/activity")({
   beforeLoad: ({ context }) => {
-    if (!context.me.tenant) throw redirect({ to: context.me.homePath });
+    if (!context.me.tenant || !context.me.isManager) throw redirect({ to: context.me.homePath });
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(activityQuery(context.tenant.id, today(), today())),

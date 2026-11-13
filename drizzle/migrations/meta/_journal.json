@@ -92,6 +92,13 @@
       "when": 1794521672624,
       "tag": "0012_manager_deletes_recount",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794596146650,
+      "tag": "0013_activity_log_manager_only",
+      "breakpoints": true
     }
   ]
 }
