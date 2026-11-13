@@ -41,6 +41,7 @@ type NavItem = {
   to:
     | "/admin"
     | "/dashboard"
+    | "/inventory"
     | "/scan"
     | "/products"
     | "/team"
@@ -68,7 +69,8 @@ function navFor(me: Me): NavItem[] {
   const activity: NavItem = { to: "/activity", label: "activity", short: "activityShort", icon: History };
   if (me.isManager)
     return [
-      { to: "/dashboard", label: "dashboard", icon: LayoutDashboard, dock: true },
+      { to: "/dashboard", label: "dashboard", short: "dashboardShort", icon: LayoutDashboard, dock: true },
+      { to: "/inventory", label: "inventory", icon: ClipboardList, dock: true },
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
       { to: "/scan", label: "scan", icon: ScanLine, dock: true },
       { to: "/products", label: "products", icon: Package, dock: true },
