@@ -72,8 +72,13 @@ function ProductsPage() {
             (p.model ?? "").toLowerCase().includes(q),
         )
       : base;
-    return list.slice(0, 200);
+    return list;
   }, [products, search, fam]);
+  const PER_PAGE = 50;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const curPage = Math.min(page, pageCount);
+  const pageItems = filtered.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
 
   const onFile = async (file: File) => {
     try {
@@ -206,15 +211,15 @@ function ProductsPage() {
         <Input
           placeholder="ابحث بالاسم أو الباركود..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="h-11 bg-card ps-9"
         />
       </div>
       {familles.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <Button size="sm" variant={fam ? "outline" : "default"} onClick={() => setFam("")}>الكل</Button>
+          <Button size="sm" variant={fam ? "outline" : "default"} onClick={() => { setFam(""); setPage(1); }}>الكل</Button>
           {familles.map((f) => (
-            <Button key={f} size="sm" variant={fam === f ? "default" : "outline"} onClick={() => setFam(f)}>{f}</Button>
+            <Button key={f} size="sm" variant={fam === f ? "default" : "outline"} onClick={() => { setFam(f); setPage(1); }}>{f}</Button>
           ))}
         </div>
       )}
@@ -245,7 +250,7 @@ function ProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtered.map((p) => (
+                {pageItems.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/40">
                     <td className="px-4 py-3">
                       <p className="font-bold">{p.name}</p>
@@ -297,11 +302,23 @@ function ProductsPage() {
                 ))}
               </tbody>
             </table>
-            {products.length > filtered.length && (
-              <p className="border-t p-3 text-center text-xs text-muted-foreground">
-                عرض {filtered.length} من {products.length}. استعمل البحث للعثور على منتج.
-              </p>
-            )}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t p-3 text-xs text-muted-foreground">
+              <span>
+                عرض {filtered.length === 0 ? 0 : (curPage - 1) * PER_PAGE + 1} إلى {Math.min(curPage * PER_PAGE, filtered.length)} من أصل {filtered.length} منتج
+              </span>
+              <div className="flex flex-wrap items-center gap-1">
+                <Button size="sm" variant="outline" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)}>السابق</Button>
+                {Array.from({ length: pageCount }, (_, i) => i + 1)
+                  .filter((n) => n === 1 || n === pageCount || Math.abs(n - curPage) <= 2)
+                  .map((n, i, arr) => (
+                    <span key={n} className="flex items-center gap-1">
+                      {i > 0 && n - (arr[i - 1] ?? n) > 1 && <span>…</span>}
+                      <Button size="sm" variant={n === curPage ? "default" : "outline"} className="min-w-9" onClick={() => setPage(n)}>{n}</Button>
+                    </span>
+                  ))}
+                <Button size="sm" variant="outline" disabled={curPage >= pageCount} onClick={() => setPage(curPage + 1)}>التالي</Button>
+              </div>
+            </div>
           </div>
         )}
       </div>

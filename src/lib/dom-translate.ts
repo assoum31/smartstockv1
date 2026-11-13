@@ -1,4 +1,5 @@
 import { PHRASES } from "@/lib/translations";
+import { DZ_PHRASES } from "@/lib/translations-dz";
 import type { Lang } from "@/lib/i18n";
 
 /**
@@ -16,8 +17,12 @@ let lang: Lang = "ar";
 const textOrig = new WeakMap<Text, { orig: string; out: string }>();
 const attrOrig = new WeakMap<Element, Record<string, { orig: string; out: string }>>();
 
+const dzKeys = Object.keys(DZ_PHRASES).sort((a, b) => b.length - a.length);
+const dzRe = new RegExp(`(?<![\\u0600-\\u06FF])(${dzKeys.map(esc).join("|")})(?![\\u0600-\\u06FF])`, "g");
+
 export function translateString(src: string, l: Lang = lang): string {
   if (l === "ar" || !AR.test(src)) return src;
+  if (l === "dz") return src.replace(dzRe, (m) => DZ_PHRASES[m] ?? m);
   const i = l === "fr" ? 0 : 1;
   const trimmed = src.trim();
   const exact = PHRASES[trimmed];
