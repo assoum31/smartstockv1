@@ -312,7 +312,7 @@ function ProductsPage() {
                   .filter((n) => n === 1 || n === pageCount || Math.abs(n - curPage) <= 2)
                   .map((n, i, arr) => (
                     <span key={n} className="flex items-center gap-1">
-                      {i > 0 && n - arr[i - 1] > 1 && <span>…</span>}
+                      {i > 0 && n - (arr[i - 1] ?? n) > 1 && <span>…</span>}
                       <Button size="sm" variant={n === curPage ? "default" : "outline"} className="min-w-9" onClick={() => setPage(n)}>{n}</Button>
                     </span>
                   ))}
