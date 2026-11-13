@@ -40,6 +40,8 @@ import { useI18n, type TKey } from "@/lib/i18n";
 type NavItem = {
   to:
     | "/admin"
+    | "/audit"
+    | "/advances"
     | "/dashboard"
     | "/inventory"
     | "/scan"
