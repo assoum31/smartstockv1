@@ -1,5 +1,11 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "السابق": ["Précédent", "Previous"],
+ "التالي": ["Suivant", "Next"],
+ "عرض": ["Affichage", "Showing"],
+ "من أصل": ["sur", "of"],
+ "العربية الفصحى": ["Arabe standard", "Standard Arabic"],
+ "الدارجة الجزائرية": ["Darija algérienne", "Algerian Darija"],
  "لوحة التحكم": ["Tableau de bord", "Dashboard"],
  "تابع أهدافك: المبيعات والمنتجات الأكثر طلباً": ["Suivez vos objectifs : ventes et produits les plus demandés", "Track your goals: sales and best-selling products"],
  "فتح لوحة الجرد": ["Ouvrir l'inventaire", "Open inventory"],
