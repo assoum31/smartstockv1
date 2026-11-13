@@ -64,6 +64,53 @@ export type Database = {
           },
         ]
       }
+      cash_advances: {
+        Row: {
+          amount: number
+          beneficiary_id: string | null
+          beneficiary_name: string
+          cash_session_id: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          reason: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          beneficiary_id?: string | null
+          beneficiary_name: string
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          reason?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          beneficiary_id?: string | null
+          beneficiary_name?: string
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          reason?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_advances_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_sessions: {
         Row: {
           closed_at: string | null
@@ -215,6 +262,10 @@ export type Database = {
       }
       inventory_logs: {
         Row: {
+          audit_code: string | null
+          audited_at: string | null
+          audited_by: string | null
+          audited_by_name: string | null
           barcode: string
           client_id: string | null
           counted_at: string
@@ -230,6 +281,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audit_code?: string | null
+          audited_at?: string | null
+          audited_by?: string | null
+          audited_by_name?: string | null
           barcode: string
           client_id?: string | null
           counted_at?: string
@@ -245,6 +300,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audit_code?: string | null
+          audited_at?: string | null
+          audited_by?: string | null
+          audited_by_name?: string | null
           barcode?: string
           client_id?: string | null
           counted_at?: string
@@ -946,6 +1005,17 @@ export type Database = {
       }
     }
     Functions: {
+      audit_inventory_log: {
+        Args: {
+          _barcode: string
+          _code: string
+          _location: string
+          _log_id: string
+          _name: string
+          _qty: number
+        }
+        Returns: undefined
+      }
       can_sell: { Args: never; Returns: boolean }
       close_cash_session: {
         Args: { _closing: number; _id: string }
@@ -965,6 +1035,10 @@ export type Database = {
           _req_id: string
         }
         Returns: undefined
+      }
+      create_cash_advance: {
+        Args: { _amount: number; _beneficiary_id: string; _reason: string }
+        Returns: string
       }
       create_goods_receipt: {
         Args: {
@@ -1032,6 +1106,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      next_audit_code: { Args: { _session_id: string }; Returns: string }
       open_cash_session: { Args: { _opening: number }; Returns: string }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
@@ -1054,7 +1129,14 @@ export type Database = {
       start_inventory_session: { Args: { _name: string }; Returns: string }
     }
     Enums: {
-      app_role: "master" | "manager" | "worker" | "cashier" | "pricer"
+      app_role:
+        | "master"
+        | "manager"
+        | "worker"
+        | "cashier"
+        | "pricer"
+        | "observer"
+        | "auditor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1182,7 +1264,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["master", "manager", "worker", "cashier", "pricer"],
+      app_role: [
+        "master",
+        "manager",
+        "worker",
+        "cashier",
+        "pricer",
+        "observer",
+        "auditor",
+      ],
     },
   },
 } as const

@@ -17,6 +17,8 @@ import { Route as MasterRouteImport } from './routes/master'
 import { Route as WorkerRouteImport } from './routes/worker'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdvancesRouteImport } from './routes/_authenticated/advances'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -68,6 +70,16 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdvancesRoute = AuthenticatedAdvancesRouteImport.update({
+  id: '/advances',
+  path: '/advances',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -146,6 +158,8 @@ export interface FileRoutesByFullPath {
   '/worker': typeof WorkerRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/advances': typeof AuthenticatedAdvancesRoute
+  '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -168,6 +182,8 @@ export interface FileRoutesByTo {
   '/worker': typeof WorkerRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/advances': typeof AuthenticatedAdvancesRoute
+  '/audit': typeof AuthenticatedAuditRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/inventory': typeof AuthenticatedInventoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -192,6 +208,8 @@ export interface FileRoutesById {
   '/worker': typeof WorkerRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/advances': typeof AuthenticatedAdvancesRoute
+  '/_authenticated/audit': typeof AuthenticatedAuditRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -216,6 +234,8 @@ export interface FileRouteTypes {
     | '/worker'
     | '/activity'
     | '/admin'
+    | '/advances'
+    | '/audit'
     | '/dashboard'
     | '/inventory'
     | '/notifications'
@@ -238,6 +258,8 @@ export interface FileRouteTypes {
     | '/worker'
     | '/activity'
     | '/admin'
+    | '/advances'
+    | '/audit'
     | '/dashboard'
     | '/inventory'
     | '/notifications'
@@ -261,6 +283,8 @@ export interface FileRouteTypes {
     | '/worker'
     | '/_authenticated/activity'
     | '/_authenticated/admin'
+    | '/_authenticated/advances'
+    | '/_authenticated/audit'
     | '/_authenticated/dashboard'
     | '/_authenticated/inventory'
     | '/_authenticated/notifications'
@@ -341,6 +365,20 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/advances': {
+      id: '/_authenticated/advances'
+      path: '/advances'
+      fullPath: '/advances'
+      preLoaderRoute: typeof AuthenticatedAdvancesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/audit': {
+      id: '/_authenticated/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuthenticatedAuditRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -440,6 +478,8 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdvancesRoute: typeof AuthenticatedAdvancesRoute
+  AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -458,6 +498,8 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdvancesRoute: AuthenticatedAdvancesRoute,
+  AuthenticatedAuditRoute: AuthenticatedAuditRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,

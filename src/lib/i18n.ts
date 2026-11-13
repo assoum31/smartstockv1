@@ -12,6 +12,8 @@ const dict = {
   dashboard: { ar: "لوحة التحكم", fr: "Tableau de bord", en: "Dashboard" },
   dashboardShort: { ar: "الرئيسية", fr: "Accueil", en: "Home" },
   inventory: { ar: "الجرد", fr: "Inventaire", en: "Inventory" },
+  audit: { ar: "التدقيق", fr: "Contrôle", en: "Audit" },
+  advances: { ar: "التسبيقات", fr: "Acomptes", en: "Advances" },
   scan: { ar: "السكان", fr: "Scanner", en: "Scan" },
   pos: { ar: "البيع", fr: "Vente", en: "Sales" },
   salesLog: { ar: "سجل المبيعات", fr: "Journal des ventes", en: "Sales log" },

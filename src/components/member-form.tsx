@@ -5,13 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { isValidUsername } from "@/lib/identity";
 
-export type MemberRole = "worker" | "manager" | "cashier" | "pricer";
+export type MemberRole = "worker" | "manager" | "cashier" | "pricer" | "observer" | "auditor";
 
 export const ROLE_OPTIONS: { role: MemberRole; label: string; hint: string; managerOnly?: boolean }[] = [
   { role: "manager", label: "مسير", hint: "كل الصلاحيات: الجرد، الفريق، المنتجات، البيع", managerOnly: true },
   { role: "cashier", label: "بائع / كاشير", hint: "نقطة البيع، سجل المبيعات، الموردين، وصول السلع" },
   { role: "worker", label: "عامل جرد", hint: "يمسح ويعدّ فقط" },
   { role: "pricer", label: "مصحح الأسعار", hint: "يعدّل أسعار المنتجات فقط" },
+  { role: "observer", label: "مراقب الجرد", hint: "يشاهد الجرد والفوارق مباشرة بدون أي تعديل" },
+  { role: "auditor", label: "مدقق الجرد", hint: "يدقق الباركود والاسم والرقم ID ومكان الرف، وتعديل الكمية اختياري" },
 ];
 
 export function UsernameField({
