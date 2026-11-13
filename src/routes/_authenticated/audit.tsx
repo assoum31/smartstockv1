@@ -153,7 +153,7 @@ function AuditDialog({ log, sessionId, onClose, onSaved }: { log: InventoryLog; 
 
   const save = async () => {
     const n = Number(qty);
-    if (editQty && (!Number.isFinite(n) || n < 0)) return toast.error("كمية غير صالحة");
+    if (editQty && (!Number.isFinite(n) || n < 0)) { toast.error("كمية غير صالحة"); return; }
     setBusy(true);
     const { error } = await supabase.rpc("audit_inventory_log", {
       _log_id: log.id,

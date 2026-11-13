@@ -164,12 +164,12 @@ function NewAdvance({
   const [busy, setBusy] = useState(false);
   const save = async () => {
     const n = Number(amount);
-    if (!who) return toast.error("اختر العامل");
-    if (!Number.isFinite(n) || n <= 0) return toast.error("مبلغ غير صالح");
+    if (!who) { toast.error("اختر العامل"); return; }
+    if (!Number.isFinite(n) || n <= 0) { toast.error("مبلغ غير صالح"); return; }
     setBusy(true);
     const { error } = await supabase.rpc("create_cash_advance", { _beneficiary_id: who, _amount: n, _reason: reason });
     setBusy(false);
-    if (error) return toast.error(errorText(error));
+    if (error) { toast.error(errorText(error)); return; }
     toast.success("تم تسجيل التسبيق");
     setWho("");
     setAmount("");
