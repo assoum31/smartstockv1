@@ -99,6 +99,13 @@
       "when": 1794596146650,
       "tag": "0013_activity_log_manager_only",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794597956556,
+      "tag": "0014_observer_auditor_advances",
+      "breakpoints": true
     }
   ]
 }
