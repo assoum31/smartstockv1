@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone } from "lucide-react";
+import { KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone, Contrast, Save } from "lucide-react";
 import { setTheme, useTheme, type ThemePref } from "@/lib/theme";
 import { useI18n, setLang, setDirOverride, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ function SettingsPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const { t, lang, dirOverride } = useI18n();
+  const theme = useTheme();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +71,19 @@ function SettingsPage() {
       />
       <LanguageCard t={t} lang={lang} dirOverride={dirOverride} />
       <ThemeCard t={t} />
+      <Button
+        size="lg"
+        className="w-full"
+        onClick={() => {
+          setLang(lang);
+          setDirOverride(dirOverride);
+          setTheme(theme);
+          toast.success(t("settingsSaved"));
+        }}
+      >
+        <Save />
+        {t("saveSettings")}
+      </Button>
       {me.isManager && me.tenant && <CompanySettingsCard tenantId={me.tenant.id} />}
       <form onSubmit={submit} className="surface-card space-y-4 p-6">
         <h2 className="flex items-center gap-2 text-lg font-extrabold">
@@ -194,6 +208,7 @@ function ThemeCard({ t }: { t: ReturnType<typeof useI18n>["t"] }) {
   const opts: { v: ThemePref; label: string; Icon: typeof Sun }[] = [
     { v: "light", label: t("themeLight"), Icon: Sun },
     { v: "dark", label: t("themeDark"), Icon: Moon },
+    { v: "oled", label: t("themeOled"), Icon: Contrast },
     { v: "system", label: t("themeSystem"), Icon: MonitorSmartphone },
   ];
   return (
@@ -205,7 +220,7 @@ function ThemeCard({ t }: { t: ReturnType<typeof useI18n>["t"] }) {
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("themeHint")}</p>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {opts.map(({ v, label, Icon }) => (
           <button
             key={v}

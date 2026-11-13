@@ -1,5 +1,8 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "لوحة التحكم": ["Tableau de bord", "Dashboard"],
+ "تابع أهدافك: المبيعات والمنتجات الأكثر طلباً": ["Suivez vos objectifs : ventes et produits les plus demandés", "Track your goals: sales and best-selling products"],
+ "فتح لوحة الجرد": ["Ouvrir l'inventaire", "Open inventory"],
  "(تم إنشاء المتجر، أضف المسير من قائمة الأعضاء)": [
   "(Magasin créé, ajoutez le gérant depuis la liste des membres)",
   "(Store created, add the manager from the members list)"

@@ -8,7 +8,9 @@ const DIR_KEY = "smartstock:dir";
 
 const dict = {
   stores: { ar: "المتاجر", fr: "Magasins", en: "Stores" },
-  dashboard: { ar: "الجرد", fr: "Inventaire", en: "Inventory" },
+  dashboard: { ar: "لوحة التحكم", fr: "Tableau de bord", en: "Dashboard" },
+  dashboardShort: { ar: "الرئيسية", fr: "Accueil", en: "Home" },
+  inventory: { ar: "الجرد", fr: "Inventaire", en: "Inventory" },
   scan: { ar: "السكان", fr: "Scanner", en: "Scan" },
   pos: { ar: "البيع", fr: "Vente", en: "Sales" },
   salesLog: { ar: "سجل المبيعات", fr: "Journal des ventes", en: "Sales log" },
@@ -47,9 +49,12 @@ const dict = {
   savePassword: { ar: "حفظ كلمة المرور", fr: "Enregistrer", en: "Save password" },
   appearance: { ar: "المظهر", fr: "Apparence", en: "Appearance" },
   themeLight: { ar: "نهاري", fr: "Clair", en: "Light" },
-  themeDark: { ar: "ليلي", fr: "Sombre", en: "Dark" },
+  themeDark: { ar: "ليلي مريح", fr: "Nuit douce", en: "Night comfort" },
+  themeOled: { ar: "أسود", fr: "Noir OLED", en: "OLED black" },
+  saveSettings: { ar: "حفظ الإعدادات", fr: "Enregistrer les paramètres", en: "Save settings" },
+  settingsSaved: { ar: "تم حفظ الإعدادات", fr: "Paramètres enregistrés", en: "Settings saved" },
   themeSystem: { ar: "حسب الهاتف", fr: "Selon l'appareil", en: "Match device" },
-  themeHint: { ar: "الوضع الليلي أسود بالكامل، مريح للعين ويوفر بطارية الهاتف.", fr: "Le mode sombre est noir intégral, reposant et économe en batterie.", en: "Dark mode is true black: easy on the eyes and saves battery." },
+  themeHint: { ar: "الليلي المريح بألوان هادئة وكتابة خافتة لراحة العين، والأسود بالكامل يوفر البطارية.", fr: "Nuit douce : couleurs apaisées et texte atténué. Noir OLED : noir intégral, économe en batterie.", en: "Night comfort uses soft colors and dimmed text; OLED black is true black and saves battery." },
   saving: { ar: "جاري الحفظ...", fr: "Enregistrement…", en: "Saving…" },
 } satisfies Record<string, Record<Lang, string>>;
 export type TKey = keyof typeof dict;
