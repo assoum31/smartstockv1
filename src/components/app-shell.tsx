@@ -87,7 +87,6 @@ function navFor(me: Me): NavItem[] {
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
   if (!items.length) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
-  items.push({ ...activity, dock: items.filter((i) => i.dock).length < 5 });
   return items;
 }
 
@@ -209,7 +208,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
 
           <div className="ms-auto flex items-center gap-1.5">
             <SyncBadge />
-            {!me.isMaster && (
+            {me.isManager && (
               <Link to="/activity" aria-label={t("activity")} className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">
                 <History className="h-5 w-5" />
               </Link>
