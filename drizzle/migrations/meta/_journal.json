@@ -127,6 +127,13 @@
       "when": 1794657430600,
       "tag": "0017_online_store_customization",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794660633828,
+      "tag": "0018_new_products_hidden_by_default",
+      "breakpoints": true
     }
   ]
 }
