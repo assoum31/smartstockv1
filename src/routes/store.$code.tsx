@@ -63,7 +63,7 @@ function StorePage() {
   const familles = useMemo(() => [...new Set(data.map((d) => d.famille).filter(Boolean) as string[])].sort(), [data]);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return data.filter((d) => (fam === "all" || d.famille === fam) && (!s || d.name.toLowerCase().includes(s) || d.barcode.includes(s))).slice(0, 300);
+    return data.filter((d) => (fam === "all" || d.famille === fam) && (!s || d.name.toLowerCase().includes(s) || d.barcode.toLowerCase().includes(s))).slice(0, 300);
   }, [data, q, fam]);
   const byCode = useMemo(() => new Map(data.map((d) => [d.barcode, d])), [data]);
   const lines = Object.entries(cart).map(([b, n]) => ({ item: byCode.get(b), n })).filter((l) => l.item) as { item: Item; n: number }[];

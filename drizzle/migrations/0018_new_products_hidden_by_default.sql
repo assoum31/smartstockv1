@@ -1,0 +1,2 @@
+ALTER TABLE public.products ALTER COLUMN online_visible SET DEFAULT false;
+COMMENT ON COLUMN public.products.online_visible IS 'Show this product in the public online store. New products start hidden; the manager turns them on from the online store page.';
