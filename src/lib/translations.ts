@@ -802,7 +802,6 @@ export const PHRASES: Record<string, [string, string]> = {
   "Pièces vendues",
   "Items sold"
  ],
- "الكاميرا": [
   "Caméra",
   "Camera"
  ],
