@@ -294,6 +294,14 @@ export const PHRASES: Record<string, [string, string]> = {
   "Vider le panier",
   "Empty cart"
  ],
+ "رجوع إلى جديد": [
+  "Remettre en nouveau",
+  "Back to new"
+ ],
+ "استرجاع الطلبية": [
+  "Restaurer la commande",
+  "Restore order"
+ ],
  "إلغاء": [
   "Annuler",
   "Cancel"

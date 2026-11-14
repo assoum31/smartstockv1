@@ -95,6 +95,8 @@ function OrdersPage() {
               {o.status === "new" && <Button size="sm" onClick={() => void setSt(o, "confirmed")}>تأكيد</Button>}
               {o.status === "confirmed" && <Button size="sm" onClick={() => { setPay("cash"); setDelivering(o); }}>تم التسليم</Button>}
               {(o.status === "new" || o.status === "confirmed") && <Button size="sm" variant="ghost" onClick={() => void setSt(o, "cancelled")}>إلغاء</Button>}
+              {o.status === "confirmed" && <Button size="sm" variant="outline" onClick={() => void setSt(o, "new")}>رجوع إلى جديد</Button>}
+              {o.status === "cancelled" && <Button size="sm" variant="outline" onClick={() => void setSt(o, "new")}>استرجاع الطلبية</Button>}
             </div>
           </li>
         ))}
