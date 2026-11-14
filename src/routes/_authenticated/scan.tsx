@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
       context.queryClient.ensureQueryData(sessionLogsQuery(session?.id ?? null)),
     ]);
   },
-  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }, { name: 'description', content: 'عد المنتجات بالباركود وحفظ الجرد على الجهاز في SMART STOCK.' }, { property: 'og:title', content: 'السكان | SMART STOCK' }, { property: 'og:description', content: 'الجرد بالباركود وحفظ الكميات والملاحظات.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
   component: ScanPage,
 });
 

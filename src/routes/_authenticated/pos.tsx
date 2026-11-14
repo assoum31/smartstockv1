@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/pos")({
       context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
       context.queryClient.ensureQueryData(myCashSessionQuery(context.tenant.id, context.userId)),
     ]),
-  head: () => ({ meta: [{ title: "نقطة البيع | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "نقطة البيع | SMART STOCK" }, { name: 'description', content: 'بيع المنتجات وحفظ الوصولات ومزامنة المبيعات في SMART STOCK.' }, { property: 'og:title', content: 'نقطة البيع | SMART STOCK' }, { property: 'og:description', content: 'إدارة البيع والصندوق ووصولات المتجر.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
   component: PosPage,
 });
 
@@ -155,7 +155,16 @@ function PosPage() {
     try {
     const clientId = newClientId();
     await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
-    if (print) printReceipt(cart, `LOCAL-${clientId}`);
+    let number = `LOCAL-${clientId}`;
+    if (online) {
+      await syncDeviceSales();
+      const { data: synced } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', clientId).maybeSingle();
+      if (synced) {
+        const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number').eq('id', synced.ticket_id).maybeSingle();
+        if (ticket) number = String(ticket.ticket_number).padStart(4, '0');
+      }
+    }
+    if (print) printReceipt(cart, number);
     toast.success('تم حفظ البيع على الجهاز');
     setCart([]);
     setPaid("");

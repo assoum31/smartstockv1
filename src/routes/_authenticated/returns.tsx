@@ -79,6 +79,15 @@ function ReturnsPage() {
   const [linked, setLinked] = useState<{ id: string; number: number; edit: boolean } | null>(null);
 
   const lookup = async (raw: string) => {
+    const localId = raw.trim().match(/^LOCAL-([0-9a-f-]{36})$/i)?.[1];
+    if (localId) {
+      const { data: synced, error } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', localId).eq('tenant_id', tenant.id).maybeSingle();
+      if (error) return void toast.error(errorText(error));
+      if (!synced) return void toast.error('هذا الوصل لم تتم مزامنته بعد.');
+      const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number').eq('id', synced.ticket_id).maybeSingle();
+      if (!ticket) return void toast.error('الوصل غير موجود');
+      return lookup(String(ticket.ticket_number));
+    }
     const n = parseTicketCode(raw);
     if (!n) return void toast.error("رقم وصل غير صالح");
     const { data, error } = await supabase

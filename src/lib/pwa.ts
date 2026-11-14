@@ -20,4 +20,7 @@ export async function initializePwa() {
   }
   const registration = await navigator.serviceWorker.register('/sw.js');
   void registration.update();
+  await navigator.serviceWorker.ready;
+  // Warm the fixed start URL and the two offline work screens, never API responses.
+  await Promise.allSettled(['/login', '/pos', '/scan'].map(path => fetch(path, { headers: { Accept: 'text/html' }, credentials: 'same-origin' })));
 }
