@@ -16,9 +16,9 @@ const EMPTY = {
 };
 
 export function ProductFormDialog({
-  product, open, onOpenChange, onSaved, familles, tenantId, initialBarcode,
+  product, open, onOpenChange, onSaved, familles, tenantId, initialBarcode, isManager = false,
 }: {
-  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (saved?: Product) => void; initialBarcode?: string; familles: string[]; tenantId: string;
+  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (saved?: Product) => void; initialBarcode?: string; familles: string[]; tenantId: string; isManager?: boolean;
 }) {
   const [f, setF] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
