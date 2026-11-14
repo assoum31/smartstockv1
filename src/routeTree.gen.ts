@@ -33,6 +33,7 @@ import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as StoreCodeRouteImport } from './routes/store.$code'
 import { Route as AuthenticatedStoresStoreIdRouteImport } from './routes/_authenticated/stores.$storeId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -155,6 +156,11 @@ const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const StoreCodeRoute = StoreCodeRouteImport.update({
+  id: '/store/$code',
+  path: '/store/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedStoresStoreIdRoute =
   AuthenticatedStoresStoreIdRouteImport.update({
     id: '/stores/$storeId',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/store/$code': typeof StoreCodeRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRoutesByTo {
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/store/$code': typeof StoreCodeRoute
   '/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRoutesById {
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/store/$code': typeof StoreCodeRoute
   '/_authenticated/stores/$storeId': typeof AuthenticatedStoresStoreIdRoute
 }
 export interface FileRouteTypes {
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suppliers'
     | '/team'
+    | '/store/$code'
     | '/stores/$storeId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suppliers'
     | '/team'
+    | '/store/$code'
     | '/stores/$storeId'
   id:
     | '__root__'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/suppliers'
     | '/_authenticated/team'
+    | '/store/$code'
     | '/_authenticated/stores/$storeId'
   fileRoutesById: FileRoutesById
 }
@@ -331,6 +343,7 @@ export interface RootRouteChildren {
   ManagerRoute: typeof ManagerRoute
   MasterRoute: typeof MasterRoute
   WorkerRoute: typeof WorkerRoute
+  StoreCodeRoute: typeof StoreCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -503,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/store/$code': {
+      id: '/store/$code'
+      path: '/store/$code'
+      fullPath: '/store/$code'
+      preLoaderRoute: typeof StoreCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/stores/$storeId': {
       id: '/_authenticated/stores/$storeId'
       path: '/stores/$storeId'
@@ -567,6 +587,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagerRoute: ManagerRoute,
   MasterRoute: MasterRoute,
   WorkerRoute: WorkerRoute,
+  StoreCodeRoute: StoreCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

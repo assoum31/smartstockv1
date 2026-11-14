@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { HandCoins, Plus } from "lucide-react";
+import { HandCoins, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ const advancesQuery = (tenantId: string) =>
 export const Route = createFileRoute("/_authenticated/advances")({
   beforeLoad: ({ context }) => {
     if (!context.me.canSell || !context.me.tenant) throw redirect({ to: context.me.homePath });
-    return { tenant: context.me.tenant };
+    return { tenant: context.me.tenant, isManager: context.me.isManager };
   },
   loader: ({ context }) =>
     Promise.all([
@@ -50,7 +50,22 @@ export const Route = createFileRoute("/_authenticated/advances")({
 const money = (n: number) => `${n.toLocaleString("fr-DZ", { maximumFractionDigits: 2 })}\u00A0DA`;
 
 function AdvancesPage() {
-  const { tenant } = Route.useRouteContext();
+  const { tenant, isManager } = Route.useRouteContext();
+  const [editing, setEditing] = useState<{ id: string; amount: string; reason: string } | null>(null);
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["advances", tenant.id] });
+  const del = async (id: string) => {
+    if (!confirm("حذف هذا التسبيق؟")) return;
+    const { error } = await supabase.from("cash_advances").delete().eq("id", id);
+    if (error) toast.error(errorText(error)); else { toast.success("تم الحذف"); refresh(); }
+  };
+  const saveEdit = async () => {
+    if (!editing) return;
+    const n = Number(editing.amount);
+    if (!Number.isFinite(n) || n <= 0) { toast.error("مبلغ غير صالح"); return; }
+    const { error } = await supabase.from("cash_advances").update({ amount: n, reason: editing.reason || null }).eq("id", editing.id);
+    if (error) { toast.error(errorText(error)); return; }
+    toast.success("تم التعديل"); setEditing(null); refresh();
+  };
   const qc = useQueryClient();
   const { data: rows } = useSuspenseQuery(advancesQuery(tenant.id));
   const { data: team } = useSuspenseQuery(teamQuery(tenant.id));
@@ -133,10 +148,30 @@ function AdvancesPage() {
               </p>
             </div>
             <span className="whitespace-nowrap font-extrabold">{money(Number(r.amount))}</span>
+            {isManager && (
+              <>
+                <Button size="icon" variant="ghost" aria-label="تعديل" onClick={() => setEditing({ id: r.id, amount: String(r.amount), reason: r.reason ?? "" })}><Pencil /></Button>
+                <Button size="icon" variant="ghost" aria-label="حذف" onClick={() => void del(r.id)}><Trash2 /></Button>
+              </>
+            )}
           </li>
         ))}
         {!list.length && <li className="surface-card p-8 text-center text-sm text-muted-foreground">لا توجد تسبيقات</li>}
       </ul>
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-right sm:text-right"><DialogTitle>تعديل التسبيق</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <Label htmlFor="ed-amount">المبلغ (DA)</Label>
+              <Input id="ed-amount" type="number" inputMode="decimal" value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: e.target.value })} />
+              <Label htmlFor="ed-reason">السبب</Label>
+              <Input id="ed-reason" value={editing.reason} onChange={(e) => setEditing({ ...editing, reason: e.target.value })} />
+              <Button className="w-full" onClick={() => void saveEdit()}>حفظ التعديل</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <NewAdvance
         open={open}
         onOpenChange={setOpen}
