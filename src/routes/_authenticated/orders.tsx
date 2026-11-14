@@ -5,6 +5,7 @@ import { Copy, MessageCircle, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
 import { money } from "@/lib/pos-queries";
 import { onlineOrdersQuery, ORDER_STATUS, waLink, type OnlineOrder } from "@/lib/online-orders";
@@ -33,8 +34,30 @@ function OrdersPage() {
     if (error) toast.error(errorText(error));
     else void qc.invalidateQueries({ queryKey: ["online-orders", tenant.id] });
   };
+  const [delivering, setDelivering] = useState<OnlineOrder | null>(null);
+  const [pay, setPay] = useState("cash");
+  const deliver = async () => {
+    if (!delivering) return;
+    const { error } = await supabase.rpc("deliver_online_order", { _order_id: delivering.id, _payment: pay });
+    if (error) return void toast.error(errorText(error));
+    toast.success("تم التسليم وتسجيل البيع في الكاسة");
+    setDelivering(null);
+    for (const k of [["online-orders", tenant.id], ["sales-tickets"], ["products", tenant.id]]) void qc.invalidateQueries({ queryKey: k });
+  };
   return (
     <div className="space-y-5">
+      <Dialog open={!!delivering} onOpenChange={(o) => !o && setDelivering(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>تأكيد التسليم #{delivering?.order_number}</DialogTitle></DialogHeader>
+          <p className="text-sm">المبلغ: <b>{money(Number(delivering?.total_amount ?? 0))} دج</b> — سيُسجَّل كبون بيع ويُنقص من المخزون ويدخل الكاسة المفتوحة.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[["cash", "نقداً"], ["card", "بطاقة"], ["credit", "آجل"]].map(([v, l]) => (
+              <Button key={v} variant={pay === v ? "default" : "outline"} onClick={() => setPay(v)}>{l}</Button>
+            ))}
+          </div>
+          <DialogFooter><Button onClick={() => void deliver()}>تأكيد التسليم</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
       <PageHeader title="طلبيات أونلاين" subtitle="اتصل بالزبون ثم أكّد الطلبية" />
       <div className="surface-card flex flex-wrap items-center gap-2 p-3 text-sm">
         <span className="font-bold">رابط متجري أونلاين:</span>
@@ -70,7 +93,7 @@ function OrdersPage() {
               <Button size="sm" variant="outline" asChild><a href={`tel:${o.phone}`}><Phone />{o.phone}</a></Button>
               <Button size="sm" variant="outline" asChild><a href={waLink(o.whatsapp || o.phone)} target="_blank" rel="noreferrer"><MessageCircle />واتساب</a></Button>
               {o.status === "new" && <Button size="sm" onClick={() => void setSt(o, "confirmed")}>تأكيد</Button>}
-              {o.status === "confirmed" && <Button size="sm" onClick={() => void setSt(o, "done")}>تم التسليم</Button>}
+              {o.status === "confirmed" && <Button size="sm" onClick={() => { setPay("cash"); setDelivering(o); }}>تم التسليم</Button>}
               {(o.status === "new" || o.status === "confirmed") && <Button size="sm" variant="ghost" onClick={() => void setSt(o, "cancelled")}>إلغاء</Button>}
             </div>
           </li>

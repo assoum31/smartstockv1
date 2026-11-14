@@ -16,5 +16,6 @@ export function salesSummary(tickets: Ticket[], products: Prod[], from: string, 
       c += q * (cost.get(i.barcode) ?? 0);
     }
   }
-  return { revenue, cost: c, profit: revenue - c, tickets: n, units, average: n ? revenue / n : 0 };
+  const profit = revenue - c;
+  return { revenue, cost: c, profit, tickets: n, units, average: n ? revenue / n : 0, margin: revenue ? (profit / revenue) * 100 : 0, avgProfit: n ? profit / n : 0 };
 }

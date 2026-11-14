@@ -17,6 +17,8 @@ export function SalesStats({ tenantId }: { tenantId: string }) {
     { label: "رقم الأعمال", value: money(s.revenue) },
     { label: "تكلفة الشراء", value: money(s.cost) },
     { label: "الفائدة", value: money(s.profit) },
+    { label: "هامش الربح", value: `${s.margin.toFixed(1)}%` },
+    { label: "متوسط فائدة الوصل", value: money(s.avgProfit) },
     { label: "عدد الوصولات", value: String(s.tickets) },
     { label: "متوسط الوصل", value: money(s.average) },
     { label: "القطع المباعة", value: String(s.units) },
@@ -28,7 +30,7 @@ export function SalesStats({ tenantId }: { tenantId: string }) {
         <Input type="date" className="h-9 w-auto" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="من تاريخ" />
         <Input type="date" className="h-9 w-auto" value={to} onChange={(e) => setTo(e.target.value)} aria-label="إلى تاريخ" />
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="surface-card p-3">
             <p className="text-xs text-muted-foreground">{c.label}</p>
