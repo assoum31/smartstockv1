@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
-import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe } from "lucide-react";
+import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";

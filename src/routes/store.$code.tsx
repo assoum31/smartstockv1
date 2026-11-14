@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Minus, Plus, Search, ShoppingBag, Trash2 } from "lucide-react";
@@ -77,7 +77,7 @@ function StorePage() {
   const add = (d: Item) => { setQty(d.barcode, (cart[d.barcode] ?? 0) + 1); setPicked(d); };
 
   return (
-    <div className="min-h-screen bg-background" style={accent ? ({ "--primary": accent } as React.CSSProperties) : undefined}>
+    <div className="min-h-screen bg-background" style={accent ? ({ "--primary": accent } as CSSProperties) : undefined}>
       <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           {info?.logo && <img src={info.logo} alt="" className="h-9 w-9 rounded object-contain" />}
