@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/pos-queries";
 import { formatQty } from "@/lib/messages";
-import { filterByQuery } from "@/lib/store-rules";
 import { currentStockRows } from "@/lib/stock-rules";
 
 type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number; alt_barcodes: string[] | null };
