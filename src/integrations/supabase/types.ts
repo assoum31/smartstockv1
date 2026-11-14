@@ -1204,6 +1204,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      audit_uncounted_product: {
+        Args: {
+          _barcode: string
+          _code: string
+          _location: string
+          _mode: string
+          _session_id: string
+        }
+        Returns: undefined
+      }
       can_sell: { Args: never; Returns: boolean }
       close_cash_session: {
         Args: { _closing: number; _id: string }
