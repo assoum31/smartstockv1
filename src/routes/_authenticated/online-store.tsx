@@ -98,7 +98,7 @@ function OnlineStorePage() {
     for (const r of data) {
       const p = byCode.get(String(r["الباركود"] ?? "").trim());
       if (!p) { miss++; continue; }
-      const patch: Record<string, unknown> = {};
+      const patch: { name?: string; famille?: string | null; selling_price?: number; online_visible?: boolean; image_url?: string | null; online_description?: string | null; related_barcodes?: string[] } = {};
       const str = (k: string) => String(r[k] ?? "").trim();
       if (str("الاسم")) patch.name = str("الاسم");
       if ("الفئة" in r) patch.famille = str("الفئة") || null;
