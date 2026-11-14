@@ -1,7 +1,7 @@
 import { openPrint, ticketHtml, useStoreSettings } from "@/lib/store-settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, Camera, CameraOff, Minus, PauseCircle, Plus, Printer, Search, Trash2, Undo2, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { myCashSessionQuery } from "@/lib/pos-queries";
@@ -19,7 +19,7 @@ import { errorText } from "@/lib/messages";
 import { ProductFormDialog } from "@/components/product-form";
 import { OnlineOrdersAlert } from "@/components/online-orders-alert";
 import { pendingStock, saveDeviceSale, syncDeviceSales, useDeviceSales, retryDeviceSale } from '@/lib/offline-sales';
-import { newClientId, useSyncState } from '@/lib/offline';
+import { newClientId, useSyncState, withOfflineCopy } from "@/lib/offline";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
