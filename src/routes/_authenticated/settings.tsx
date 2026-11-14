@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CompanySettingsCard } from "@/components/company-settings-card";
 import { PrinterSettingsCard } from "@/components/printer-settings-card";
+import { CameraSettingsCard } from "@/components/camera-settings-card";
 import { PageHeader } from "@/components/stat-card";
 import { MIN_PASSWORD_LENGTH } from "@/lib/identity";
 import { ROLE_LABEL } from "@/lib/me";
@@ -81,6 +82,7 @@ function SettingsPage() {
           <TabsTrigger value="appearance" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Palette className="h-4 w-4" />المظهر واللغة</TabsTrigger>
           {me.isManager && me.tenant && <TabsTrigger value="company" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Building2 className="h-4 w-4" />المؤسسة</TabsTrigger>}
           {me.isManager && me.tenant && <TabsTrigger value="printers" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Printer className="h-4 w-4" />الطابعات</TabsTrigger>}
+          <TabsTrigger value="camera" className="shrink-0 gap-1.5 rounded-lg px-3 py-2">الكاميرا</TabsTrigger>
           <TabsTrigger value="offline" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><WifiOff className="h-4 w-4" />العمل دون إنترنت</TabsTrigger>
           <TabsTrigger value="security" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><KeyRound className="h-4 w-4" />الأمان</TabsTrigger>
         </TabsList>
@@ -107,6 +109,7 @@ function SettingsPage() {
         {me.isManager && me.tenant && (
           <TabsContent value="printers" className="mt-0"><PrinterSettingsCard tenantId={me.tenant.id} /></TabsContent>
         )}
+        <TabsContent value="camera" className="mt-0"><CameraSettingsCard /></TabsContent>
         <TabsContent value="offline" className="mt-0"><OfflineCard tenantId={me.tenant?.id} /></TabsContent>
         <TabsContent value="security" className="mt-0">
       <form onSubmit={submit} className="surface-card space-y-4 p-6">
