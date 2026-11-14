@@ -54,25 +54,43 @@ function StockPage() {
   const { tenant } = Route.useRouteContext();
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const { data: moves } = useSuspenseQuery(movesQuery(tenant.id));
-  const [tab, setTab] = useState<"moves" | "alerts">("moves");
+  const [tab, setTab] = useState<"moves" | "alerts" | "stock">("moves");
   const [kind, setKind] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<P | null>(null);
+  const [fam, setFam] = useState("");
+  const [showZero, setShowZero] = useState(false);
+  const [sort, setSort] = useState<"qty" | "value" | "name">("qty");
+  const [page, setPage] = useState(1);
 
   const kpi = useMemo(() => {
-    let buy = 0, sell = 0, out = 0, low = 0;
+    let buy = 0, sell = 0, out = 0, low = 0, units = 0, refs = 0;
     for (const p of products) {
       const n = Math.max(0, Number(p.system_quantity));
-      buy += n * Number(p.purchase_price); sell += n * Number(p.selling_price);
+      buy += n * Number(p.purchase_price); sell += n * Number(p.selling_price); units += n;
+      if (n > 0) refs++;
       if (Number(p.system_quantity) <= 0) out++; else if (Number(p.min_stock) > 0 && Number(p.system_quantity) <= Number(p.min_stock)) low++;
     }
-    return { buy, sell, margin: sell - buy, out, low };
+    return { buy, sell, margin: sell - buy, out, low, units, refs };
   }, [products]);
   const alerts = useMemo(() => products.filter((p) => Number(p.system_quantity) <= 0 || (Number(p.min_stock) > 0 && Number(p.system_quantity) <= Number(p.min_stock))), [products]);
   const s = q.trim().toLowerCase();
   const shownMoves = moves.filter((m) => (!kind || m.kind === kind) && (!s || `${m.product_name} ${m.barcode}`.toLowerCase().includes(s)));
   const shownAlerts = alerts.filter((p) => !s || `${p.name} ${p.barcode}`.toLowerCase().includes(s));
   const byBarcode = (b: string | null) => products.find((p) => p.barcode === b) ?? null;
+  const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter((f): f is string => !!f))].sort((a, b) => a.localeCompare(b, ["ar", "fr"])), [products]);
+  const stockRows = useMemo(() => {
+    const rows = products.filter((p) => showZero || Number(p.system_quantity) > 0);
+    const found = filterByQuery(rows, q).filter((p) => !fam || p.famille === fam);
+    return found.sort((a, b) => sort === "name"
+      ? a.name.localeCompare(b.name, ["ar", "fr"])
+      : sort === "value"
+        ? Number(b.system_quantity) * Number(b.selling_price) - Number(a.system_quantity) * Number(a.selling_price)
+        : Number(b.system_quantity) - Number(a.system_quantity));
+  }, [products, q, fam, showZero, sort]);
+  const pageCount = Math.max(1, Math.ceil(stockRows.length / PER_PAGE));
+  const curPage = Math.min(page, pageCount);
+  const pageRows = stockRows.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
 
   return (
     <div className="space-y-4">
