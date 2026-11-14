@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/stat-card";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { errorText } from "@/lib/messages";
+import { compressImage } from "@/lib/product-image";
 import { filterByQuery, parseRelated, STORE_COLORS } from "@/lib/store-rules";
 
 type P = { id: string; barcode: string; name: string; famille: string | null; selling_price: number; system_quantity: number; image_url: string | null; online_visible: boolean; online_description: string | null; related_barcodes: string[] };
@@ -202,6 +203,8 @@ function EditDialog({ p, products, onClose, onSaved }: { p: P; products: P[]; on
       <div className="surface-card max-h-[90vh] w-full max-w-lg space-y-3 overflow-y-auto p-4" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-extrabold">تعديل: {p.name}</h3>
         {fld("name", "الاسم")}{fld("famille", "الفئة (القسم)")}{fld("price", "سعر البيع")}{fld("image", "رابط الصورة")}
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-bold"><Upload className="h-4 w-4" />رفع صورة من الجهاز
+          <input type="file" accept="image/*" hidden onChange={async (e) => { const file = e.target.files?.[0]; e.target.value = ""; if (!file) return; try { const d = await compressImage(file); setF((x) => ({ ...x, image: d })); } catch { toast.error("تعذر قراءة الصورة"); } }} /></label>
         {f.image && <img src={f.image} alt="" className="h-28 rounded object-contain" />}
         {fld("desc", "وصف قصير")}
         <div className="space-y-1">
