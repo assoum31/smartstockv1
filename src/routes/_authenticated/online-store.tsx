@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/stat-card";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { errorText } from "@/lib/messages";
-import { parseRelated, STORE_COLORS } from "@/lib/store-rules";
+import { filterByQuery, parseRelated, STORE_COLORS } from "@/lib/store-rules";
 
 type P = { id: string; barcode: string; name: string; famille: string | null; selling_price: number; system_quantity: number; image_url: string | null; online_visible: boolean; online_description: string | null; related_barcodes: string[] };
 type S = { store_title: string | null; store_tagline: string | null; store_color: string | null; store_banner: string | null; store_logo: string | null; store_enabled: boolean };
