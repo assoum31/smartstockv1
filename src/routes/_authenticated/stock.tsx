@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { money } from "@/lib/pos-queries";
 import { formatQty } from "@/lib/messages";
 import { filterByQuery } from "@/lib/store-rules";
+import { currentStockRows } from "@/lib/stock-rules";
 
 type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number; alt_barcodes: string[] | null };
 const KIND: Record<string, string> = { receipt: "وصل سلع", sale: "بيع", customer_return: "إرجاع زبون", supplier_return: "إرجاع مورد" };
@@ -79,15 +80,7 @@ function StockPage() {
   const shownAlerts = alerts.filter((p) => !s || `${p.name} ${p.barcode}`.toLowerCase().includes(s));
   const byBarcode = (b: string | null) => products.find((p) => p.barcode === b) ?? null;
   const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter((f): f is string => !!f))].sort((a, b) => a.localeCompare(b, ["ar", "fr"])), [products]);
-  const stockRows = useMemo(() => {
-    const rows = products.filter((p) => showZero || Number(p.system_quantity) > 0);
-    const found = filterByQuery(rows, q).filter((p) => !fam || p.famille === fam);
-    return found.sort((a, b) => sort === "name"
-      ? a.name.localeCompare(b.name, ["ar", "fr"])
-      : sort === "value"
-        ? Number(b.system_quantity) * Number(b.selling_price) - Number(a.system_quantity) * Number(a.selling_price)
-        : Number(b.system_quantity) - Number(a.system_quantity));
-  }, [products, q, fam, showZero, sort]);
+  const stockRows = useMemo(() => currentStockRows(products, { q, famille: fam, showZero, sort }), [products, q, fam, showZero, sort]);
   const pageCount = Math.max(1, Math.ceil(stockRows.length / PER_PAGE));
   const curPage = Math.min(page, pageCount);
   const pageRows = stockRows.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
