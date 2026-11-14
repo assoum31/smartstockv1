@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone, Contrast, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { productsQuery } from "@/lib/queries";
+import { useSyncState, flushQueue } from "@/lib/offline";
+import { useDeviceSales, syncDeviceSales } from "@/lib/offline-sales";
+import { CloudDownload, Building2, WifiOff, Palette, RefreshCw, KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone, Contrast, Save } from "lucide-react";
 import { setTheme, useTheme, type ThemePref } from "@/lib/theme";
 import { useI18n, setLang, setDirOverride, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -64,11 +70,19 @@ function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
         title={t("settings")}
         subtitle={`${me.fullName} · ${ROLE_LABEL[me.roles[0] ?? "worker"]}`}
       />
+      <Tabs defaultValue="appearance" className="space-y-5">
+        <TabsList className="no-scrollbar flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl p-1">
+          <TabsTrigger value="appearance" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Palette className="h-4 w-4" />المظهر واللغة</TabsTrigger>
+          {me.isManager && me.tenant && <TabsTrigger value="company" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Building2 className="h-4 w-4" />المؤسسة والطباعة</TabsTrigger>}
+          <TabsTrigger value="offline" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><WifiOff className="h-4 w-4" />العمل دون إنترنت</TabsTrigger>
+          <TabsTrigger value="security" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><KeyRound className="h-4 w-4" />الأمان</TabsTrigger>
+        </TabsList>
+        <TabsContent value="appearance" className="mt-0 space-y-6">
       <LanguageCard t={t} lang={lang} dirOverride={dirOverride} />
       <ThemeCard t={t} />
       <Button
@@ -84,7 +98,12 @@ function SettingsPage() {
         <Save />
         {t("saveSettings")}
       </Button>
-      {me.isManager && me.tenant && <CompanySettingsCard tenantId={me.tenant.id} />}
+        </TabsContent>
+        {me.isManager && me.tenant && (
+          <TabsContent value="company" className="mt-0"><CompanySettingsCard tenantId={me.tenant.id} /></TabsContent>
+        )}
+        <TabsContent value="offline" className="mt-0"><OfflineCard tenantId={me.tenant?.id} /></TabsContent>
+        <TabsContent value="security" className="mt-0">
       <form onSubmit={submit} className="surface-card space-y-4 p-6">
         <h2 className="flex items-center gap-2 text-lg font-extrabold">
           <KeyRound className="h-5 w-5 text-primary" />
@@ -131,7 +150,52 @@ function SettingsPage() {
           {saving ? t("saving") : t("savePassword")}
         </Button>
       </form>
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+function OfflineCard({ tenantId }: { tenantId?: string }) {
+  const qc = useQueryClient();
+  const { queue, online } = useSyncState();
+  const { sales } = useDeviceSales();
+  const [usage, setUsage] = useState<string>("—");
+  const [busy, setBusy] = useState(false);
+  const measure = () => {
+    navigator.storage?.estimate?.().then((e) => setUsage(`${((e.usage ?? 0) / 1048576).toFixed(1)} MB`));
+  };
+  useEffect(measure, []);
+  const download = async () => {
+    if (!tenantId) return;
+    setBusy(true);
+    try {
+      await qc.fetchQuery({ ...productsQuery(tenantId), staleTime: 0 });
+      await qc.refetchQueries({ type: "active" });
+      toast.success("تم تنزيل البيانات على الجهاز");
+      measure();
+    } catch {
+      toast.error("لا يوجد اتصال بالإنترنت.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const pending = queue.length + sales.length;
+  return (
+    <section className="surface-card space-y-5 p-5 sm:p-6">
+      <div>
+        <h2 className="flex items-center gap-2 text-lg font-extrabold"><WifiOff className="h-5 w-5 text-primary" />العمل دون إنترنت</h2>
+        <p className="mt-1 text-sm text-muted-foreground">يحفظ التطبيق المنتجات والجرد والإعدادات على هذا الجهاز ليعمل دون إنترنت، ثم يرسل العمليات تلقائياً عند عودة الاتصال.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">المساحة المستعملة على الجهاز</p><p className="mt-1 font-mono text-xl font-extrabold">{usage}</p></div>
+        <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">عمليات تنتظر المزامنة</p><p className="mt-1 font-mono text-xl font-extrabold">{pending}</p></div>
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button onClick={download} disabled={busy || !online || !tenantId} className="flex-1"><CloudDownload />{busy ? "..." : "تنزيل كل البيانات على الجهاز"}</Button>
+        <Button variant="outline" onClick={() => { void flushQueue(); void syncDeviceSales(); }} disabled={!online || !pending} className="flex-1"><RefreshCw />مزامنة الآن</Button>
+      </div>
+    </section>
   );
 }
 
