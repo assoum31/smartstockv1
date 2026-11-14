@@ -7,18 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
+import { Button } from "@/components/ui/button";
 import { money } from "@/lib/pos-queries";
 import { formatQty } from "@/lib/messages";
+import { filterByQuery } from "@/lib/store-rules";
 
-type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number };
+type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number; alt_barcodes: string[] | null };
 const KIND: Record<string, string> = { receipt: "وصل سلع", sale: "بيع", customer_return: "إرجاع زبون", supplier_return: "إرجاع مورد" };
+const PER_PAGE = 50;
 
 const productsQuery = (t: string) => queryOptions({
   queryKey: ["stock-products", t],
   queryFn: async () => {
     const all: P[] = [];
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await supabase.from("products").select("barcode,name,famille,system_quantity,purchase_price,selling_price,min_stock").eq("tenant_id", t).order("name").range(from, from + 999);
+      const { data, error } = await supabase.from("products").select("barcode,name,famille,system_quantity,purchase_price,selling_price,min_stock,alt_barcodes").eq("tenant_id", t).order("name").range(from, from + 999);
       if (error) throw error;
       all.push(...(data as P[]));
       if (data.length < 1000) break;
