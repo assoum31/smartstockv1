@@ -420,6 +420,45 @@ export type Database = {
           },
         ]
       }
+      offline_sales_sync: {
+        Row: {
+          client_id: string
+          recorded_at: string
+          tenant_id: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          recorded_at?: string
+          tenant_id: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          recorded_at?: string
+          tenant_id?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_sales_sync_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offline_sales_sync_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "sales_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       online_order_items: {
         Row: {
           barcode: string
@@ -1378,6 +1417,18 @@ export type Database = {
         Returns: undefined
       }
       start_inventory_session: { Args: { _name: string }; Returns: string }
+      sync_offline_sale: {
+        Args: {
+          _cash_id: string
+          _client_id: string
+          _discount: number
+          _items: Json
+          _payment: string
+          _session_id: string
+          _sold_at: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
