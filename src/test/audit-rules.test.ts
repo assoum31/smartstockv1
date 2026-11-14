@@ -23,3 +23,18 @@ describe("auditor search and IDs", () => {
   it("shows only unaudited products when enabled", () => expect(filterAuditIndex(index, "", "", true)).toEqual([logs[1]]));
   it("combines shelf and text filters", () => expect(filterAuditIndex(index, "Milk", "B2")).toEqual([]));
 });
+import { uncountedProducts as _unc, filterUncounted as _fu } from "@/lib/audit-rules";
+describe("uncounted products for auditor", () => {
+  const products = [
+    { barcode: "A1", name: "Clou", alt_barcodes: ["ALT9"], default_location: "R1" },
+    { barcode: "B2", name: "Marteau", alt_barcodes: [], default_location: "R2" },
+    { barcode: "C3", name: "Vis", alt_barcodes: [], default_location: "R1" },
+  ];
+  it("excludes products counted by main or alternate barcode", () => {
+    expect(_unc(products, [{ barcode: "alt9" }, { barcode: "B2" }]).map((p) => p.barcode)).toEqual(["C3"]);
+  });
+  it("searches uncounted by name and shelf", () => {
+    expect(_fu(products, "mart").map((p) => p.barcode)).toEqual(["B2"]);
+    expect(_fu(products, "", "R1").map((p) => p.barcode)).toEqual(["A1", "C3"]);
+  });
+});

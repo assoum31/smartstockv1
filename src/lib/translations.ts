@@ -1846,7 +1846,18 @@ export const PHRASES: Record<string, [string, string]> = {
   "Non défini",
   "Not set"
  ],
- "غير محسوب": [
+ "كل المنتجات": ["Tous les produits", "All products"],
+  "المحسوب وغير المحسوب": ["Comptés et non comptés", "Counted and uncounted"],
+  "المحسوبة فقط": ["Comptés uniquement", "Counted only"],
+  "منتج غير محسوب في الجرد": ["Produit non compté", "Uncounted product"],
+  "تسجيله كـ 0 وتدقيقه": ["Enregistrer à 0 et vérifier", "Record as 0 and audit"],
+  "تنبيه فريق الجرد": ["Alerter l'équipe d'inventaire", "Alert counting team"],
+  "تم تسجيله في الجرد بكمية 0": ["Enregistré avec quantité 0", "Recorded with quantity 0"],
+  "تم إرسال تنبيه لفريق الجرد": ["Alerte envoyée à l'équipe", "Alert sent to counting team"],
+  "هذا المنتج محسوب بالفعل": ["Ce produit est déjà compté", "This product is already counted"],
+  "الرف / المكان": ["Rayon / emplacement", "Shelf / location"],
+  "حالة الجرد": ["État d'inventaire", "Count status"],
+  "غير محسوب": [
   "Non compté",
   "Not counted"
  ],
