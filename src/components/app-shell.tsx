@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ROLE_LABEL, type Me } from "@/lib/me";
-import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
+import { startOfflineSync, useSyncState, flushQueue, clearLocalSignOutData } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 import { useLiveNotes, useSeenAt } from "@/lib/notifications";
 import { useI18n, type TKey } from "@/lib/i18n";

@@ -64,19 +64,79 @@ async function tx<T>(
   });
 }
 
-export async function cacheSet(key: string, value: unknown) {
+export function scopedCacheKey(key: string, userId: string) {
+  return `user:${userId}:${key}`;
+}
+
+async function currentCacheUserId() {
   try {
-    await tx("cache", "readwrite", (s) => s.put(value, key));
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeScopedCache(key: string, value: unknown, userId: string) {
+  try {
+    await tx("cache", "readwrite", (s) => s.put(value, scopedCacheKey(key, userId)));
   } catch {
     /* storage full or private mode: lookups just won't work offline */
   }
 }
 
-export async function cacheGet<T>(key: string): Promise<T | undefined> {
+async function readScopedCache<T>(key: string, userId: string): Promise<T | undefined> {
   try {
-    return (await tx("cache", "readonly", (s) => s.get(key))) as T | undefined;
+    return (await tx("cache", "readonly", (s) => s.get(scopedCacheKey(key, userId)))) as T | undefined;
   } catch {
     return undefined;
+  }
+}
+
+export async function cacheSet(key: string, value: unknown) {
+  const userId = await currentCacheUserId();
+  if (userId) await writeScopedCache(key, value, userId);
+}
+
+export async function cacheGet<T>(key: string): Promise<T | undefined> {
+  const userId = await currentCacheUserId();
+  return userId ? readScopedCache<T>(key, userId) : undefined;
+}
+
+/** Clear cached catalog/session data, never durable offline sales or the count queue. */
+export async function cacheClear() {
+  const db = await openDb();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction("cache", "readwrite");
+    const request = transaction.objectStore("cache").openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      if (!String(cursor.key).startsWith("sale:")) cursor.delete();
+      cursor.continue();
+    };
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+}
+
+/** Best-effort cleanup used after sign-out; pending/failed sales remain durable. */
+export async function clearLocalSignOutData() {
+  try {
+    await cacheClear();
+  } catch {
+    /* local cleanup must never block sign-out */
+  }
+  try {
+    localStorage.removeItem("stocki_me_v5");
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("smartstock_cart_")) localStorage.removeItem(key);
+    }
+  } catch {
+    /* local cleanup must never block sign-out */
   }
 }
 

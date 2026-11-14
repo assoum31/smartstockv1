@@ -97,8 +97,8 @@ function ProductsPage() {
     try {
       const raw = await readSheetAsText(file);
       setParsed({ ...parseProductRows(raw), fileName: file.name });
-    } catch {
-      toast.error("تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
     }
   };
 

@@ -120,8 +120,8 @@ function ReceiptsPage() {
     let rows: Record<string, unknown>[];
     try {
       rows = await readSheetAsText(file);
-    } catch {
-      return void toast.error("تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
+    } catch (error) {
+      return void toast.error(error instanceof Error ? error.message : "تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
     }
     const { receipts: parsed, errors } = parseReceiptRows(rows);
     if (parsed.length === 0) return void toast.error(errors[0] ?? "لا توجد أسطر صالحة في الملف");

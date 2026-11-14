@@ -418,8 +418,8 @@ function ImportSalesButtons({ session }: { session: InventorySession }) {
         done++;
       }
       if (done) toast.success(`تم استيراد ${done} بون`);
-    } catch {
-      toast.error("تعذرت قراءة الملف.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذرت قراءة الملف.");
     } finally {
       setBusy(false);
       void queryClient.invalidateQueries({ queryKey: ["sales-tickets", session.id] });
