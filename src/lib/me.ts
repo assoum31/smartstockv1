@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isNetworkError } from './offline';
 
 export type Role = "master" | "manager" | "worker" | "cashier" | "pricer" | "observer" | "auditor" | "sales_manager";
 
@@ -49,6 +50,7 @@ export async function fetchMe(): Promise<Me | null> {
   } = await supabase.auth.getSession();
   if (!session) return null;
   const userId = session.user.id;
+  if (!navigator.onLine) return readCache(userId);
 
   const [profileRes, rolesRes] = await Promise.all([
     supabase
@@ -60,7 +62,8 @@ export async function fetchMe(): Promise<Me | null> {
   ]);
 
   if (profileRes.error || rolesRes.error) {
-    const cached = readCache(userId);
+    const message = (profileRes.error ?? rolesRes.error)?.message ?? '';
+    const cached = isNetworkError(message) ? readCache(userId) : null;
     if (cached) return cached;
     throw profileRes.error ?? rolesRes.error;
   }

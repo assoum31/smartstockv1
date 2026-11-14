@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { cacheGet, cacheSet } from "./offline";
+import { withOfflineCopy } from "./offline";
 
 export type InventorySession = Tables<"inventory_sessions">;
 export type InventoryLog = Tables<"inventory_logs">;
@@ -25,19 +25,6 @@ async function fetchAll<T>(
     if (!data || data.length < PAGE) break;
   }
   return out;
-}
-
-/** Try the network, keep a copy for offline use, fall back to the copy. */
-async function withOfflineCopy<T>(key: string, load: () => Promise<T>): Promise<T> {
-  try {
-    const value = await load();
-    void cacheSet(key, value);
-    return value;
-  } catch (e) {
-    const cached = await cacheGet<T>(key);
-    if (cached !== undefined) return cached;
-    throw e;
-  }
 }
 
 export const activeSessionQuery = (tenantId: string) =>
