@@ -17,6 +17,7 @@ import { activeSessionQuery, productsQuery, type Product } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
 import { ProductFormDialog } from "@/components/product-form";
+import { OnlineOrdersAlert } from "@/components/online-orders-alert";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
@@ -166,6 +167,7 @@ function PosPage() {
 
   return (
     <div className="space-y-5">
+      <OnlineOrdersAlert tenantId={tenant.id} />
       <ProductFormDialog
         product={null}
         open={newCode !== null}

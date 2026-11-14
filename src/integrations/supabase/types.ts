@@ -155,6 +155,53 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          tenant_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tenant_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           barcode: string
@@ -366,6 +413,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inventory_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_order_items: {
+        Row: {
+          barcode: string
+          id: string
+          order_id: string
+          product_name: string
+          quantity: number
+          tenant_id: string
+          unit_price: number
+        }
+        Insert: {
+          barcode: string
+          id?: string
+          order_id: string
+          product_name: string
+          quantity: number
+          tenant_id: string
+          unit_price: number
+        }
+        Update: {
+          barcode?: string
+          id?: string
+          order_id?: string
+          product_name?: string
+          quantity?: number
+          tenant_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_order_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_orders: {
+        Row: {
+          created_at: string
+          customer_name: string
+          email: string | null
+          handled_by_name: string | null
+          id: string
+          notes: string | null
+          order_number: number
+          phone: string
+          status: string
+          tenant_id: string
+          total_amount: number
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_name: string
+          email?: string | null
+          handled_by_name?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: number
+          phone: string
+          status?: string
+          tenant_id: string
+          total_amount?: number
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          email?: string | null
+          handled_by_name?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: number
+          phone?: string
+          status?: string
+          tenant_id?: string
+          total_amount?: number
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_orders_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1108,6 +1256,29 @@ export type Database = {
       }
       next_audit_code: { Args: { _session_id: string }; Returns: string }
       open_cash_session: { Args: { _opening: number }; Returns: string }
+      place_online_order: {
+        Args: {
+          _code: string
+          _email: string
+          _items: Json
+          _name: string
+          _notes: string
+          _phone: string
+          _whatsapp: string
+        }
+        Returns: number
+      }
+      public_store_catalog: {
+        Args: { _code: string }
+        Returns: {
+          available: number
+          barcode: string
+          famille: string
+          name: string
+          selling_price: number
+          store_name: string
+        }[]
+      }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_alt_barcodes: {
@@ -1137,6 +1308,7 @@ export type Database = {
         | "pricer"
         | "observer"
         | "auditor"
+        | "sales_manager"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1272,6 +1444,7 @@ export const Constants = {
         "pricer",
         "observer",
         "auditor",
+        "sales_manager",
       ],
     },
   },

@@ -310,7 +310,7 @@ export const createMember = createServerFn({ method: "POST" })
       .object({
         username: usernameSchema,
         fullName: fullNameSchema,
-        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor"]),
+        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager"]),
         storeId: z.string().uuid().optional(),
       })
       .parse(d),
@@ -392,7 +392,7 @@ export const updateMember = createServerFn({ method: "POST" })
       .object({
         memberId: z.string().uuid(),
         fullName: fullNameSchema,
-        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor"]),
+        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager"]),
       })
       .parse(d),
   )

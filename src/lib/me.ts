@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "master" | "manager" | "worker" | "cashier" | "pricer" | "observer" | "auditor";
+export type Role = "master" | "manager" | "worker" | "cashier" | "pricer" | "observer" | "auditor" | "sales_manager";
 
 export interface Me {
   userId: string;
@@ -19,12 +19,14 @@ export interface Me {
   canWatchInventory: boolean;
   /** Manager or inventory auditor: audit counted lines. */
   canAudit: boolean;
+  /** Manager or sales manager: sales statistics, revenue and profit. */
+  canSeeStats: boolean;
   /** Account or store switched off by an admin. */
   blocked: boolean;
   homePath: "/admin" | "/dashboard" | "/scan" | "/pos" | "/products" | "/inventory" | "/audit";
 }
 
-const CACHE_KEY = "stocki_me_v4";
+const CACHE_KEY = "stocki_me_v5";
 
 function readCache(userId: string): Me | null {
   try {
@@ -80,7 +82,8 @@ export async function fetchMe(): Promise<Me | null> {
   const isMaster = roles.includes("master");
   const isManager = roles.includes("manager");
   // A store member whose store is switched off can't see their store row.
-  const canSell = isManager || roles.includes("cashier");
+  const canSell = isManager || roles.includes("cashier") || roles.includes("sales_manager");
+  const canSeeStats = isManager || roles.includes("sales_manager");
   const canSeeProducts = canSell || roles.includes("pricer");
   const canWatchInventory = isManager || roles.includes("observer");
   const canAudit = isManager || roles.includes("auditor");
@@ -98,10 +101,11 @@ export async function fetchMe(): Promise<Me | null> {
     canSeeProducts,
     canWatchInventory,
     canAudit,
+    canSeeStats,
     blocked,
     homePath: isMaster
       ? "/admin"
-      : isManager
+      : canSeeStats
         ? "/dashboard"
         : roles.includes("cashier")
           ? "/pos"
@@ -131,4 +135,5 @@ export const ROLE_LABEL: Record<Role, string> = {
   pricer: "مصحح الأسعار",
   observer: "مراقب الجرد",
   auditor: "مدقق الجرد",
+  sales_manager: "مسؤول المبيعات",
 };
