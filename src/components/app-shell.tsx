@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ROLE_LABEL, type Me } from "@/lib/me";
-import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
+import { startOfflineSync, useSyncState, flushQueue, clearLocalSignOutData } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 import { useLiveNotes, useSeenAt } from "@/lib/notifications";
 import { useI18n, type TKey } from "@/lib/i18n";
@@ -212,6 +212,11 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
+    try {
+      await clearLocalSignOutData();
+    } catch {
+      // Local cleanup must never prevent sign-out or navigation.
+    }
     navigate({
       to: me.isMaster ? "/master" : me.isManager ? "/manager" : "/worker",
       replace: true,

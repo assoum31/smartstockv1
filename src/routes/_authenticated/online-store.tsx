@@ -93,27 +93,31 @@ function OnlineStorePage() {
   }]);
   const fileRef = useRef<HTMLInputElement>(null);
   const importX = async (file: File) => {
-    const data = await readSheetAsText(file);
-    const byCode = new Map(products.map((p) => [p.barcode, p]));
-    let n = 0, miss = 0;
-    for (const r of data) {
-      const p = byCode.get(String(r["الباركود"] ?? "").trim());
-      if (!p) { miss++; continue; }
-      const patch: { name?: string; famille?: string | null; selling_price?: number; online_visible?: boolean; image_url?: string | null; online_description?: string | null; related_barcodes?: string[] } = {};
-      const str = (k: string) => String(r[k] ?? "").trim();
-      if (str("الاسم")) patch.name = str("الاسم");
-      if ("الفئة" in r) patch.famille = str("الفئة") || null;
-      const price = Number(str("سعر البيع").replace(",", "."));
-      if (str("سعر البيع") && Number.isFinite(price) && price >= 0) patch.selling_price = price;
-      if (str("معروض")) patch.online_visible = !/^(لا|no|non|0|false)$/i.test(str("معروض"));
-      if ("رابط الصورة" in r) patch.image_url = str("رابط الصورة") || null;
-      if ("الوصف" in r) patch.online_description = str("الوصف") || null;
-      if ("سلع مقترحة" in r) patch.related_barcodes = parseRelated(str("سلع مقترحة"), p.barcode);
-      const { error } = await supabase.from("products").update(patch).eq("id", p.id);
-      if (!error) n++;
+    try {
+      const data = await readSheetAsText(file);
+      const byCode = new Map(products.map((p) => [p.barcode, p]));
+      let n = 0, miss = 0;
+      for (const r of data) {
+        const p = byCode.get(String(r["الباركود"] ?? "").trim());
+        if (!p) { miss++; continue; }
+        const patch: { name?: string; famille?: string | null; selling_price?: number; online_visible?: boolean; image_url?: string | null; online_description?: string | null; related_barcodes?: string[] } = {};
+        const str = (k: string) => String(r[k] ?? "").trim();
+        if (str("الاسم")) patch.name = str("الاسم");
+        if ("الفئة" in r) patch.famille = str("الفئة") || null;
+        const price = Number(str("سعر البيع").replace(",", "."));
+        if (str("سعر البيع") && Number.isFinite(price) && price >= 0) patch.selling_price = price;
+        if (str("معروض")) patch.online_visible = !/^(لا|no|non|0|false)$/i.test(str("معروض"));
+        if ("رابط الصورة" in r) patch.image_url = str("رابط الصورة") || null;
+        if ("الوصف" in r) patch.online_description = str("الوصف") || null;
+        if ("سلع مقترحة" in r) patch.related_barcodes = parseRelated(str("سلع مقترحة"), p.barcode);
+        const { error } = await supabase.from("products").update(patch).eq("id", p.id);
+        if (!error) n++;
+      }
+      toast.success(`تم تحديث ${n} منتج${miss ? `، ${miss} باركود غير موجود` : ""}`);
+      void refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذرت قراءة الملف. استعمل ملف Excel أو CSV.");
     }
-    toast.success(`تم تحديث ${n} منتج${miss ? `، ${miss} باركود غير موجود` : ""}`);
-    void refresh();
   };
 
   const txt = (k: keyof S, label: string, ph = "") => (
