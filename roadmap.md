@@ -1,5 +1,7 @@
 # Stocki Pro roadmap
 
+- [x] Auditor: shelf/name/all-barcode/ID search, automatic or manual IDs, camera, unaudited filter, Enter save and clear search after saving (authenticated end-to-end check awaits preview sign-in)
+
 - [ ] Get the original spec (cahier des charges + topo) from the user — waiting on the user
 - [x] Step 1: secure accounts (real sign-in, synthetic email per store), stores, roles, store isolation rules + tests across 2 stores
 - [x] Step 2: /login + first sign-in with one-time PIN + route protection

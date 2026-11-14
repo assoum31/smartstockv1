@@ -1,18 +1,21 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Search, ShieldCheck } from "lucide-react";
+import { Camera, CameraOff, CheckCircle2, Search, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BarcodeScanner } from "@/components/barcode-scanner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/stat-card";
-import { activeSessionQuery, sessionLogsQuery, type InventoryLog } from "@/lib/queries";
+import { activeSessionQuery, productsQuery, sessionLogsQuery, type InventoryLog } from "@/lib/queries";
 import { errorText, formatDateTime, formatQty } from "@/lib/messages";
+import { auditSearchIndex, filterAuditIndex, normalizeAuditCode } from "@/lib/audit-rules";
 
 export const Route = createFileRoute("/_authenticated/audit")({
   beforeLoad: ({ context }) => {
@@ -21,12 +24,19 @@ export const Route = createFileRoute("/_authenticated/audit")({
   },
   loader: async ({ context }) => {
     const active = await context.queryClient.ensureQueryData(activeSessionQuery(context.tenant.id));
-    await context.queryClient.ensureQueryData(sessionLogsQuery(active?.id ?? null));
+    await Promise.all([
+      context.queryClient.ensureQueryData(sessionLogsQuery(active?.id ?? null)),
+      context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
+    ]);
   },
   head: () => ({
     meta: [
       { title: "تدقيق الجرد | SMART STOCK" },
       { name: "description", content: "تدقيق الباركود والاسم والرقم ومكان الرف لكل منتج محسوب." },
+      { property: "og:title", content: "تدقيق الجرد | SMART STOCK" },
+      { property: "og:description", content: "البحث في المنتجات المحسوبة وتدقيق الباركود والرقم والرف." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuditPage,
@@ -37,20 +47,24 @@ function AuditPage() {
   const qc = useQueryClient();
   const { data: active } = useSuspenseQuery(activeSessionQuery(tenant.id));
   const { data: logs } = useSuspenseQuery(sessionLogsQuery(active?.id ?? null));
+  const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const [q, setQ] = useState("");
+  const [shelf, setShelf] = useState("");
+  const [unauditedOnly, setUnauditedOnly] = useState(false);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [tab, setTab] = useState("all");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState<InventoryLog | null>(null);
 
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return logs;
-    return logs.filter(
-      (l) =>
-        l.barcode.toLowerCase().includes(s) ||
-        l.product_name.toLowerCase().includes(s) ||
-        (l.audit_code ?? "").includes(s) ||
-        (l.location ?? "").toLowerCase().includes(s),
-    );
-  }, [logs, q]);
+  const index = useMemo(() => auditSearchIndex(logs, products), [logs, products]);
+  const filtered = useMemo(() => filterAuditIndex(index, q, shelf, unauditedOnly), [index, q, shelf, unauditedOnly]);
+  const shelves = useMemo(() => Array.from(new Set(logs.map((l) => l.location).filter((l): l is string => Boolean(l)))).sort(), [logs]);
+  const onDetected = useCallback((code: string) => {
+    setQ(code);
+    setShelf("");
+    setCameraOn(false);
+    searchRef.current?.focus();
+  }, []);
   const mine = useMemo(
     () =>
       logs
@@ -72,20 +86,37 @@ function AuditPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="تدقيق الجرد" subtitle={`${active.name} · تم تدقيق ${done} من ${logs.length}`} />
-      <Tabs defaultValue="all">
+      <Tabs value={tab} onValueChange={(value) => { setTab(value); setCameraOn(false); }}>
         <TabsList>
           <TabsTrigger value="all">المنتجات المحسوبة</TabsTrigger>
           <TabsTrigger value="mine">سجلي ({mine.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4 space-y-3">
-          <div className="relative">
+          <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchRef}
+              aria-label="البحث في الجرد"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="ابحث بالباركود، الاسم، الرقم ID أو الرف"
-              className="h-11 ps-9"
+              className="h-11 ps-9 pe-10"
             />
+            {q && <Button type="button" variant="ghost" size="icon" className="absolute end-1 top-1 h-9 w-9" aria-label="مسح البحث" onClick={() => { setQ(""); searchRef.current?.focus(); }}><X className="h-4 w-4" /></Button>}
+          </div>
+          <Button type="button" variant={cameraOn ? "secondary" : "outline"} size="icon" className="h-11 w-11 shrink-0" aria-label={cameraOn ? "إيقاف الكاميرا" : "تشغيل الكاميرا"} title={cameraOn ? "إيقاف الكاميرا" : "تشغيل الكاميرا"} onClick={() => setCameraOn((v) => !v)}>
+            {cameraOn ? <CameraOff className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+          </Button>
+          </div>
+          {cameraOn && <BarcodeScanner onDetected={onDetected} />}
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={shelf || "__all__"} onValueChange={(value) => setShelf(value === "__all__" ? "" : value)}>
+              <SelectTrigger className="w-44" aria-label="الرف أو المكان"><SelectValue placeholder="كل الرفوف" /></SelectTrigger>
+              <SelectContent><SelectItem value="__all__">كل الرفوف</SelectItem>{shelves.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent>
+            </Select>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked={unauditedOnly} onCheckedChange={(value) => setUnauditedOnly(value === true)} />غير المدقق فقط</label>
+            <span className="text-sm text-muted-foreground">{filtered.length} / {logs.length}</span>
           </div>
           <LogList logs={filtered} onPick={setEdit} />
         </TabsContent>
@@ -100,7 +131,12 @@ function AuditPage() {
           onClose={() => setEdit(null)}
           onSaved={() => {
             setEdit(null);
+            setQ("");
+            setShelf("");
+            setTab("all");
+            setCameraOn(false);
             refresh();
+            window.setTimeout(() => searchRef.current?.focus(), 100);
           }}
         />
       )}
@@ -112,15 +148,15 @@ function LogList({ logs, onPick, showAudit }: { logs: InventoryLog[]; onPick: (l
   if (!logs.length) return <div className="surface-card p-8 text-center text-sm text-muted-foreground">لا توجد نتائج</div>;
   return (
     <ul className="space-y-2">
-      {logs.slice(0, 300).map((l) => (
+      {logs.map((l) => (
         <li key={l.id}>
-          <button type="button" onClick={() => onPick(l)} className="surface-card flex w-full items-center gap-3 p-3 text-start hover:bg-secondary/50">
+          <Button type="button" variant="outline" onClick={() => onPick(l)} className="surface-card flex h-auto w-full items-center gap-3 whitespace-normal p-3 text-start hover:bg-secondary/50">
             <span className="barcode-chip min-w-14 rounded-md bg-secondary px-2 py-1 text-center text-xs font-bold">
               {l.audit_code ?? "----"}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate font-bold">{l.product_name}</span>
-              <span className="barcode-chip block truncate text-xs text-muted-foreground" dir="ltr">
+              <span className="barcode-chip block truncate text-xs text-muted-foreground">
                 {l.barcode}
               </span>
               <span className="block text-xs text-muted-foreground">
@@ -129,7 +165,7 @@ function LogList({ logs, onPick, showAudit }: { logs: InventoryLog[]; onPick: (l
               </span>
             </span>
             {l.audited_at && <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />}
-          </button>
+          </Button>
         </li>
       ))}
     </ul>
@@ -144,26 +180,50 @@ function AuditDialog({ log, sessionId, onClose, onSaved }: { log: InventoryLog; 
   const [editQty, setEditQty] = useState(false);
   const [qty, setQty] = useState(String(log.counted_quantity));
   const [busy, setBusy] = useState(false);
+  const [codeLoading, setCodeLoading] = useState(!log.audit_code);
+  const codeRef = useRef<HTMLInputElement>(null);
+  const codeTouched = useRef(false);
+  const saving = useRef(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!log.audit_code) {
+      void supabase.rpc("next_audit_code", { _session_id: sessionId }).then(({ data, error }) => {
+        if (!mounted) return;
+        setCodeLoading(false);
+        if (error) toast.error(errorText(error));
+        else if (!codeTouched.current) setCode(normalizeAuditCode(String(data ?? "")));
+      });
+    }
+    return () => { mounted = false; };
+  }, [log.audit_code, sessionId]);
 
   const nextCode = async () => {
+    setCodeLoading(true);
     const { data, error } = await supabase.rpc("next_audit_code", { _session_id: sessionId });
+    setCodeLoading(false);
     if (error) toast.error(errorText(error));
-    else setCode(String(data ?? ""));
+    else { setCode(normalizeAuditCode(String(data ?? ""))); codeRef.current?.focus(); }
   };
 
   const save = async () => {
+    if (saving.current || codeLoading) return;
     const n = Number(qty);
     if (editQty && (!Number.isFinite(n) || n < 0)) { toast.error("كمية غير صالحة"); return; }
     setBusy(true);
+    saving.current = true;
+    const normalizedCode = normalizeAuditCode(code);
+    setCode(normalizedCode);
     const { error } = await supabase.rpc("audit_inventory_log", {
       _log_id: log.id,
-      _code: code,
+      _code: normalizedCode,
       _barcode: barcode,
       _name: name,
       _location: location,
       _qty: (editQty ? n : null) as number,
     });
     setBusy(false);
+    saving.current = false;
     if (error) {
       toast.error(error.message.includes("duplicate_audit_code") ? "هذا الرقم ID مستعمل لمنتج آخر" : errorText(error));
       return;
@@ -174,26 +234,26 @@ function AuditDialog({ log, sessionId, onClose, onSaved }: { log: InventoryLog; 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-right sm:text-right">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md" onOpenAutoFocus={(event) => { event.preventDefault(); codeRef.current?.focus(); }}>
+        <DialogHeader className="text-start">
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
             تدقيق المنتج
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void save(); }}>
           <div className="space-y-1.5">
             <Label htmlFor="a-code">الرقم ID (اختياري)</Label>
             <div className="flex gap-2">
-              <Input id="a-code" dir="ltr" value={code} onChange={(e) => setCode(e.target.value)} placeholder="0001" className="barcode-chip" />
-              <Button type="button" variant="outline" onClick={() => void nextCode()}>
+              <Input ref={codeRef} id="a-code" inputMode="numeric" value={code} onChange={(e) => { codeTouched.current = true; setCode(e.target.value); }} onBlur={() => setCode(normalizeAuditCode(code))} placeholder="0001" className="barcode-chip" />
+              <Button type="button" variant="outline" disabled={busy || codeLoading} onClick={() => void nextCode()}>
                 الرقم التالي
               </Button>
             </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="a-bc">الباركود</Label>
-            <Input id="a-bc" dir="ltr" value={barcode} onChange={(e) => setBarcode(e.target.value)} className="barcode-chip" />
+            <Input id="a-bc" value={barcode} onChange={(e) => setBarcode(e.target.value)} className="barcode-chip" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="a-name">اسم المنتج</Label>
@@ -210,10 +270,10 @@ function AuditDialog({ log, sessionId, onClose, onSaved }: { log: InventoryLog; 
           {editQty && (
             <Input type="number" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} />
           )}
-          <Button className="w-full" disabled={busy} onClick={() => void save()}>
+          <Button type="submit" className="w-full" disabled={busy || codeLoading}>
             حفظ التدقيق
           </Button>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

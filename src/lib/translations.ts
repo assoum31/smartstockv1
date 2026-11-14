@@ -1,5 +1,13 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "البحث في الجرد": ["Rechercher dans l’inventaire", "Search inventory"],
+ "مسح البحث": ["Effacer la recherche", "Clear search"],
+ "الرف أو المكان": ["Rayon ou emplacement", "Shelf or location"],
+ "كل الرفوف": ["Tous les rayons", "All shelves"],
+ "غير المدقق فقط": ["Non contrôlés uniquement", "Unaudited only"],
+ "الرقم ID (اختياري)": ["Numéro ID (facultatif)", "ID number (optional)"],
+ "ابحث بالباركود، الاسم، الرقم ID أو الرف": ["Code-barres, nom, ID ou rayon", "Barcode, name, ID or shelf"],
+ "هذا الرقم ID مستعمل لمنتج آخر": ["Cet ID est déjà utilisé par un autre produit", "This ID is already used by another product"],
  "تدقيق الجرد": ["Contrôle d'inventaire", "Inventory audit"],
  "تدقيق المنتج": ["Contrôler le produit", "Audit product"],
  "سجلي": ["Mon journal", "My log"],

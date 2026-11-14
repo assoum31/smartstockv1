@@ -33,6 +33,8 @@ use the editor.
 
 ## Project rules
 
+- Auditor search and numeric ID normalization live in `src/lib/audit-rules.ts`; save audits only through the existing database function so permissions and logging remain enforced.
+
 - Accounts are real auth users with a synthetic per-store email (`username@storecode...`); only server functions in `src/lib/accounts.functions.ts` create them or check activation PINs (hashed, table has no client policies), so no browser can create accounts or read PINs. The legacy `app_users` table is retired.
 - Every store-owned row carries `tenant_id` and RLS limits reads/writes to the caller's store; inventory sessions open/close only through database functions that snapshot stock, so variances compare against stock at session start.
 - There is exactly one master; it signs in only on the unlinked /master page (store login refuses the master code). Its first sign-in with the default credentials goes through `claimMaster`, which forces a new password, so the default never becomes a real password.
