@@ -18,3 +18,11 @@ describe("salesSummary", () => {
     expect(s.tickets).toBe(1);
   });
 });
+
+import { salesSummary as ss } from "@/lib/sales-stats";
+import { it as it2, expect as ex2 } from "vitest";
+it2("profit margin = profit / revenue × 100 and avg profit per ticket", () => {
+  const r = ss([{ created_at: "2026-11-01", total_amount: 200, items: [{ barcode: "a", quantity: 2 }] }, { created_at: "2026-11-01", total_amount: 100, items: [{ barcode: "a", quantity: 1 }] }], [{ barcode: "a", purchase_price: 50 }], "", "");
+  ex2(r.margin).toBe(50);
+  ex2(r.avgProfit).toBe(75);
+});

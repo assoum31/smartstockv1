@@ -4,10 +4,11 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { errorText } from "@/lib/messages";
-import { Banknote, ChevronDown, Package, Printer, Receipt, Search, Trash2, Undo2 } from "lucide-react";
+import { Banknote, ChevronDown, Globe, Package, Printer, Receipt, Search, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, StatCard } from "@/components/stat-card";
+import { SalesStats } from "@/components/sales-stats";
 import { useStoreSettings } from "@/lib/store-settings";
 import { printTicket } from "@/lib/print-ticket";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
@@ -33,29 +34,34 @@ function SalesPage() {
   const [day, setDay] = useState(today());
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  const [onlineOnly, setOnlineOnly] = useState(false);
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
     return tickets.filter(
       (t) =>
         (!day || t.created_at.slice(0, 10) === day) &&
+        (!onlineOnly || !!t.online_order_id) &&
         (!s ||
           String(t.ticket_number).includes(s) ||
           t.created_by_name.toLowerCase().includes(s) ||
           t.items.some((i) => i.product_name.toLowerCase().includes(s) || i.barcode.toLowerCase().includes(s))),
     );
-  }, [tickets, day, q]);
+  }, [tickets, day, q, onlineOnly]);
   const total = list.reduce((a, t) => a + Number(t.total_amount), 0);
+  const onlineTotal = list.filter((t) => t.online_order_id).reduce((a, t) => a + Number(t.total_amount), 0);
   const articles = list.reduce((a, t) => a + t.items.reduce((b, i) => b + Number(i.quantity), 0), 0);
 
   return (
     <div className="space-y-5">
       <PageHeader title="سجل المبيعات" subtitle="كل البونات المسجلة في المتجر" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard icon={Receipt} label="عدد البونات" value={list.length} />
         <StatCard icon={Package} label="القطع المباعة" value={articles} />
         <StatCard icon={Banknote} tone="neutral" label="المداخيل (دج)" value={money(total)} />
+        <StatCard icon={Globe} tone="neutral" label="مداخيل أونلاين (دج)" value={money(onlineTotal)} />
       </div>
+      {me.canSeeStats && <SalesStats tenantId={tenant.id} />}
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-48 flex-1">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -63,6 +69,7 @@ function SalesPage() {
         </div>
         <Input type="date" value={day} onChange={(e) => setDay(e.target.value)} className="h-11 w-44" />
         <Button variant="outline" className="h-11" onClick={() => setDay("")}>كل الأيام</Button>
+        <Button variant={onlineOnly ? "default" : "outline"} className="h-11" onClick={() => setOnlineOnly(!onlineOnly)}><Globe />أونلاين فقط</Button>
       </div>
       <div className="space-y-2">
         {list.length === 0 && <p className="surface-card p-8 text-center text-muted-foreground">لا توجد مبيعات.</p>}
@@ -71,7 +78,7 @@ function SalesPage() {
             <button type="button" onClick={() => setOpen(open === t.id ? null : t.id)} className="flex w-full items-center gap-3 p-3 text-start">
               <span className="barcode-chip rounded-lg bg-muted px-2 py-1 text-xs font-bold">#{String(t.ticket_number).padStart(4, "0")}</span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold">{t.created_by_name}</span>
+                <span className="block text-sm font-bold">{t.created_by_name}{t.online_order_id && <span className="ms-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">أونلاين</span>}</span>
                 <span className="block text-[11px] text-muted-foreground">
                   {new Date(t.created_at).toLocaleString("fr-FR")} · {t.items.length} منتج
                 </span>
