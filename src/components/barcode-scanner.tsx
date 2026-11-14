@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Html5Qrcode, CameraDevice } from "html5-qrcode";
 import { RefreshCw } from "lucide-react";
+import { getCameraPrefs, requestCameraPermission } from "@/lib/camera-prefs";
 
 interface BarcodeScannerProps {
   onDetected: (code: string) => void;
@@ -17,6 +18,7 @@ export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: 
   const [activeCameraIndex, setActiveCameraIndex] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerId = "barcode-scanner-view";
+  const [attempt, setAttempt] = useState(0);
 
   const stopCamera = async () => {
     if (scannerRef.current && scannerRef.current.isScanning) {
@@ -74,6 +76,10 @@ export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: 
     let isMounted = true;
 
     async function init() {
+      if (!getCameraPrefs().enabled) {
+        setErrorMsg("الكاميرا متوقفة من إعدادات التطبيق (الإعدادات ← الكاميرا).");
+        return;
+      }
       try {
         const devices = await Html5Qrcode.getCameras();
         if (!devices || devices.length === 0) {
@@ -112,7 +118,17 @@ export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: 
         }
 
         // If still -1, default to 0
-        const selectedIdx = mainIdx !== -1 ? mainIdx : 0;
+        let selectedIdx = mainIdx !== -1 ? mainIdx : 0;
+        const pref = getCameraPrefs().deviceId;
+        const all = targetCameras;
+        if (pref) {
+          const i = all.findIndex((d) => d.id === pref);
+          if (i >= 0) selectedIdx = i;
+          else {
+            const d = devices.find((x) => x.id === pref);
+            if (d) { all.unshift(d); selectedIdx = 0; setCameras([...all]); }
+          }
+        }
 
         setActiveCameraIndex(selectedIdx);
 
@@ -131,7 +147,7 @@ export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: 
       isMounted = false;
       stopCamera();
     };
-  }, [startCamera]);
+  }, [startCamera, attempt]);
 
   useEffect(() => {
     const s = scannerRef.current;
@@ -154,6 +170,15 @@ export function BarcodeScanner({ onDetected, torchOn = false, onTorchSupport }: 
       {errorMsg ? (
         <div className="p-6 text-center text-sm text-red-400">
           <p>{errorMsg}</p>
+          {getCameraPrefs().enabled && (
+            <button
+              type="button"
+              onClick={async () => { await requestCameraPermission(); setErrorMsg(null); setAttempt((a) => a + 1); }}
+              className="mt-3 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+            >
+              منح الصلاحية وتشغيل الكاميرا
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative">
