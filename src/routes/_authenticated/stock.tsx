@@ -163,6 +163,29 @@ function StockPage() {
             </button>
           ))}
         </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="divide-y rounded-xl border bg-card">
+            {stockRows.length === 0 && <p className="p-6 text-center text-muted-foreground">لا توجد سلع في المخزون.</p>}
+            {pageRows.map((p) => {
+              const n = Number(p.system_quantity);
+              return (
+                <button key={p.barcode} onClick={() => setOpen(p)} className="flex w-full items-center gap-3 p-3 text-start hover:bg-muted/50">
+                  <div className="min-w-0 flex-1"><p className="truncate font-semibold">{p.name}</p><p className="truncate text-xs text-muted-foreground">{p.barcode} · {p.famille ?? "—"}</p></div>
+                  <div className="hidden text-end sm:block"><p className="text-xs text-muted-foreground">القيمة (بيع)</p><p className="font-mono text-sm font-bold">{money(n * Number(p.selling_price))}</p></div>
+                  <Badge variant={n <= 0 ? "destructive" : "secondary"}>{formatQty(n)}</Badge>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <p>عرض {stockRows.length === 0 ? 0 : (curPage - 1) * PER_PAGE + 1} إلى {Math.min(curPage * PER_PAGE, stockRows.length)} من أصل {stockRows.length} منتج</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)}>السابق</Button>
+              <Button size="sm" variant="outline" disabled={curPage >= pageCount} onClick={() => setPage(curPage + 1)}>التالي</Button>
+            </div>
+          </div>
+        </div>
       )}
       <ProductCard tenantId={tenant.id} product={open} onClose={() => setOpen(null)} />
     </div>
