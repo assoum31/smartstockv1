@@ -212,6 +212,11 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
+    try {
+      await clearLocalSignOutData();
+    } catch {
+      // Local cleanup must never prevent sign-out or navigation.
+    }
     navigate({
       to: me.isMaster ? "/master" : me.isManager ? "/manager" : "/worker",
       replace: true,

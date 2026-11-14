@@ -306,19 +306,21 @@ export function newClientId() {
 }
 
 export async function withOfflineCopy<T>(key: string, load: () => Promise<T>): Promise<T> {
+  // Keep one identity for the whole read/load/write cycle, even if auth changes mid-request.
+  const userId = await currentCacheUserId();
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    const cached = await cacheGet<T>(key);
+    const cached = userId ? await readScopedCache<T>(key, userId) : undefined;
     if (cached !== undefined) return cached;
     throw new Error('لا توجد نسخة محفوظة على هذا الجهاز. افتح الصفحة بالإنترنت أولاً.');
   }
   try {
     const value = await load();
-    await cacheSet(key, value);
+    if (userId) await writeScopedCache(key, value, userId);
     return value;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (!isNetworkError(message)) throw error;
-    const cached = await cacheGet<T>(key);
+    const cached = userId ? await readScopedCache<T>(key, userId) : undefined;
     if (cached !== undefined) return cached;
     throw error;
   }
