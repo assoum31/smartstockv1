@@ -80,19 +80,28 @@ function PosPage() {
   }, [lastSyncedAt, tenant.id, queryClient]);
 
   const q = code.trim().toLowerCase();
-  const suggestions = useMemo(
-    () =>
-      q.length < 2
-        ? []
-        : products
-            .filter(
-              (p) =>
-                p.name.toLowerCase().includes(q) ||
-                p.barcode.includes(q) ||
-                (p.alt_barcodes ?? []).some((b) => b.includes(q)),
-            )
-            .slice(0, 8),
-    [products, q],
+  const [family, setFamily] = useState<string | null>(null);
+  // Local, offline search over the cached catalogue: name, every barcode, family and model, ranked.
+  const suggestions = useMemo(() => {
+    if (q.length < 1) return [];
+    const scored: { p: Product; s: number }[] = [];
+    for (const p of products) {
+      const name = p.name.toLowerCase();
+      const codes = [p.barcode, ...(p.alt_barcodes ?? [])].map((b) => String(b).toLowerCase());
+      let s = 0;
+      if (codes.includes(q)) s = 100;
+      else if (codes.some((b) => b.startsWith(q))) s = 60;
+      else if (name.startsWith(q)) s = 50;
+      else if (q.length >= 2 && name.includes(q)) s = 40;
+      else if (q.length >= 2 && codes.some((b) => b.includes(q))) s = 30;
+      else if (q.length >= 2 && [p.famille, (p as { model?: string | null }).model].some((v) => v?.toLowerCase().includes(q))) s = 10;
+      if (s) scored.push({ p, s });
+    }
+    return scored.sort((a, b) => b.s - a.s || a.p.name.localeCompare(b.p.name)).slice(0, 12).map((x) => x.p);
+  }, [products, q]);
+  const quickProducts = useMemo(
+    () => (family ? products.filter((p) => p.famille === family) : products).slice().sort((a, b) => a.name.localeCompare(b.name)).slice(0, 48),
+    [products, family],
   );
 
   const addProduct = (p: Pick<Product, "barcode" | "name" | "selling_price">) => {
@@ -179,6 +188,18 @@ function PosPage() {
     } catch (error) { toast.error(errorText(error)); }
     finally { setSaving(false); }
   };
+  const checkoutRef = useRef(checkout);
+  checkoutRef.current = checkout;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "F2") { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select(); }
+      else if (e.key === "F4") { e.preventDefault(); void checkoutRef.current(true); }
+      else if (e.key === "F9") { e.preventDefault(); void checkoutRef.current(false); }
+      else if (e.key === "Escape") { setCode(""); inputRef.current?.focus(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -251,7 +272,7 @@ function PosPage() {
           ))}
         </div>
       )}
-      <div className="grid gap-5 lg:grid-cols-[1fr_24rem]">
+      <div className="grid gap-4 md:grid-cols-[1fr_19rem] lg:grid-cols-[1fr_22rem] xl:grid-cols-[1fr_26rem]">
         <div className="space-y-3">
           <form
             className="flex gap-2"
@@ -276,6 +297,12 @@ function PosPage() {
               {camera ? <CameraOff /> : <Camera />}
             </Button>
           </form>
+          <p className="hidden flex-wrap gap-3 text-xs text-muted-foreground md:flex">
+            <span><kbd className="rounded border px-1 font-mono">F2</kbd> البحث</span>
+            <span><kbd className="rounded border px-1 font-mono">F4</kbd> بيع وطباعة</span>
+            <span><kbd className="rounded border px-1 font-mono">F9</kbd> بيع دون طباعة</span>
+            <span><kbd className="rounded border px-1 font-mono">Esc</kbd> مسح البحث</span>
+          </p>
           {camera && <BarcodeScanner onDetected={(c) => addCode(c)} />}
           {suggestions.length > 0 && (
             <div className="surface-card divide-y">
@@ -291,6 +318,25 @@ function PosPage() {
                   <span className="font-mono font-bold">{money(Number(p.selling_price))}</span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {!q && (
+            <div className="space-y-2">
+              <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+                <Button size="sm" variant={family === null ? "default" : "outline"} className="shrink-0" onClick={() => setFamily(null)}>الكل</Button>
+                {familles.map((f) => (
+                  <Button key={f} size="sm" variant={family === f ? "default" : "outline"} className="shrink-0" onClick={() => setFamily(f)}>{f}</Button>
+                ))}
+              </div>
+              <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+                {quickProducts.map((p) => (
+                  <button key={p.id} type="button" onClick={() => addProduct(p)} className="surface-card flex min-h-16 flex-col justify-between p-2.5 text-start transition-colors hover:bg-muted/40 active:scale-[0.98]">
+                    <span className="line-clamp-2 text-sm font-bold">{p.name}</span>
+                    <span className="font-mono text-xs text-primary">{money(Number(p.selling_price))}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -342,7 +388,7 @@ function PosPage() {
           </div>
         </div>
 
-        <div className="surface-card h-fit space-y-4 p-5 lg:sticky lg:top-20">
+        <div className="surface-card h-fit space-y-4 p-5 md:sticky md:top-20">
           <div className="rounded-2xl bg-ink p-5 text-ink-foreground">
             <p className="text-xs opacity-80">المجموع ({cart.reduce((n, l) => n + l.quantity, 0)} قطعة)</p>
             <p className="font-mono text-4xl font-extrabold">{money(total)}</p>
