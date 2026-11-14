@@ -9,6 +9,7 @@ import type { Product } from "@/lib/queries";
 import { parseAltBarcodes } from "@/lib/inventory-rules";
 import { Switch } from "@/components/ui/switch";
 import { compressImage } from "@/lib/product-image";
+import { productRowForUpdate } from "@/lib/product-form-rules";
 
 const EMPTY = {
   barcode: "", name: "", famille: "", model: "", default_location: "", alt: "",
@@ -47,9 +48,7 @@ export function ProductFormDialog({
       purchase_price: num(f.purchase_price), selling_price: num(f.selling_price), carton_size: num(f.carton_size) || 1,
       system_quantity: num(f.system_quantity), min_stock: num(f.min_stock), image_url: f.image_url.trim() || null, online_visible: online, updated_at: new Date().toISOString(),
     };
-    const updateRow = product && !isManager
-      ? { ...row, purchase_price: product.purchase_price, system_quantity: product.system_quantity }
-      : row;
+    const updateRow = productRowForUpdate(row, product, isManager);
     const { data, error } = product
       ? await supabase.from("products").update(updateRow).eq("id", product.id).select().single()
       : await supabase.from("products").insert(row).select().single();
