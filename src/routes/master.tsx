@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { checkDefaultMaster, claimMaster } from "@/lib/accounts.functions";
 import {
   MASTER_CODE,
-  MIN_PASSWORD_LENGTH,
+  MASTER_MIN_PASSWORD_LENGTH,
   accountEmail,
   isDefaultMasterLogin,
 } from "@/lib/identity";
@@ -96,8 +96,8 @@ function MasterPage() {
   const handleNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (newPassword.length < MIN_PASSWORD_LENGTH)
-      return setError(`كلمة المرور ${MIN_PASSWORD_LENGTH} أحرف على الأقل.`);
+    if (newPassword.length < MASTER_MIN_PASSWORD_LENGTH)
+      return setError(`كلمة المرور يجب أن تكون ${MASTER_MIN_PASSWORD_LENGTH} أحرف على الأقل.`);
     if (newPassword !== confirm) return setError("كلمتا المرور غير متطابقتين.");
     setLoading(true);
     try {

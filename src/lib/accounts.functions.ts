@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   MASTER_CODE,
+  MASTER_MIN_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   PIN_MAX_ATTEMPTS,
   PIN_PATTERN,
@@ -26,7 +27,8 @@ const storeCodeSchema = z
   .transform(normalizeStoreCode)
   .refine((v) => v !== MASTER_CODE && STORE_CODE_PATTERN.test(v), "invalid_store_code");
 const fullNameSchema = z.string().trim().min(2).max(80);
-const passwordSchema = z.string().min(MIN_PASSWORD_LENGTH).max(128);
+export const passwordSchema = z.string().min(MIN_PASSWORD_LENGTH).max(128);
+export const masterPasswordSchema = z.string().min(MASTER_MIN_PASSWORD_LENGTH).max(128);
 
 async function loadAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -108,7 +110,7 @@ export const checkDefaultMaster = createServerFn({ method: "POST" })
  */
 export const claimMaster = createServerFn({ method: "POST" })
   .validator((d) =>
-    z.object({ username: z.string(), password: z.string(), newPassword: passwordSchema }).parse(d),
+    z.object({ username: z.string(), password: z.string(), newPassword: masterPasswordSchema }).parse(d),
   )
   .handler(async ({ data }) => {
     const fail = { ok: false as const, reason: "invalid_login" };
@@ -186,25 +188,20 @@ export const activateAccount = createServerFn({ method: "POST" })
 
     const { data: activation } = await admin
       .from("worker_activations")
-      .select("pin_hash, expires_at, attempts")
+      .select("pin_hash, expires_at")
       .eq("user_id", profile.id)
       .maybeSingle();
     if (!activation) return fail;
-    if (activation.attempts >= PIN_MAX_ATTEMPTS)
-      return { ok: false as const, reason: "pin_locked" };
-    if (new Date(activation.expires_at).getTime() < Date.now())
-      return { ok: false as const, reason: "pin_expired" };
+
+    const { data: claimedAttempt } = await admin.rpc("claim_pin_attempt", {
+      _user_id: profile.id,
+      _max: PIN_MAX_ATTEMPTS,
+    });
+    if (claimedAttempt === null) return fail;
+    if (new Date(activation.expires_at).getTime() < Date.now()) return fail;
 
     const good = await verifySecret(data.pin, activation.pin_hash);
-    if (!good) {
-      await admin
-        .from("worker_activations")
-        .update({ attempts: activation.attempts + 1 })
-        .eq("user_id", profile.id);
-      return activation.attempts + 1 >= PIN_MAX_ATTEMPTS
-        ? { ok: false as const, reason: "pin_locked" }
-        : fail;
-    }
+    if (!good) return fail;
     // Correct PIN, but the store is suspended: say so, and keep the PIN usable for later.
     if (!tenant.is_active) return { ok: false as const, reason: "store_suspended" };
 

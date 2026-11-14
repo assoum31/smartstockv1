@@ -5,7 +5,8 @@
 
 export const MASTER_CODE = "admin";
 export const EMAIL_DOMAIN = "stockipro.app";
-export const MIN_PASSWORD_LENGTH = 6;
+export const MIN_PASSWORD_LENGTH = 10;
+export const MASTER_MIN_PASSWORD_LENGTH = 12;
 export const PIN_LENGTH = 6;
 export const PIN_MAX_ATTEMPTS = 5;
 export const PIN_TTL_DAYS = 7;
