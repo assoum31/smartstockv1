@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { productRowForUpdate } from "@/lib/product-form-rules";
 
 const migration = readFileSync(
-  new URL("../../drizzle/migrations/0027_security_hardening_step_3.sql", import.meta.url),
+  path.resolve("drizzle/migrations/0027_security_hardening_step_3.sql"),
   "utf8",
 );
 
