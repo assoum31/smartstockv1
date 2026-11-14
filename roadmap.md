@@ -1,5 +1,7 @@
 # Stocki Pro roadmap
 
+- [ ] Installable desktop/phone app: guarded offline shell, durable sales/count queue, idempotent sync, cached catalogue and cash session, verification.
+
 - [x] Auditor: shelf/name/all-barcode/ID search, automatic or manual IDs, camera, unaudited filter, Enter save and clear search after saving (authenticated end-to-end check awaits preview sign-in)
 
 - [ ] Get the original spec (cahier des charges + topo) from the user — waiting on the user

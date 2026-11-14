@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { initI18n, useI18n } from "@/lib/i18n";
 import { initTheme } from "@/lib/theme";
 import { DirectionProvider } from "@radix-ui/react-direction";
+import { initializePwa } from "@/lib/pwa";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -128,12 +129,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "alternate icon", href: "/favicon.png", type: "image/png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap",
-      },
     ],
   }),
   shellComponent: RootShell,
@@ -164,6 +159,7 @@ function RootComponent() {
   useEffect(() => {
     initI18n();
     initTheme();
+    void initializePwa().catch(console.error);
   }, []);
 
   useEffect(() => {
