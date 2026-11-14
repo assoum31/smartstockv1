@@ -802,9 +802,6 @@ export const PHRASES: Record<string, [string, string]> = {
   "Pièces vendues",
   "Items sold"
  ],
-  "Caméra",
-  "Camera"
- ],
  "الكتالوج فارغ": [
   "Catalogue vide",
   "Catalog is empty"
