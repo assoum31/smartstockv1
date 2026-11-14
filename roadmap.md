@@ -20,3 +20,4 @@
 - [x] Scan page: search products by name or barcode
 - [x] Return a sale ticket from the sales log (limited to sold qty), barcode + QR on printed slips, ticket lookup/scan on returns page
 - [x] Mobile bottom bar redesign + activity log page (own for staff, whole store for managers, filters, Excel)
+- [x] Manager edits/deletes advances; sellers add customers, suppliers and products from receipts; sales manager role with revenue/profit stats; public online store /store/<code> with orders alert in POS
