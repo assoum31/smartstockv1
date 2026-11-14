@@ -24,7 +24,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,woff2,png,svg}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
-        navigateFallback: undefined,
+        navigateFallback: null,
         cleanupOutdatedCaches: true,
         runtimeCaching: [{
           urlPattern: ({ request, url }) => url.origin === self.location.origin && !url.pathname.startsWith('/~oauth') && !url.pathname.startsWith('/api/') && (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html') === true),

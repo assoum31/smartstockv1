@@ -13,7 +13,7 @@ export interface DeviceSale {
   discount: number;
   sold_at: string;
   status: 'pending' | 'failed';
-  error?: string;
+  error?: string | undefined;
 }
 
 export function pendingStock(sales: DeviceSale[], barcode: string) {

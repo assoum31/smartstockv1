@@ -126,6 +126,7 @@ export async function fetchMe(): Promise<Me | null> {
 
 export const meQueryOptions = queryOptions({
   queryKey: ["me"],
+  networkMode: 'always',
   queryFn: fetchMe,
   staleTime: 5 * 60 * 1000,
 });

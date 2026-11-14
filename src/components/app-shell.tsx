@@ -36,6 +36,8 @@ import { startOfflineSync, useSyncState, flushQueue } from "@/lib/offline";
 import { cn } from "@/lib/utils";
 import { useLiveNotes, useSeenAt } from "@/lib/notifications";
 import { useI18n, type TKey } from "@/lib/i18n";
+import { useDeviceSales, syncDeviceSales } from '@/lib/offline-sales';
+import { InstallApp } from '@/components/install-app';
 
 type NavItem = {
   to:
@@ -107,8 +109,9 @@ function navFor(me: Me): NavItem[] {
 export function SyncBadge() {
   const { t } = useI18n();
   const { online, syncing, queue } = useSyncState();
-  const pending = queue.filter((q) => q.status === "pending").length;
-  const failed = queue.filter((q) => q.status === "failed").length;
+  const { sales, syncing: syncingSales } = useDeviceSales();
+  const pending = queue.filter((q) => q.status === "pending").length + sales.filter(sale => sale.status === 'pending').length;
+  const failed = queue.filter((q) => q.status === "failed").length + sales.filter(sale => sale.status === 'failed').length;
   if (online && pending === 0 && failed === 0) {
     return (
       <span className="flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-bold text-success">
@@ -118,9 +121,9 @@ export function SyncBadge() {
     );
   }
   return (
-    <button
+    <Button variant="ghost"
       type="button"
-      onClick={() => void flushQueue()}
+      onClick={() => { void flushQueue(); void syncDeviceSales(); }}
       className={cn(
         "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold",
         failed
@@ -130,14 +133,14 @@ export function SyncBadge() {
       title="إعادة الإرسال"
     >
       {online ? (
-        <RefreshCw className={cn("h-3 w-3", syncing && "animate-spin")} />
+        <RefreshCw className={cn("h-3 w-3", (syncing || syncingSales) && "animate-spin")} />
       ) : (
         <CloudOff className="h-3 w-3" />
       )}
       {!online ? t("offline") : t("sending")}
       {pending > 0 && <span className="font-mono">· {pending}</span>}
       {failed > 0 && <span className="font-mono">· {failed} {t("rejected")}</span>}
-    </button>
+    </Button>
   );
 }
 
@@ -167,12 +170,19 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   const dockItems = items.filter((i) => i.dock).slice(0, 5);
   const menuItems = items.filter((i) => !dockItems.includes(i));
   const { t, dir } = useI18n();
+  const { queue } = useSyncState();
+  const { sales } = useDeviceSales();
 
   useEffect(() => {
     startOfflineSync();
   }, []);
 
   const signOut = async () => {
+    if (queue.length || sales.length) {
+      const { toast } = await import('sonner');
+      toast.error('زامن العمليات المحفوظة قبل تسجيل الخروج.');
+      return;
+    }
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
@@ -221,6 +231,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
           </nav>
 
           <div className="ms-auto flex items-center gap-1.5">
+            <InstallApp />
             <SyncBadge />
             {me.isManager && (
               <Link to="/activity" aria-label={t("activity")} className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-ink-foreground/10">

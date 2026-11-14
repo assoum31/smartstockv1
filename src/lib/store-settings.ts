@@ -32,6 +32,7 @@ export const defaultSettings = (tenantId: string): StoreSettings => ({
 export const storeSettingsQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["store-settings", tenantId],
+    networkMode: 'always',
     queryFn: (): Promise<StoreSettings> => withOfflineCopy(`store-settings:${tenantId}`, async () => {
       const { data, error } = await supabase.from("store_settings").select("*").eq("tenant_id", tenantId).maybeSingle();
       if (error) throw error;

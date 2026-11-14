@@ -71,6 +71,7 @@ export type CashSession = Tables<"cash_sessions">;
 export const myCashSessionQuery = (tenantId: string, userId: string) =>
   queryOptions({
     queryKey: ["cash-session", tenantId, userId],
+    networkMode: 'always',
     queryFn: (): Promise<CashSession | null> => withOfflineCopy(`cash-session:${tenantId}:${userId}`, async () => {
       const { data, error } = await supabase
         .from("cash_sessions")

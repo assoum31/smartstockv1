@@ -27,7 +27,7 @@ export interface QueuedCount {
   created_at: string;
   status: "pending" | "failed";
   error?: string | undefined;
-  productPatch?: { purchase: number; selling: number; alts: string[] };
+  productPatch?: { purchase: number; selling: number; alts: string[] } | undefined;
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;

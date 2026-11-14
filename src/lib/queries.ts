@@ -30,6 +30,7 @@ async function fetchAll<T>(
 export const activeSessionQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["active-session", tenantId],
+    networkMode: 'always',
     queryFn: () =>
       withOfflineCopy(`active-session:${tenantId}`, async () => {
         const { data, error } = await supabase
@@ -61,6 +62,7 @@ export const sessionsQuery = (tenantId: string) =>
 export const sessionLogsQuery = (sessionId: string | null) =>
   queryOptions({
     queryKey: ["session-logs", sessionId],
+    networkMode: 'always',
     queryFn: () =>
       sessionId
         ? withOfflineCopy(`session-logs:${sessionId}`, () =>
@@ -95,6 +97,7 @@ export const snapshotQuery = (sessionId: string | null) =>
 export const productsQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["products", tenantId],
+    networkMode: 'always',
     queryFn: () =>
       withOfflineCopy(`products:${tenantId}`, () =>
         fetchAll<Product>((from, to) =>
