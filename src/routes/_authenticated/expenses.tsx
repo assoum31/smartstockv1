@@ -88,7 +88,7 @@ function ExpensesPage() {
 }
 
 function NewExpense({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
-  const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
+  const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0] ?? "");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [source, setSource] = useState<"cash" | "external">("cash");
