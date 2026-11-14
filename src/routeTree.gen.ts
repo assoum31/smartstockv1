@@ -33,6 +33,7 @@ import { Route as AuthenticatedReturnsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSalesRouteImport } from './routes/_authenticated/sales'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as StoreCodeRouteImport } from './routes/store.$code'
@@ -159,6 +160,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stock': typeof AuthenticatedStockRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
   '/store/$code': typeof StoreCodeRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/sales': typeof AuthenticatedSalesRoute
   '/scan': typeof AuthenticatedScanRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stock': typeof AuthenticatedStockRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
   '/team': typeof AuthenticatedTeamRoute
   '/store/$code': typeof StoreCodeRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/_authenticated/sales': typeof AuthenticatedSalesRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/store/$code': typeof StoreCodeRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/scan'
     | '/settings'
+    | '/stock'
     | '/suppliers'
     | '/team'
     | '/store/$code'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/scan'
     | '/settings'
+    | '/stock'
     | '/suppliers'
     | '/team'
     | '/store/$code'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales'
     | '/_authenticated/scan'
     | '/_authenticated/settings'
+    | '/_authenticated/stock'
     | '/_authenticated/suppliers'
     | '/_authenticated/team'
     | '/store/$code'
@@ -541,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stock': {
+      id: '/_authenticated/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof AuthenticatedStockRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/suppliers': {
       id: '/_authenticated/suppliers'
       path: '/suppliers'
@@ -591,6 +610,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesRoute: typeof AuthenticatedSalesRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStockRoute: typeof AuthenticatedStockRoute
   AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedStoresStoreIdRoute: typeof AuthenticatedStoresStoreIdRoute
@@ -615,6 +635,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesRoute: AuthenticatedSalesRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStockRoute: AuthenticatedStockRoute,
   AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedStoresStoreIdRoute: AuthenticatedStoresStoreIdRoute,
