@@ -1455,6 +1455,10 @@ export type Database = {
         Returns: undefined
       }
       can_sell: { Args: never; Returns: boolean }
+      claim_pin_attempt: {
+        Args: { _max: number; _user_id: string }
+        Returns: number
+      }
       close_cash_session: {
         Args: { _closing: number; _id: string }
         Returns: undefined
