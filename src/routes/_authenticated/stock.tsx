@@ -7,18 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/stat-card";
+import { Button } from "@/components/ui/button";
 import { money } from "@/lib/pos-queries";
 import { formatQty } from "@/lib/messages";
+import { currentStockRows } from "@/lib/stock-rules";
 
-type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number };
+type P = { barcode: string; name: string; famille: string | null; system_quantity: number; purchase_price: number; selling_price: number; min_stock: number; alt_barcodes: string[] | null };
 const KIND: Record<string, string> = { receipt: "وصل سلع", sale: "بيع", customer_return: "إرجاع زبون", supplier_return: "إرجاع مورد" };
+const PER_PAGE = 50;
 
 const productsQuery = (t: string) => queryOptions({
   queryKey: ["stock-products", t],
   queryFn: async () => {
     const all: P[] = [];
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await supabase.from("products").select("barcode,name,famille,system_quantity,purchase_price,selling_price,min_stock").eq("tenant_id", t).order("name").range(from, from + 999);
+      const { data, error } = await supabase.from("products").select("barcode,name,famille,system_quantity,purchase_price,selling_price,min_stock,alt_barcodes").eq("tenant_id", t).order("name").range(from, from + 999);
       if (error) throw error;
       all.push(...(data as P[]));
       if (data.length < 1000) break;
@@ -51,30 +54,42 @@ function StockPage() {
   const { tenant } = Route.useRouteContext();
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
   const { data: moves } = useSuspenseQuery(movesQuery(tenant.id));
-  const [tab, setTab] = useState<"moves" | "alerts">("moves");
+  const [tab, setTab] = useState<"moves" | "alerts" | "stock">("moves");
   const [kind, setKind] = useState("");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<P | null>(null);
+  const [fam, setFam] = useState("");
+  const [showZero, setShowZero] = useState(false);
+  const [sort, setSort] = useState<"qty" | "value" | "name">("qty");
+  const [page, setPage] = useState(1);
 
   const kpi = useMemo(() => {
-    let buy = 0, sell = 0, out = 0, low = 0;
+    let buy = 0, sell = 0, out = 0, low = 0, units = 0, refs = 0;
     for (const p of products) {
       const n = Math.max(0, Number(p.system_quantity));
-      buy += n * Number(p.purchase_price); sell += n * Number(p.selling_price);
+      buy += n * Number(p.purchase_price); sell += n * Number(p.selling_price); units += n;
+      if (n > 0) refs++;
       if (Number(p.system_quantity) <= 0) out++; else if (Number(p.min_stock) > 0 && Number(p.system_quantity) <= Number(p.min_stock)) low++;
     }
-    return { buy, sell, margin: sell - buy, out, low };
+    return { buy, sell, margin: sell - buy, out, low, units, refs };
   }, [products]);
   const alerts = useMemo(() => products.filter((p) => Number(p.system_quantity) <= 0 || (Number(p.min_stock) > 0 && Number(p.system_quantity) <= Number(p.min_stock))), [products]);
   const s = q.trim().toLowerCase();
   const shownMoves = moves.filter((m) => (!kind || m.kind === kind) && (!s || `${m.product_name} ${m.barcode}`.toLowerCase().includes(s)));
   const shownAlerts = alerts.filter((p) => !s || `${p.name} ${p.barcode}`.toLowerCase().includes(s));
   const byBarcode = (b: string | null) => products.find((p) => p.barcode === b) ?? null;
+  const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter((f): f is string => !!f))].sort((a, b) => a.localeCompare(b, ["ar", "fr"])), [products]);
+  const stockRows = useMemo(() => currentStockRows(products, { q, famille: fam, showZero, sort }), [products, q, fam, showZero, sort]);
+  const pageCount = Math.max(1, Math.ceil(stockRows.length / PER_PAGE));
+  const curPage = Math.min(page, pageCount);
+  const pageRows = stockRows.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
 
   return (
     <div className="space-y-4">
       <PageHeader title="المخزون" subtitle="قيمة السلع وحركة المخزون" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
+        <Kpi label="سلع في المخزون" value={String(kpi.refs)} />
+        <Kpi label="إجمالي القطع" value={formatQty(kpi.units)} />
         <Kpi label="قيمة المخزون (شراء)" value={money(kpi.buy)} />
         <Kpi label="قيمة المخزون (بيع)" value={money(kpi.sell)} />
         <Kpi label="الربح المتوقع" value={money(kpi.margin)} />
@@ -84,14 +99,32 @@ function StockPage() {
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setTab("moves")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "moves" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>حركة المخزون</button>
         <button onClick={() => setTab("alerts")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "alerts" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>تنبيهات النفاد ({alerts.length})</button>
+        <button onClick={() => setTab("stock")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "stock" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>المخزون الحالي ({kpi.refs})</button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-9" placeholder="ابحث بالاسم أو الباركود" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-9" placeholder="ابحث بالاسم أو الباركود" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} /></div>
         {tab === "moves" && (
           <select className="h-10 rounded-md border bg-background px-3 text-sm" value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">كل الحركات</option>
             {Object.entries(KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
+        )}
+        {tab === "stock" && (
+          <>
+            <select className="h-10 rounded-md border bg-background px-3 text-sm" value={fam} onChange={(e) => { setFam(e.target.value); setPage(1); }}>
+              <option value="">كل الأقسام</option>
+              {familles.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+            <select className="h-10 rounded-md border bg-background px-3 text-sm" value={sort} onChange={(e) => setSort(e.target.value as "qty" | "value" | "name")}>
+              <option value="qty">الأكثر كمية</option>
+              <option value="value">الأكثر قيمة</option>
+              <option value="name">حسب الاسم</option>
+            </select>
+            <label className="flex h-10 items-center gap-2 rounded-md border bg-background px-3 text-sm">
+              <input type="checkbox" checked={showZero} onChange={(e) => { setShowZero(e.target.checked); setPage(1); }} />
+              عرض السلع النافدة
+            </label>
+          </>
         )}
       </div>
       {tab === "moves" ? (
@@ -111,7 +144,7 @@ function StockPage() {
             );
           })}
         </div>
-      ) : (
+      ) : tab === "alerts" ? (
         <div className="divide-y rounded-xl border bg-card">
           {shownAlerts.length === 0 && <p className="p-6 text-center text-muted-foreground">لا توجد تنبيهات.</p>}
           {shownAlerts.map((p) => (
@@ -121,6 +154,29 @@ function StockPage() {
               <Badge variant={Number(p.system_quantity) <= 0 ? "destructive" : "secondary"}>{Number(p.system_quantity) <= 0 ? "نافد" : "منخفض"} · {formatQty(Number(p.system_quantity))}</Badge>
             </button>
           ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="divide-y rounded-xl border bg-card">
+            {stockRows.length === 0 && <p className="p-6 text-center text-muted-foreground">لا توجد سلع في المخزون.</p>}
+            {pageRows.map((p) => {
+              const n = Number(p.system_quantity);
+              return (
+                <button key={p.barcode} onClick={() => setOpen(p)} className="flex w-full items-center gap-3 p-3 text-start hover:bg-muted/50">
+                  <div className="min-w-0 flex-1"><p className="truncate font-semibold">{p.name}</p><p className="truncate text-xs text-muted-foreground">{p.barcode} · {p.famille ?? "—"}</p></div>
+                  <div className="hidden text-end sm:block"><p className="text-xs text-muted-foreground">القيمة (بيع)</p><p className="font-mono text-sm font-bold">{money(n * Number(p.selling_price))}</p></div>
+                  <Badge variant={n <= 0 ? "destructive" : "secondary"}>{formatQty(n)}</Badge>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <p>عرض {stockRows.length === 0 ? 0 : (curPage - 1) * PER_PAGE + 1} إلى {Math.min(curPage * PER_PAGE, stockRows.length)} من أصل {stockRows.length} منتج</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)}>السابق</Button>
+              <Button size="sm" variant="outline" disabled={curPage >= pageCount} onClick={() => setPage(curPage + 1)}>التالي</Button>
+            </div>
+          </div>
         </div>
       )}
       <ProductCard tenantId={tenant.id} product={open} onClose={() => setOpen(null)} />
