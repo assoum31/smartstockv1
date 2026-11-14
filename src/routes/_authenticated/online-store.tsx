@@ -159,7 +159,7 @@ function OnlineStorePage() {
         <div className="flex flex-wrap gap-2">
           <div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input className="ps-9" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="بحث بالاسم أو الباركود أو الفئة" /></div>
-          <Button size="sm" variant="secondary" onClick={() => void bulk(true)}>عرض الكل ({list.length})</Button>
+          <Button size="sm" onClick={() => void bulk(true)}>عرض الكل في المتجر ({list.length})</Button>
           <Button size="sm" variant="secondary" onClick={() => void bulk(false)}>إخفاء الكل</Button>
         </div>
         <ul className="divide-y rounded-lg border">

@@ -76,6 +76,19 @@ function ProductsPage() {
   }, [products, search, fam]);
   const PER_PAGE = 50;
   const [page, setPage] = useState(1);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
+  const setOnline = async (ids: string[], v: boolean) => {
+    if (!ids.length) return;
+    setBusy(true);
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await supabase.from("products").update({ online_visible: v }).in("id", ids.slice(i, i + 200));
+      if (error) { setBusy(false); return void toast.error(error.message); }
+    }
+    setBusy(false); setSel(new Set());
+    toast.success(v ? `تم عرض ${ids.length} منتج في المتجر` : `تم إخفاء ${ids.length} منتج من المتجر`);
+    void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+  };
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const curPage = Math.min(page, pageCount);
   const pageItems = filtered.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
@@ -224,6 +237,20 @@ function ProductsPage() {
         </div>
       )}
 
+      {canSell && products.length > 0 && (
+        <div className="surface-card flex flex-wrap items-center gap-2 p-3 text-sm">
+          <span className="flex-1 font-bold">المتجر أونلاين: {products.filter((p) => p.online_visible).length} معروض من {products.length}{sel.size > 0 ? ` · ${sel.size} محدد` : ""}</span>
+          {sel.size > 0 ? (<>
+            <Button size="sm" disabled={busy} onClick={() => void setOnline([...sel], true)}>عرض المحدد</Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => void setOnline([...sel], false)}>إخفاء المحدد</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>إلغاء التحديد</Button>
+          </>) : (<>
+            <Button size="sm" disabled={busy} onClick={() => void setOnline(filtered.map((p) => p.id), true)}>عرض الكل في المتجر ({filtered.length})</Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => void setOnline(filtered.map((p) => p.id), false)}>إخفاء الكل</Button>
+          </>)}
+        </div>
+      )}
+
       <div className="surface-card overflow-hidden">
         {products.length === 0 ? (
           <div className="flex flex-col items-center gap-3 p-12 text-center">
@@ -239,6 +266,7 @@ function ProductsPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/60 text-xs text-muted-foreground">
                 <tr>
+                  {canSell && <th className="px-2 py-3"><input type="checkbox" aria-label="تحديد الكل" className="h-4 w-4" checked={filtered.length > 0 && filtered.every((p) => sel.has(p.id))} onChange={(e) => setSel(e.target.checked ? new Set(filtered.map((p) => p.id)) : new Set())} /></th>}
                   <th className="px-4 py-3 text-start font-bold">المنتج</th>
                   <th className="px-4 py-3 text-start font-bold">الباركود</th>
                   <th className="px-4 py-3 text-start font-bold">الموقع</th>
@@ -252,11 +280,16 @@ function ProductsPage() {
               <tbody className="divide-y">
                 {pageItems.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/40">
+                    {canSell && <td className="px-2 py-3"><input type="checkbox" aria-label="تحديد" className="h-4 w-4" checked={sel.has(p.id)} onChange={(e) => setSel((s) => { const n = new Set(s); if (e.target.checked) n.add(p.id); else n.delete(p.id); return n; })} /></td>}
                     <td className="px-4 py-3">
-                      <p className="font-bold">{p.name}</p>
+                      <div className="flex items-center gap-2">
+                      {p.image_url && <img src={p.image_url} alt="" loading="lazy" className="h-9 w-9 rounded object-cover" />}
+                      <div>
+                      <p className="font-bold">{p.name}{p.online_visible && <span className="ms-2 rounded bg-primary/15 px-1.5 text-[10px] text-primary">أونلاين</span>}</p>
                       {(p.famille || p.model) && (
                         <p className="text-xs text-muted-foreground">{[p.famille, p.model].filter(Boolean).join(" · ")}</p>
                       )}
+                      </div></div>
                     </td>
                     <td className="px-4 py-3">
                       <span className="barcode-chip rounded-md bg-secondary px-2 py-0.5 text-xs">
