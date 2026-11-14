@@ -1548,6 +1548,10 @@ export type Database = {
         }
         Returns: string
       }
+      inventory_log_update_identity_ok: {
+        Args: { _counted_by: string; _id: string; _session_id: string }
+        Returns: boolean
+      }
       is_manager: { Args: never; Returns: boolean }
       log_activity: {
         Args: {

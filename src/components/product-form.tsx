@@ -9,6 +9,7 @@ import type { Product } from "@/lib/queries";
 import { parseAltBarcodes } from "@/lib/inventory-rules";
 import { Switch } from "@/components/ui/switch";
 import { compressImage } from "@/lib/product-image";
+import { productRowForUpdate } from "@/lib/product-form-rules";
 
 const EMPTY = {
   barcode: "", name: "", famille: "", model: "", default_location: "", alt: "",
@@ -16,9 +17,9 @@ const EMPTY = {
 };
 
 export function ProductFormDialog({
-  product, open, onOpenChange, onSaved, familles, tenantId, initialBarcode,
+  product, open, onOpenChange, onSaved, familles, tenantId, initialBarcode, isManager = false,
 }: {
-  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (saved?: Product) => void; initialBarcode?: string; familles: string[]; tenantId: string;
+  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (saved?: Product) => void; initialBarcode?: string; familles: string[]; tenantId: string; isManager?: boolean;
 }) {
   const [f, setF] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -47,9 +48,22 @@ export function ProductFormDialog({
       purchase_price: num(f.purchase_price), selling_price: num(f.selling_price), carton_size: num(f.carton_size) || 1,
       system_quantity: num(f.system_quantity), min_stock: num(f.min_stock), image_url: f.image_url.trim() || null, online_visible: online, updated_at: new Date().toISOString(),
     };
+    const updateRow = productRowForUpdate(row, product, isManager);
     const { data, error } = product
-      ? await supabase.from("products").update(row).eq("id", product.id).select().single()
+      ? await supabase.from("products").update(updateRow).eq("id", product.id).select().single()
       : await supabase.from("products").insert(row).select().single();
+    if (!error && product && !isManager && num(f.purchase_price) !== Number(product.purchase_price)) {
+      const { error: priceError } = await supabase.rpc("set_product_prices", {
+        _barcode: product.barcode,
+        _purchase: num(f.purchase_price),
+        _selling: num(f.selling_price),
+      });
+      if (priceError) {
+        setSaving(false);
+        return void toast.error("تعذر حفظ سعر الشراء");
+      }
+      if (data) data.purchase_price = num(f.purchase_price);
+    }
     setSaving(false);
     if (error) return void toast.error(error.code === "23505" ? "هذا الباركود موجود مسبقاً" : "تعذر الحفظ");
     toast.success(product ? "تم تعديل المنتج" : "تمت إضافة المنتج");
@@ -59,7 +73,7 @@ export function ProductFormDialog({
   const field = (k: keyof typeof EMPTY, label: string, opts: { mono?: boolean; list?: string } = {}) => (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Input value={f[k]} onChange={set(k)} list={opts.list} className={`h-11 ${opts.mono ? "font-mono" : ""}`} inputMode={opts.mono ? "decimal" : undefined} />
+      <Input value={f[k]} onChange={set(k)} list={opts.list} disabled={Boolean(product && !isManager && k === "system_quantity")} className={`h-11 ${opts.mono ? "font-mono" : ""}`} inputMode={opts.mono ? "decimal" : undefined} />
     </div>
   );
 
