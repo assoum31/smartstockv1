@@ -764,6 +764,7 @@ export type Database = {
           discount: number
           id: string
           notes: string | null
+          online_order_id: string | null
           payment_method: string
           session_id: string | null
           tenant_id: string
@@ -778,6 +779,7 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          online_order_id?: string | null
           payment_method?: string
           session_id?: string | null
           tenant_id: string
@@ -792,6 +794,7 @@ export type Database = {
           discount?: number
           id?: string
           notes?: string | null
+          online_order_id?: string | null
           payment_method?: string
           session_id?: string | null
           tenant_id?: string
@@ -799,6 +802,13 @@ export type Database = {
           total_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_tickets_online_order_id_fkey"
+            columns: ["online_order_id"]
+            isOneToOne: false
+            referencedRelation: "online_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_tickets_session_id_fkey"
             columns: ["session_id"]
@@ -1251,6 +1261,10 @@ export type Database = {
         Returns: undefined
       }
       delete_sales_ticket: { Args: { _ticket_id: string }; Returns: undefined }
+      deliver_online_order: {
+        Args: { _order_id: string; _payment: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

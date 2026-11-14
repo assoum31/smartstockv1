@@ -134,6 +134,13 @@
       "when": 1794660633828,
       "tag": "0018_new_products_hidden_by_default",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794662767422,
+      "tag": "0019_deliver_online_order",
+      "breakpoints": true
     }
   ]
 }
