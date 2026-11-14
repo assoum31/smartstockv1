@@ -1,3 +1,4 @@
+import { ProductFormDialog } from "@/components/product-form";
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
@@ -58,6 +59,18 @@ function ReceiptsPage() {
   const storeSettings = useStoreSettings(tenant.id);
   const fileRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState<string | null>(null);
+  const [newProduct, setNewProduct] = useState<string | null>(null);
+  const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter(Boolean) as string[])].sort(), [products]);
+  const addSupplier = async () => {
+    const name = prompt("اسم المورد الجديد")?.trim();
+    if (!name) return;
+    const phone = prompt("هاتف المورد (اختياري)")?.trim() || null;
+    const { data, error } = await supabase.from("suppliers").insert({ name, phone, tenant_id: tenant.id }).select("id").single();
+    if (error) { toast.error(errorText(error)); return; }
+    await qc.invalidateQueries({ queryKey: ["suppliers", tenant.id] });
+    setSupplierId(data.id);
+    toast.success("تمت إضافة المورد");
+  };
 
   const brCode = (n: number) => `BR-${String(n).padStart(4, "0")}`;
 
@@ -231,10 +244,13 @@ function ReceiptsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="rc-sup">المورد</Label>
-              <select id="rc-sup" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="h-11 w-full rounded-md border bg-background px-3 text-sm">
-                <option value="">— بدون مورد —</option>
-                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <div className="flex gap-2">
+                <select id="rc-sup" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="h-11 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— بدون مورد —</option>
+                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <Button type="button" variant="outline" className="h-11 shrink-0" onClick={() => void addSupplier()}><Plus />مورد</Button>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rc-ref">رقم فاتورة المورد</Label>
@@ -246,6 +262,23 @@ function ReceiptsPage() {
             </div>
           </div>
 
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" size="sm" onClick={() => setNewProduct(code.trim())}><Plus />منتج جديد</Button>
+          </div>
+          <ProductFormDialog
+            product={null}
+            open={newProduct !== null}
+            initialBarcode={newProduct ?? ""}
+            familles={familles}
+            tenantId={tenant.id}
+            onOpenChange={(o) => !o && setNewProduct(null)}
+            onSaved={(saved) => {
+              setNewProduct(null);
+              void qc.invalidateQueries({ queryKey: ["products", tenant.id] });
+              if (saved) setLines((ls) => [...ls, { barcode: saved.barcode, product_name: saved.name, quantity: "1", purchase_price: String(saved.purchase_price ?? 0), selling_price: String(saved.selling_price ?? 0), isNew: false } as Line]);
+              setCode("");
+            }}
+          />
           <form className="relative" onSubmit={(e) => { e.preventDefault(); addLine(code); }}>
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input autoFocus autoComplete="off" value={code} onChange={(e) => setCode(e.target.value)} placeholder="امسح الباركود أو ابحث بالاسم ثم Enter" className="h-12 ps-9" />
