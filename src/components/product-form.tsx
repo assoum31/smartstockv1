@@ -14,9 +14,9 @@ const EMPTY = {
 };
 
 export function ProductFormDialog({
-  product, open, onOpenChange, onSaved, familles, tenantId,
+  product, open, onOpenChange, onSaved, familles, tenantId, initialBarcode,
 }: {
-  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: () => void; familles: string[]; tenantId: string;
+  product: Product | null; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (saved?: Product) => void; initialBarcode?: string; familles: string[]; tenantId: string;
 }) {
   const [f, setF] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -27,8 +27,8 @@ export function ProductFormDialog({
       default_location: product.default_location ?? "", alt: (product.alt_barcodes ?? []).join(", "),
       purchase_price: String(product.purchase_price), selling_price: String(product.selling_price),
       carton_size: String(product.carton_size), system_quantity: String(product.system_quantity), min_stock: String(product.min_stock),
-    } : EMPTY);
-  }, [open, product]);
+    } : { ...EMPTY, barcode: initialBarcode ?? "" });
+  }, [open, product, initialBarcode]);
   const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) => setF((s) => ({ ...s, [k]: e.target.value }));
   const num = (v: string) => Number(v.replace(",", ".")) || 0;
 
@@ -42,13 +42,13 @@ export function ProductFormDialog({
       purchase_price: num(f.purchase_price), selling_price: num(f.selling_price), carton_size: num(f.carton_size) || 1,
       system_quantity: num(f.system_quantity), min_stock: num(f.min_stock), updated_at: new Date().toISOString(),
     };
-    const { error } = product
-      ? await supabase.from("products").update(row).eq("id", product.id)
-      : await supabase.from("products").insert(row);
+    const { data, error } = product
+      ? await supabase.from("products").update(row).eq("id", product.id).select().single()
+      : await supabase.from("products").insert(row).select().single();
     setSaving(false);
     if (error) return void toast.error(error.code === "23505" ? "هذا الباركود موجود مسبقاً" : "تعذر الحفظ");
     toast.success(product ? "تم تعديل المنتج" : "تمت إضافة المنتج");
-    onSaved();
+    onSaved((data ?? undefined) as Product | undefined);
   };
 
   const field = (k: keyof typeof EMPTY, label: string, opts: { mono?: boolean; list?: string } = {}) => (

@@ -16,6 +16,7 @@ import { ticketCode } from "@/lib/receipt-code";
 import { activeSessionQuery, productsQuery, type Product } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
+import { ProductFormDialog } from "@/components/product-form";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
@@ -96,11 +97,15 @@ function PosPage() {
     inputRef.current?.focus();
   };
 
+  const [newCode, setNewCode] = useState<string | null>(null);
+  const familles = useMemo(() => [...new Set(products.map((p) => p.famille).filter(Boolean) as string[])].sort(), [products]);
   const addCode = (raw: string) => {
     const p = findProductByBarcode(products, raw);
     if (p) return addProduct(p);
     if (suggestions.length === 1 && suggestions[0]) return addProduct(suggestions[0]);
-    toast.error("منتج غير موجود في الكتالوج");
+    const code = raw.trim();
+    toast.error("منتج غير موجود في الكتالوج", code ? { action: { label: "إضافة كمنتج جديد", onClick: () => setNewCode(code) } } : undefined);
+    if (code && /^\S+$/.test(code)) setNewCode(code);
   };
 
   const setLine = (barcode: string, patch: Partial<CartLine>) =>
@@ -161,6 +166,19 @@ function PosPage() {
 
   return (
     <div className="space-y-5">
+      <ProductFormDialog
+        product={null}
+        open={newCode !== null}
+        initialBarcode={newCode ?? ""}
+        familles={familles}
+        tenantId={tenant.id}
+        onOpenChange={(o) => !o && setNewCode(null)}
+        onSaved={(saved) => {
+          setNewCode(null);
+          void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
+          if (saved) addProduct(saved);
+        }}
+      />
       <PageHeader
         title="نقطة البيع"
         subtitle={session ? `الجلسة: ${session.name}` : "بيع مباشر · المخزون يُحدَّث تلقائياً"}
