@@ -188,6 +188,8 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
   const items = navFor(me);
   const dockItems = items.filter((i) => i.dock).slice(0, 5);
   const menuItems = items.filter((i) => !dockItems.includes(i));
+  const groups = grouped(items);
+  const [drawer, setDrawer] = useState(false);
   const { t, dir } = useI18n();
   const { queue } = useSyncState();
   const { sales } = useDeviceSales();
@@ -216,17 +218,6 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
       {!me.isMaster && <RecountBanner userId={me.userId} />}
       <header className="sticky top-0 z-30 border-b border-ink-foreground/10 bg-ink/95 text-ink-foreground backdrop-blur pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-3 sm:h-16 sm:px-6">
-          <Link to={me.homePath} className="flex min-w-0 items-center gap-2">
-            <BrandMark className="h-9 w-9 shrink-0 shadow-lift rounded-xl" />
-            <span className="min-w-0 leading-tight">
-              <span className="block text-sm font-extrabold tracking-wide sm:text-base">
-                SMART <span className="text-warning">STOCK</span>
-              </span>
-              <span className="block max-w-[8rem] truncate text-[11px] text-ink-muted sm:max-w-[12rem]">
-                {me.tenant ? me.tenant.name : t("hq")}
-              </span>
-            </span>
-          </Link>
 
           <Sheet open={drawer} onOpenChange={setDrawer}>
             <SheetTrigger asChild>
@@ -280,7 +271,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
               <span className="block text-sm font-extrabold tracking-wide sm:text-base">
                 SMART <span className="text-warning">STOCK</span>
               </span>
-              <span className="block max-w-[8rem] truncate text-[11px] text-ink-muted sm:max-w-[12rem]">
+              <span className="block max-w-[7rem] truncate text-[11px] text-ink-muted sm:max-w-[12rem]">
                 {me.tenant ? me.tenant.name : t("hq")}
               </span>
             </span>
@@ -350,7 +341,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {menuItems.map((item) => (
-                  <DropdownMenuItem key={item.to} asChild className="md:hidden">
+                  <DropdownMenuItem key={item.to} asChild className="hidden">
                     <Link to={item.to}>
                       <item.icon className="h-4 w-4" />
                       {t(item.label)}
