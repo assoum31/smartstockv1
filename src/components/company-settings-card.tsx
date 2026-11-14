@@ -56,7 +56,7 @@ export function CompanySettingsCard({ tenantId }: { tenantId: string }) {
   return (
     <div className="surface-card space-y-4 p-6">
       <h2 className="flex items-center gap-2 text-lg font-extrabold">
-        <Building2 className="h-5 w-5 text-primary" /> معلومات المؤسسة والطباعة
+        <Building2 className="h-5 w-5 text-primary" /> معلومات المؤسسة
       </h2>
       <div className="flex items-center gap-3">
         <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border bg-muted">
@@ -79,22 +79,6 @@ export function CompanySettingsCard({ tenantId }: { tenantId: string }) {
             <Input id={`cs-${k}`} value={(s[k] as string | null) ?? ""} onChange={(e) => set({ [k]: e.target.value || null } as Partial<StoreSettings>)} />
           </div>
         ))}
-      </div>
-      <div className="space-y-2">
-        <Label>عرض وصل البيع</Label>
-        <div className="flex gap-2">
-          {[58, 60, 80].map((w) => (
-            <Button key={w} type="button" variant={s.ticket_width === w ? "default" : "outline"} onClick={() => set({ ticket_width: w })}>{w} مم</Button>
-          ))}
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>مقاس ملصق الباركود الافتراضي (مم)</Label>
-        <div className="flex flex-wrap gap-2">
-          {[[40, 20], [40, 25], [50, 30], [58, 40]].map(([w, h]) => (
-            <Button key={`${w}x${h}`} type="button" variant={s.label_width === w && s.label_height === h ? "default" : "outline"} onClick={() => set({ label_width: w!, label_height: h! })}>{w}×{h}</Button>
-          ))}
-        </div>
       </div>
       <Button className="w-full" disabled={saving} onClick={() => void save()}>{saving ? "جاري الحفظ..." : "حفظ الإعدادات"}</Button>
     </div>

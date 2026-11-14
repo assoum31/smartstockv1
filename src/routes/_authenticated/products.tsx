@@ -370,6 +370,7 @@ function ProductsPage() {
         open={Boolean(labelItems)}
         onOpenChange={(o) => !o && setLabelItems(null)}
         defaultSize={{ w: storeSettings.label_width, h: storeSettings.label_height }}
+        defaults={{ copies: storeSettings.label_copies, showName: storeSettings.label_show_name, showPrice: storeSettings.label_show_price }}
       />
 
       <Dialog

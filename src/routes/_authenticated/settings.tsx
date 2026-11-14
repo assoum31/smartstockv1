@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { productsQuery } from "@/lib/queries";
 import { useSyncState, flushQueue } from "@/lib/offline";
 import { useDeviceSales, syncDeviceSales } from "@/lib/offline-sales";
-import { CloudDownload, Building2, WifiOff, Palette, RefreshCw, KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone, Contrast, Save } from "lucide-react";
+import { CloudDownload, Building2, WifiOff, Palette, RefreshCw, KeyRound, Languages, Check, Sun, Moon, MonitorSmartphone, Contrast, Save, Printer } from "lucide-react";
 import { setTheme, useTheme, type ThemePref } from "@/lib/theme";
 import { useI18n, setLang, setDirOverride, type Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CompanySettingsCard } from "@/components/company-settings-card";
+import { PrinterSettingsCard } from "@/components/printer-settings-card";
 import { PageHeader } from "@/components/stat-card";
 import { MIN_PASSWORD_LENGTH } from "@/lib/identity";
 import { ROLE_LABEL } from "@/lib/me";
@@ -78,7 +79,8 @@ function SettingsPage() {
       <Tabs defaultValue="appearance" className="space-y-5">
         <TabsList className="no-scrollbar flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl p-1">
           <TabsTrigger value="appearance" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Palette className="h-4 w-4" />المظهر واللغة</TabsTrigger>
-          {me.isManager && me.tenant && <TabsTrigger value="company" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Building2 className="h-4 w-4" />المؤسسة والطباعة</TabsTrigger>}
+          {me.isManager && me.tenant && <TabsTrigger value="company" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Building2 className="h-4 w-4" />المؤسسة</TabsTrigger>}
+          {me.isManager && me.tenant && <TabsTrigger value="printers" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><Printer className="h-4 w-4" />الطابعات</TabsTrigger>}
           <TabsTrigger value="offline" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><WifiOff className="h-4 w-4" />العمل دون إنترنت</TabsTrigger>
           <TabsTrigger value="security" className="shrink-0 gap-1.5 rounded-lg px-3 py-2"><KeyRound className="h-4 w-4" />الأمان</TabsTrigger>
         </TabsList>
@@ -101,6 +103,9 @@ function SettingsPage() {
         </TabsContent>
         {me.isManager && me.tenant && (
           <TabsContent value="company" className="mt-0"><CompanySettingsCard tenantId={me.tenant.id} /></TabsContent>
+        )}
+        {me.isManager && me.tenant && (
+          <TabsContent value="printers" className="mt-0"><PrinterSettingsCard tenantId={me.tenant.id} /></TabsContent>
         )}
         <TabsContent value="offline" className="mt-0"><OfflineCard tenantId={me.tenant?.id} /></TabsContent>
         <TabsContent value="security" className="mt-0">
