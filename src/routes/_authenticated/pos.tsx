@@ -471,23 +471,24 @@ function PosPage() {
 }
 
 function CloseCash({ cashId, opening, value, setValue, onDone }: { cashId: string; opening: number; value: string; setValue: (v: string) => void; onDone: () => void }) {
-  const [summary, setSummary] = useState<{ cash: number; card: number; credit: number; returns: number } | null>(null);
+  const [summary, setSummary] = useState<{ cash: number; card: number; credit: number; returns: number; debt: number } | null>(null);
   const load = async () => {
     const [{ data: t }, { data: cs }] = await Promise.all([
       supabase.from("sales_tickets").select("total_amount, payment_method").eq("cash_session_id", cashId),
       supabase.from("cash_sessions").select("opened_at").eq("id", cashId).maybeSingle(),
     ]);
     const { data: r } = await supabase.from("stock_returns").select("total_amount").eq("kind", "customer").gte("created_at", cs?.opened_at ?? new Date().toISOString());
+    const { data: dp } = await supabase.from("customer_payments").select("amount").eq("cash_session_id", cashId);
     const by = (m: string) => (t ?? []).filter((x) => x.payment_method === m).reduce((n, x) => n + Number(x.total_amount), 0);
-    setSummary({ cash: by("cash"), card: by("card"), credit: by("credit"), returns: (r ?? []).reduce((n, x) => n + Number(x.total_amount), 0) });
+    setSummary({ cash: by("cash"), card: by("card"), credit: by("credit"), returns: (r ?? []).reduce((n, x) => n + Number(x.total_amount), 0), debt: (dp ?? []).reduce((n, x) => n + Number(x.amount), 0) });
   };
   useEffect(() => { void load(); }, [cashId]);
-  const expected = summary ? opening + summary.cash - summary.returns : 0;
+  const expected = summary ? opening + summary.cash + summary.debt - summary.returns : 0;
   return (
     <div className="w-full space-y-2 rounded-xl bg-muted/50 p-3">
       {summary && (
         <p className="text-xs leading-relaxed">
-          نقداً: <b>{money(summary.cash)}</b> · بطاقة: <b>{money(summary.card)}</b> · كريدي: <b>{money(summary.credit)}</b> · إرجاعات: <b>−{money(summary.returns)}</b>
+          نقداً: <b>{money(summary.cash)}</b> · بطاقة: <b>{money(summary.card)}</b> · كريدي: <b>{money(summary.credit)}</b> · تسديد ديون: <b>+{money(summary.debt)}</b> · إرجاعات: <b>−{money(summary.returns)}</b>
           <br />المبلغ المتوقع في الصندوق: <b className="font-mono">{money(expected)}</b> دج
         </p>
       )}
