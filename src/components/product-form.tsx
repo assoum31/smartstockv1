@@ -47,9 +47,24 @@ export function ProductFormDialog({
       purchase_price: num(f.purchase_price), selling_price: num(f.selling_price), carton_size: num(f.carton_size) || 1,
       system_quantity: num(f.system_quantity), min_stock: num(f.min_stock), image_url: f.image_url.trim() || null, online_visible: online, updated_at: new Date().toISOString(),
     };
+    const updateRow = product && !isManager
+      ? { ...row, purchase_price: product.purchase_price, system_quantity: product.system_quantity }
+      : row;
     const { data, error } = product
-      ? await supabase.from("products").update(row).eq("id", product.id).select().single()
+      ? await supabase.from("products").update(updateRow).eq("id", product.id).select().single()
       : await supabase.from("products").insert(row).select().single();
+    if (!error && product && !isManager && num(f.purchase_price) !== Number(product.purchase_price)) {
+      const { error: priceError } = await supabase.rpc("set_product_prices", {
+        _barcode: product.barcode,
+        _purchase: num(f.purchase_price),
+        _selling: num(f.selling_price),
+      });
+      if (priceError) {
+        setSaving(false);
+        return void toast.error("تعذر حفظ سعر الشراء");
+      }
+      if (data) data.purchase_price = num(f.purchase_price);
+    }
     setSaving(false);
     if (error) return void toast.error(error.code === "23505" ? "هذا الباركود موجود مسبقاً" : "تعذر الحفظ");
     toast.success(product ? "تم تعديل المنتج" : "تمت إضافة المنتج");
@@ -59,7 +74,7 @@ export function ProductFormDialog({
   const field = (k: keyof typeof EMPTY, label: string, opts: { mono?: boolean; list?: string } = {}) => (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      <Input value={f[k]} onChange={set(k)} list={opts.list} className={`h-11 ${opts.mono ? "font-mono" : ""}`} inputMode={opts.mono ? "decimal" : undefined} />
+      <Input value={f[k]} onChange={set(k)} list={opts.list} disabled={Boolean(product && !isManager && k === "system_quantity")} className={`h-11 ${opts.mono ? "font-mono" : ""}`} inputMode={opts.mono ? "decimal" : undefined} />
     </div>
   );
 
