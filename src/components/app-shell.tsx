@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
-import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
+import { HandCoins, Wallet, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Menu, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -46,6 +46,7 @@ type NavItem = {
     | "/admin"
     | "/audit"
     | "/advances"
+    | "/expenses"
     | "/dashboard"
     | "/inventory"
     | "/scan"
@@ -75,7 +76,7 @@ const GROUPS: { key: GroupKey; label: string }[] = [
   { key: "admin", label: "الإدارة" },
 ];
 function groupOf(to: NavItem["to"]): GroupKey {
-  if (["/pos", "/sales", "/returns", "/orders", "/customers", "/advances"].includes(to)) return "sales";
+  if (["/pos", "/sales", "/returns", "/orders", "/customers", "/advances", "/expenses"].includes(to)) return "sales";
   if (["/products", "/receipts", "/suppliers", "/online-store"].includes(to)) return "stock";
   if (["/team", "/activity", "/admin"].includes(to)) return "admin";
   return "work";
@@ -105,6 +106,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/team", label: "team", icon: Users },
       { to: "/audit", label: "audit", icon: ShieldCheck },
       { to: "/advances", label: "advances", icon: HandCoins },
+      { to: "/expenses", label: "expenses", icon: Wallet },
       { to: "/online-store", label: "onlineStore", icon: Store },
       ...pos,
       activity,
@@ -118,6 +120,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
       ...pos.map((i) => ({ ...i, dock: i.to === "/sales" || i.to === "/returns" })),
       { to: "/advances", label: "advances", icon: HandCoins },
+      { to: "/expenses", label: "expenses", icon: Wallet },
     );
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
