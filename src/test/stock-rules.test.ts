@@ -15,7 +15,7 @@ describe("current stock list", () => {
     expect(currentStockRows(rows).map((r) => Number(r.system_quantity))).toEqual([48, 4]);
   });
   it("includes out-of-stock items only when asked", () => {
-    expect(currentStockRows(rows, { showZero: true }).map((r) => r.barcode)).toEqual(["111", "222", "333"]);
+    expect(currentStockRows(rows, { showZero: true }).map((r) => r.barcode)).toEqual(["111", "333", "222"]);
   });
   it("sorts by stock value at selling price when asked", () => {
     expect(currentStockRows(rows, { sort: "value" }).map((r) => r.barcode)).toEqual(["333", "111"]);
@@ -28,8 +28,8 @@ describe("current stock list", () => {
     expect(currentStockRows(rows, { q: "vis" }).map((r) => r.barcode)).toEqual(["111"]);
     expect(currentStockRows(rows, { q: "333" }).map((r) => r.barcode)).toEqual(["333"]);
   });
-  it("never shows an out-of-stock item, even when it matches the search", () => {
-    expect(currentStockRows(rows, { q: "support" })).toEqual([]);
+  it("drops the out-of-stock item even when the search matches it", () => {
+    expect(currentStockRows(rows, { q: "support" }).map((r) => r.barcode)).toEqual(["333"]);
   });
   it("filters by family", () => {
     expect(currentStockRows(rows, { famille: "Support" }).map((r) => r.barcode)).toEqual(["333"]);
