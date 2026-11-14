@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
-import { HandCoins, History, ShieldCheck, Undo2 } from "lucide-react";
+import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,7 +52,9 @@ type NavItem = {
     | "/suppliers"
     | "/receipts"
     | "/returns"
-    | "/activity";
+    | "/activity"
+    | "/customers"
+    | "/orders";
   label: TKey;
   short?: TKey;
   icon: LucideIcon;
@@ -67,6 +69,8 @@ function navFor(me: Me): NavItem[] {
     { to: "/returns", label: "returns", short: "returnsShort", icon: Undo2 },
     { to: "/receipts", label: "receipts", short: "receiptsShort", icon: PackagePlus },
     { to: "/suppliers", label: "suppliers", icon: Truck },
+    { to: "/customers", label: "customers", icon: Contact },
+    { to: "/orders", label: "onlineOrders", short: "ordersShort", icon: Globe },
   ];
   const activity: NavItem = { to: "/activity", label: "activity", short: "activityShort", icon: History };
   if (me.isManager)
@@ -85,6 +89,7 @@ function navFor(me: Me): NavItem[] {
   const items: NavItem[] = [];
   if (me.canAudit) items.push({ to: "/audit", label: "audit", icon: ShieldCheck, dock: true });
   if (me.canWatchInventory) items.push({ to: "/inventory", label: "inventory", icon: ClipboardList, dock: true });
+  if (me.canSeeStats) items.push({ to: "/dashboard", label: "dashboard", short: "dashboardShort", icon: LayoutDashboard, dock: true });
   if (me.canSell)
     items.push(
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
