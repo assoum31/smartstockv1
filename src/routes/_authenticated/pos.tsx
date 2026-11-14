@@ -56,6 +56,16 @@ function PosPage() {
   const [discount, setDiscount] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
   const [payment, setPayment] = useState<"cash" | "card" | "credit">("cash");
+  const [customerId, setCustomerId] = useState("");
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers", tenant.id],
+    networkMode: "always",
+    queryFn: () => withOfflineCopy(`customers:${tenant.id}`, async () => {
+      const { data, error } = await supabase.from("customers").select("*").eq("tenant_id", tenant.id).order("name");
+      if (error) throw error;
+      return data;
+    }),
+  });
   const HOLD_KEY = `smartstock:held:${tenant.id}`;
   const [held, setHeld] = useState<{ at: string; cart: CartLine[] }[]>(() => {
     if (typeof window === "undefined") return [];
@@ -143,7 +153,7 @@ function PosPage() {
 
   const printReceipt = (lines: CartLine[], number: string) => {
     const sum = lines.reduce((n, l) => n + l.quantity * l.unit_price, 0) - discAmount;
-    const pay = { cash: "نقداً", card: "بطاقة / BaridiMob", credit: "على الحساب" }[payment];
+    const pay = { cash: "نقداً", card: "بطاقة / BaridiMob", credit: `بالدين${customerId ? ` — ${customers.find((c) => c.id === customerId)?.name ?? ""}` : ""}` }[payment];
     openPrint(
       ticketHtml(storeSettings, tenant.name, {
         title: `بون رقم ${number}`,
@@ -160,10 +170,11 @@ function PosPage() {
   const checkout = async (print: boolean) => {
     if (cart.length === 0 || saving) return;
     if (!cash) return void toast.error('افتح الصندوق بالإنترنت أولاً.');
+    if (payment === 'credit' && !customerId) return void toast.error('اختر الزبون لتسجيل البيع بالدين.');
     setSaving(true);
     try {
     const clientId = newClientId();
-    await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
+    await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, customer_id: payment === 'credit' ? customerId : null, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
     let number = `LOCAL-${clientId}`;
     if (online) {
       try {
@@ -181,6 +192,7 @@ function PosPage() {
     setPaid("");
     setDiscount("");
     setPayment("cash");
+    setCustomerId("");
     void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
     void queryClient.invalidateQueries({ queryKey: ["sales-tickets"] });
     inputRef.current?.focus();
@@ -409,6 +421,12 @@ function PosPage() {
                 <Button key={k} type="button" size="sm" variant={payment === k ? "default" : "outline"} onClick={() => setPayment(k)}>{l}</Button>
               ))}
             </div>
+            {payment === "credit" && (
+              <select aria-label="الزبون" value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="h-10 w-full rounded-md border bg-background px-2 text-sm">
+                <option value="">— اختر الزبون —</option>
+                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
+              </select>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="paid">المبلغ المستلم</Label>
