@@ -29,3 +29,16 @@ export function searchByName<T extends { name: string }>(all: T[], q: string, li
   if (!s) return [];
   return all.filter((x) => x.name.toLowerCase().includes(s)).sort((a, b) => a.name.localeCompare(b.name, ["ar", "fr"])).slice(0, limit);
 }
+
+type Match = { barcode: string; name: string; famille?: string | null; alt_barcodes?: string[] | null };
+/** Name / barcode / alternate barcode / family matches, ignoring letter case. */
+export function filterByQuery<T extends Match>(all: T[], q: string): T[] {
+  const s = q.trim().toLowerCase();
+  if (!s) return all;
+  return all.filter((x) =>
+    x.name.toLowerCase().includes(s) ||
+    x.barcode.toLowerCase().includes(s) ||
+    (x.famille ?? "").toLowerCase().includes(s) ||
+    (x.alt_barcodes ?? []).some((b) => b.toLowerCase().includes(s)),
+  );
+}

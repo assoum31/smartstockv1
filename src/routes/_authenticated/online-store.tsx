@@ -66,7 +66,7 @@ function OnlineStorePage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState<P | null>(null);
-  const list = useMemo(() => { const x = q.trim().toLowerCase(); return products.filter((p) => !x || p.name.toLowerCase().includes(x) || p.barcode.toLowerCase().includes(x) || (p.famille ?? "").toLowerCase().includes(x)); }, [products, q]);
+  const list = useMemo(() => filterByQuery(products, q), [products, q]);
   const pages = Math.max(1, Math.ceil(list.length / 50));
   const cur = Math.min(page, pages);
   const rows = list.slice((cur - 1) * 50, cur * 50);
