@@ -15,7 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/stat-card";
 import { activeSessionQuery, productsQuery, sessionLogsQuery, type InventoryLog } from "@/lib/queries";
 import { errorText, formatDateTime, formatQty } from "@/lib/messages";
-import { auditSearchIndex, filterAuditIndex, normalizeAuditCode } from "@/lib/audit-rules";
+import { auditSearchIndex, filterAuditIndex, filterUncounted, normalizeAuditCode, uncountedProducts } from "@/lib/audit-rules";
+import type { Product } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/audit")({
   beforeLoad: ({ context }) => {
@@ -51,6 +52,8 @@ function AuditPage() {
   const [q, setQ] = useState("");
   const [shelf, setShelf] = useState("");
   const [unauditedOnly, setUnauditedOnly] = useState(false);
+  const [view, setView] = useState<"all" | "counted" | "uncounted">("all");
+  const [pickProduct, setPickProduct] = useState<Product | null>(null);
   const [cameraOn, setCameraOn] = useState(false);
   const [tab, setTab] = useState("all");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -58,7 +61,14 @@ function AuditPage() {
 
   const index = useMemo(() => auditSearchIndex(logs, products), [logs, products]);
   const filtered = useMemo(() => filterAuditIndex(index, q, shelf, unauditedOnly), [index, q, shelf, unauditedOnly]);
-  const shelves = useMemo(() => Array.from(new Set(logs.map((l) => l.location).filter((l): l is string => Boolean(l)))).sort(), [logs]);
+  const missing = useMemo(() => uncountedProducts(products, logs), [products, logs]);
+  const missingFiltered = useMemo(
+    () => (unauditedOnly && view !== "uncounted" ? [] : filterUncounted(missing, q, shelf)),
+    [missing, q, shelf, unauditedOnly, view],
+  );
+  const shownLogs = view === "uncounted" ? [] : filtered;
+  const shownMissing = view === "counted" ? [] : missingFiltered.slice(0, 100);
+  const shelves = useMemo(() => Array.from(new Set([...logs.map((l) => l.location), ...products.map((p) => p.default_location)].filter((l): l is string => Boolean(l)))).sort(), [logs, products]);
   const onDetected = useCallback((code: string) => {
     setQ(code);
     setShelf("");
@@ -88,7 +98,7 @@ function AuditPage() {
       <PageHeader title="تدقيق الجرد" subtitle={`${active.name} · تم تدقيق ${done} من ${logs.length}`} />
       <Tabs value={tab} onValueChange={(value) => { setTab(value); setCameraOn(false); }}>
         <TabsList>
-          <TabsTrigger value="all">المنتجات المحسوبة</TabsTrigger>
+          <TabsTrigger value="all">كل المنتجات</TabsTrigger>
           <TabsTrigger value="mine">سجلي ({mine.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4 space-y-3">
@@ -115,15 +125,49 @@ function AuditPage() {
               <SelectTrigger className="w-44" aria-label="الرف أو المكان"><SelectValue placeholder="كل الرفوف" /></SelectTrigger>
               <SelectContent><SelectItem value="__all__">كل الرفوف</SelectItem>{shelves.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent>
             </Select>
+            <Select value={view} onValueChange={(value) => setView(value as typeof view)}>
+              <SelectTrigger className="w-44" aria-label="حالة الجرد"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">المحسوب وغير المحسوب</SelectItem>
+                <SelectItem value="counted">المحسوبة فقط</SelectItem>
+                <SelectItem value="uncounted">غير المحسوبة فقط ({missing.length})</SelectItem>
+              </SelectContent>
+            </Select>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={unauditedOnly} onCheckedChange={(value) => setUnauditedOnly(value === true)} />غير المدقق فقط</label>
-            <span className="text-sm text-muted-foreground">{filtered.length} / {logs.length}</span>
+            <span className="text-sm text-muted-foreground">{shownLogs.length + missingFiltered.length * (view === "counted" ? 0 : 1)} / {logs.length + missing.length}</span>
           </div>
-          <LogList logs={filtered} onPick={setEdit} />
+          {(shownLogs.length > 0 || shownMissing.length === 0) && <LogList logs={shownLogs} onPick={setEdit} />}
+          {shownMissing.length > 0 && (
+            <ul className="space-y-2">
+              {shownMissing.map((p) => (
+                <li key={p.id}>
+                  <Button type="button" variant="outline" onClick={() => setPickProduct(p)} className="surface-card flex h-auto w-full items-center gap-3 whitespace-normal border-warning/60 p-3 text-start hover:bg-secondary/50">
+                    <span className="min-w-14 rounded-md bg-warning/20 px-2 py-1 text-center text-xs font-bold text-warning-foreground">غير محسوب</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-bold">{p.name}</span>
+                      <span className="barcode-chip block truncate text-xs text-muted-foreground">{p.barcode}</span>
+                      <span className="block text-xs text-muted-foreground">الرف: {p.default_location || "—"}</span>
+                    </span>
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
+                  </Button>
+                </li>
+              ))}
+              {missingFiltered.length > shownMissing.length && <li className="text-center text-xs text-muted-foreground">يظهر 100 من {missingFiltered.length} — دقّق البحث</li>}
+            </ul>
+          )}
         </TabsContent>
         <TabsContent value="mine" className="mt-4">
           <LogList logs={mine} onPick={setEdit} showAudit />
         </TabsContent>
       </Tabs>
+      {pickProduct && (
+        <UncountedDialog
+          product={pickProduct}
+          sessionId={active.id}
+          onClose={() => setPickProduct(null)}
+          onDone={() => { setPickProduct(null); setQ(""); refresh(); window.setTimeout(() => searchRef.current?.focus(), 100); }}
+        />
+      )}
       {edit && (
         <AuditDialog
           log={edit}
@@ -141,6 +185,48 @@ function AuditPage() {
         />
       )}
     </div>
+  );
+}
+
+function UncountedDialog({ product, sessionId, onClose, onDone }: { product: Product; sessionId: string; onClose: () => void; onDone: () => void }) {
+  const [code, setCode] = useState("");
+  const [location, setLocation] = useState(product.default_location ?? "");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void supabase.rpc("next_audit_code", { _session_id: sessionId }).then(({ data }) => { if (data) setCode(normalizeAuditCode(String(data))); });
+  }, [sessionId]);
+  const run = async (mode: "zero" | "alert") => {
+    setBusy(true);
+    const { error } = await supabase.rpc("audit_uncounted_product", {
+      _session_id: sessionId, _barcode: product.barcode, _mode: mode, _code: normalizeAuditCode(code), _location: location,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message.includes("duplicate_audit_code") ? "هذا الرقم ID مستعمل لمنتج آخر"
+        : error.message.includes("already_counted") ? "هذا المنتج محسوب بالفعل" : errorText(error));
+      return;
+    }
+    toast.success(mode === "zero" ? "تم تسجيله في الجرد بكمية 0" : "تم إرسال تنبيه لفريق الجرد");
+    onDone();
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="text-start"><DialogTitle>منتج غير محسوب في الجرد</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="rounded-md bg-secondary p-3">
+            <p className="font-bold">{product.name}</p>
+            <p className="barcode-chip text-xs text-muted-foreground">{product.barcode}</p>
+          </div>
+          <div className="space-y-1.5"><Label htmlFor="u-code">الرقم ID (اختياري)</Label><Input id="u-code" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} className="barcode-chip" /></div>
+          <div className="space-y-1.5"><Label htmlFor="u-loc">الرف / المكان</Label><Input id="u-loc" value={location} onChange={(e) => setLocation(e.target.value)} /></div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button type="button" disabled={busy} onClick={() => void run("zero")}>تسجيله كـ 0 وتدقيقه</Button>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => void run("alert")}>تنبيه فريق الجرد</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -46,3 +46,21 @@ export function filterAuditIndex<T extends AuditSearchLog>(
       (numericId && normalizeAuditCode(log.audit_code ?? "") === normalizeAuditCode(search))),
   ).map(({ log }) => log);
 }
+export type UncountedProduct = AuditSearchProduct & { default_location?: string | null };
+
+/** Store products that have no counted line in the current session (matched on main or alternate barcode). */
+export function uncountedProducts<P extends UncountedProduct>(products: P[], logs: { barcode: string }[]): P[] {
+  const counted = new Set(logs.map((l) => l.barcode.trim().toLowerCase()));
+  return products.filter((p) =>
+    ![p.barcode, ...(p.alt_barcodes ?? [])].some((b) => counted.has(String(b).trim().toLowerCase())),
+  );
+}
+
+export function filterUncounted<P extends UncountedProduct>(products: P[], query: string, shelf = ""): P[] {
+  const search = query.trim().toLowerCase();
+  return products.filter((p) =>
+    (!shelf || p.default_location === shelf) &&
+    (!search || [p.barcode, p.name, p.famille, p.model, p.default_location, ...(p.alt_barcodes ?? [])]
+      .join(" ").toLowerCase().includes(search)),
+  );
+}
