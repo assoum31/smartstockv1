@@ -183,6 +183,13 @@
       "when": 1794692712008,
       "tag": "0025_stock_movements_view",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794697740634,
+      "tag": "0026_claim_pin_attempt_atomic",
+      "breakpoints": true
     }
   ]
 }
