@@ -21,7 +21,8 @@ async function put(storeName: string, key: string, value: unknown) {
   const db = await openDb();
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(storeName, "readwrite");
-    transaction.objectStore(storeName).put(value, key);
+    if (storeName === "queue") transaction.objectStore(storeName).put(value);
+    else transaction.objectStore(storeName).put(value, key);
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
