@@ -2286,6 +2286,10 @@ export const PHRASES: Record<string, [string, string]> = {
   "Produit introuvable",
   "Product not found"
  ],
+ "إضافة كمنتج جديد": [
+  "Ajouter comme nouveau produit",
+  "Add as new product"
+ ],
  "منتج غير موجود في الكتالوج": [
   "Produit absent du catalogue",
   "Product not in catalog"
