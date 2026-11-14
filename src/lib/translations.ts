@@ -1,5 +1,6 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "الصندوق الأصلي مغلق. البيع محفوظ على الجهاز ويحتاج مراجعة المسير.": ["La caisse d’origine est fermée. La vente reste sur cet appareil et nécessite une vérification du gérant.", "The original till is closed. The sale stays on this device for manager review."],
  "تثبيت التطبيق": ["Installer l’application", "Install app"],
  "المبيعات المحفوظة على الجهاز": ["Ventes enregistrées sur cet appareil", "Sales saved on this device"],
  "تم حفظ البيع على الجهاز": ["Vente enregistrée sur cet appareil", "Sale saved on this device"],

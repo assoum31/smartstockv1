@@ -124,7 +124,7 @@ export async function enqueueCount(item: QueuedCount) {
   const existing = state.queue.find((q) => q.client_id === item.client_id);
   const toStore: QueuedCount =
     existing && existing.op === "insert" && item.op === "update"
-      ? { ...existing, payload: item.payload, status: "pending", error: undefined }
+      ? { ...existing, payload: item.payload, productPatch: item.productPatch ?? existing.productPatch, status: "pending", error: undefined }
       : item;
   await tx("queue", "readwrite", (s) => s.put(toStore));
   await reloadQueue();

@@ -141,7 +141,7 @@ function PosPage() {
         date: new Date().toLocaleString("fr-FR"),
         lines,
         total: sum,
-        code: number ? ticketCode(number) : undefined,
+        code: number ? number.startsWith('LOCAL-') ? number : ticketCode(number) : undefined,
         extra: `${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${pay}</p>${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}`,
       }),
       "width=380,height=600",
