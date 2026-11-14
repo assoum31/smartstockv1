@@ -66,7 +66,7 @@ function OnlineStorePage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState<P | null>(null);
-  const list = useMemo(() => { const x = q.trim().toLowerCase(); return products.filter((p) => !x || p.name.toLowerCase().includes(x) || p.barcode.includes(x) || (p.famille ?? "").toLowerCase().includes(x)); }, [products, q]);
+  const list = useMemo(() => { const x = q.trim().toLowerCase(); return products.filter((p) => !x || p.name.toLowerCase().includes(x) || p.barcode.toLowerCase().includes(x) || (p.famille ?? "").toLowerCase().includes(x)); }, [products, q]);
   const pages = Math.max(1, Math.ceil(list.length / 50));
   const cur = Math.min(page, pages);
   const rows = list.slice((cur - 1) * 50, cur * 50);
@@ -187,7 +187,7 @@ function EditDialog({ p, products, onClose, onSaved }: { p: P; products: P[]; on
   const [rel, setRel] = useState<string[]>(p.related_barcodes);
   const [rq, setRq] = useState("");
   const byCode = useMemo(() => new Map(products.map((x) => [x.barcode, x])), [products]);
-  const hits = useMemo(() => { const x = rq.trim().toLowerCase(); if (!x) return []; return products.filter((o) => o.barcode !== p.barcode && !rel.includes(o.barcode) && (o.name.toLowerCase().includes(x) || o.barcode.includes(x))).slice(0, 8); }, [rq, products, rel, p.barcode]);
+  const hits = useMemo(() => { const x = rq.trim().toLowerCase(); if (!x) return []; return products.filter((o) => o.barcode !== p.barcode && !rel.includes(o.barcode) && (o.name.toLowerCase().includes(x) || o.barcode.toLowerCase().includes(x))).slice(0, 8); }, [rq, products, rel, p.barcode]);
   const save = async () => {
     const price = Number(f.price.replace(",", "."));
     if (!f.name.trim() || !Number.isFinite(price) || price < 0) { toast.error("تحقق من الاسم والسعر"); return; }

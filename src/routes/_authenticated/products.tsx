@@ -67,7 +67,7 @@ function ProductsPage() {
       ? base.filter(
           (p) =>
             p.barcode.toLowerCase().includes(q) ||
-            (p.alt_barcodes ?? []).some((b) => b.includes(q)) ||
+            (p.alt_barcodes ?? []).some((b) => b.toLowerCase().includes(q)) ||
             p.name.toLowerCase().includes(q) ||
             (p.model ?? "").toLowerCase().includes(q),
         )

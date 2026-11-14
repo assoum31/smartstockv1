@@ -42,7 +42,7 @@ function SalesPage() {
         (!s ||
           String(t.ticket_number).includes(s) ||
           t.created_by_name.toLowerCase().includes(s) ||
-          t.items.some((i) => i.product_name.toLowerCase().includes(s) || i.barcode.includes(s))),
+          t.items.some((i) => i.product_name.toLowerCase().includes(s) || i.barcode.toLowerCase().includes(s))),
     );
   }, [tickets, day, q]);
   const total = list.reduce((a, t) => a + Number(t.total_amount), 0);

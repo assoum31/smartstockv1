@@ -160,7 +160,7 @@ function ReceiptsPage() {
     () =>
       q.length < 2
         ? []
-        : products.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.includes(q) || (p.alt_barcodes ?? []).some((b) => b.includes(q))).slice(0, 6),
+        : products.filter((p) => p.name.toLowerCase().includes(q) || p.barcode.toLowerCase().includes(q) || (p.alt_barcodes ?? []).some((b) => b.toLowerCase().includes(q))).slice(0, 6),
     [products, q],
   );
 
