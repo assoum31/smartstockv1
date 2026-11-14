@@ -17,6 +17,7 @@ const dict = {
   onlineStore: { ar: "إدارة المتجر أونلاين", fr: "Gérer la boutique", en: "Manage online store" },
   onlineOrders: { ar: "طلبيات أونلاين", fr: "Commandes en ligne", en: "Online orders" },
   ordersShort: { ar: "الطلبيات", fr: "Commandes", en: "Orders" },
+  stock: { ar: "المخزون", fr: "Stock", en: "Stock" },
   expenses: { ar: "المصاريف", fr: "Dépenses", en: "Expenses" },
   advances: { ar: "التسبيقات", fr: "Acomptes", en: "Advances" },
   scan: { ar: "السكان", fr: "Scanner", en: "Scan" },

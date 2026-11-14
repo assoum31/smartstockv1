@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
-import { HandCoins, Wallet, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
+import { Warehouse, HandCoins, Wallet, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Menu, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -47,6 +47,7 @@ type NavItem = {
     | "/audit"
     | "/advances"
     | "/expenses"
+    | "/stock"
     | "/dashboard"
     | "/inventory"
     | "/scan"
@@ -77,7 +78,7 @@ const GROUPS: { key: GroupKey; label: string }[] = [
 ];
 function groupOf(to: NavItem["to"]): GroupKey {
   if (["/pos", "/sales", "/returns", "/orders", "/customers", "/advances", "/expenses"].includes(to)) return "sales";
-  if (["/products", "/receipts", "/suppliers", "/online-store"].includes(to)) return "stock";
+  if (["/products", "/stock", "/receipts", "/suppliers", "/online-store"].includes(to)) return "stock";
   if (["/team", "/activity", "/admin"].includes(to)) return "admin";
   return "work";
 }
@@ -103,6 +104,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
       { to: "/scan", label: "scan", icon: ScanLine, dock: true },
       { to: "/products", label: "products", icon: Package, dock: true },
+      { to: "/stock", label: "stock", icon: Warehouse },
       { to: "/team", label: "team", icon: Users },
       { to: "/audit", label: "audit", icon: ShieldCheck },
       { to: "/advances", label: "advances", icon: HandCoins },
@@ -123,7 +125,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/expenses", label: "expenses", icon: Wallet },
     );
   if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
-  if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true });
+  if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true }, { to: "/stock", label: "stock", icon: Warehouse });
   if (!items.length) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   return items;
 }
