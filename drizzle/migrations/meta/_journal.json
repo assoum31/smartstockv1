@@ -176,6 +176,13 @@
       "when": 1794690249884,
       "tag": "0024_supplier_debts_and_expenses",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794692712008,
+      "tag": "0025_stock_movements_view",
+      "breakpoints": true
     }
   ]
 }

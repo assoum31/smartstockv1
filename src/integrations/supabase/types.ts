@@ -1416,6 +1416,21 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          actor: string | null
+          barcode: string | null
+          created_at: string | null
+          id: string | null
+          kind: string | null
+          product_name: string | null
+          qty: number | null
+          ref: string | null
+          tenant_id: string | null
+          unit_price: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       audit_inventory_log: {
