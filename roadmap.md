@@ -25,3 +25,4 @@
 - [x] Mobile bottom bar redesign + activity log page (own for staff, whole store for managers, filters, Excel)
 - [x] Manager edits/deletes advances; sellers add customers, suppliers and products from receipts; sales manager role with revenue/profit stats; public online store /store/<code> with orders alert in POS
 - [x] Online store: manager picks which products show (out-of-stock stays hidden), new products start hidden until the manager shows them, store identity/colors/logo, product images and suggestions
+- [x] Stock page: "المخزون الحالي" tab listing every item actually on the shelf (quantity + value at selling price), search by name/barcode/alternate barcode, family + sort filters, out-of-stock toggle, 50 per page
