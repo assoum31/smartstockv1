@@ -156,7 +156,7 @@ function SettingsPage() {
   );
 }
 
-function OfflineCard({ tenantId }: { tenantId?: string }) {
+function OfflineCard({ tenantId }: { tenantId: string | undefined }) {
   const qc = useQueryClient();
   const { queue, online } = useSyncState();
   const { sales } = useDeviceSales();

@@ -281,7 +281,7 @@ export function AppShell({ me, children }: { me: Me; children: React.ReactNode }
             {groups.map((g) => {
               const active = g.items.some((i) => pathname.startsWith(i.to));
               if (g.items.length === 1) {
-                const item = g.items[0];
+                const item = g.items[0]!;
                 return (
                   <Link key={g.key} to={item.to} className={cn("flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-bold transition-colors",
                     active ? "bg-primary text-primary-foreground" : "text-ink-muted hover:bg-ink-foreground/10 hover:text-ink-foreground")}>
