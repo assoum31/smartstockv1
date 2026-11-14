@@ -95,7 +95,9 @@ function StockPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="المخزون" subtitle="قيمة السلع وحركة المخزون" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
+        <Kpi label="سلع في المخزون" value={String(kpi.refs)} />
+        <Kpi label="إجمالي القطع" value={formatQty(kpi.units)} />
         <Kpi label="قيمة المخزون (شراء)" value={money(kpi.buy)} />
         <Kpi label="قيمة المخزون (بيع)" value={money(kpi.sell)} />
         <Kpi label="الربح المتوقع" value={money(kpi.margin)} />
@@ -105,14 +107,32 @@ function StockPage() {
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setTab("moves")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "moves" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>حركة المخزون</button>
         <button onClick={() => setTab("alerts")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "alerts" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>تنبيهات النفاد ({alerts.length})</button>
+        <button onClick={() => setTab("stock")} className={`rounded-full px-4 py-2 text-sm font-semibold ${tab === "stock" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>المخزون الحالي ({kpi.refs})</button>
       </div>
       <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-9" placeholder="ابحث بالاسم أو الباركود" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-9" placeholder="ابحث بالاسم أو الباركود" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} /></div>
         {tab === "moves" && (
           <select className="h-10 rounded-md border bg-background px-3 text-sm" value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">كل الحركات</option>
             {Object.entries(KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
+        )}
+        {tab === "stock" && (
+          <>
+            <select className="h-10 rounded-md border bg-background px-3 text-sm" value={fam} onChange={(e) => { setFam(e.target.value); setPage(1); }}>
+              <option value="">كل الأقسام</option>
+              {familles.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+            <select className="h-10 rounded-md border bg-background px-3 text-sm" value={sort} onChange={(e) => setSort(e.target.value as "qty" | "value" | "name")}>
+              <option value="qty">الأكثر كمية</option>
+              <option value="value">الأكثر قيمة</option>
+              <option value="name">حسب الاسم</option>
+            </select>
+            <label className="flex h-10 items-center gap-2 rounded-md border bg-background px-3 text-sm">
+              <input type="checkbox" checked={showZero} onChange={(e) => { setShowZero(e.target.checked); setPage(1); }} />
+              عرض السلع النافدة
+            </label>
+          </>
         )}
       </div>
       {tab === "moves" ? (
