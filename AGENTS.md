@@ -48,4 +48,4 @@ use the editor.
 - Screen text is written in Arabic in the code; French/English come from `src/lib/translations.ts` applied to the page by `src/lib/dom-translate.ts` after hydration, so new Arabic UI text needs a matching entry there. Pages must not hard-code `dir`; the root sets it from the language. Print windows stay Arabic RTL.
 - Day/night mode toggles the `.dark` class on <html> (`src/lib/theme.ts`); colors come only from the tokens in styles.css, so components need no dark-specific classes.
 
-- The public store `/store/$code` reads only through `public_store_catalog` and orders only through `place_online_order` (security definer, granted to anon), so visitors never touch tables or see purchase prices.
+- The public store `/store/$code` reads only through `public_store_catalog` and orders only through `place_online_order` (security definer, granted to anon), so visitors never touch tables or see purchase prices; it lists every manager-visible product regardless of stock.
