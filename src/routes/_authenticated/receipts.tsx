@@ -52,6 +52,7 @@ function ReceiptsPage() {
   const [supplierId, setSupplierId] = useState("");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  const [paid, setPaid] = useState("");
   const [code, setCode] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [saving, setSaving] = useState(false);
@@ -194,7 +195,7 @@ function ReceiptsPage() {
     if (lines.some((l) => !(Number(l.quantity) > 0))) return void toast.error("أدخل كمية صحيحة لكل منتج");
     if (lines.some((l) => l.isNew && !l.product_name.trim())) return void toast.error("أدخل اسم كل منتج جديد");
     setSaving(true);
-    const { error } = await supabase.rpc("create_goods_receipt", {
+    const { data: newId, error } = await supabase.rpc("create_goods_receipt", {
       _supplier_id: (supplierId || null) as never,
       _items: lines.map((l) => ({
         barcode: l.barcode,
@@ -206,9 +207,14 @@ function ReceiptsPage() {
       _reference: reference,
       _notes: notes,
     });
+    if (!error && newId && paid.trim() !== "" && Number(paid.replace(",", ".")) < total) {
+      const r = await supabase.rpc("set_receipt_paid", { _receipt_id: newId as string, _paid: Number(paid.replace(",", ".")) || 0 });
+      if (r.error) toast.error(errorText(r.error));
+    }
     setSaving(false);
     if (error) return void toast.error(errorText(error));
     toast.success("تم حفظ وصل الاستلام وتحديث المخزون");
+    setPaid("");
     setLines([]);
     setReference("");
     setNotes("");
@@ -322,6 +328,13 @@ function ReceiptsPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <p className="flex-1 font-extrabold">المجموع: <span className="font-mono">{money(total)}</span> دج</p>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="rc-paid" className="whitespace-nowrap text-xs">المبلغ المدفوع</Label>
+              <Input id="rc-paid" inputMode="decimal" placeholder={money(total)} value={paid} onChange={(e) => setPaid(e.target.value)} className="h-10 w-32 font-mono" />
+              {paid.trim() !== "" && Number(paid.replace(",", ".")) < total && (
+                <span className="text-xs font-bold text-destructive">دين: {money(total - (Number(paid.replace(",", ".")) || 0))}</span>
+              )}
+            </div>
             <Button variant="outline" onClick={() => { setCreating(false); setLines([]); }}>إلغاء</Button>
             <Button disabled={saving || lines.length === 0} onClick={() => void save()}>
               <PackagePlus /> {saving ? "جاري الحفظ..." : "حفظ وصل الاستلام"}
@@ -341,6 +354,9 @@ function ReceiptsPage() {
                 <span className="block text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("fr-FR")} · {r.created_by_name} · {r.items.length} منتج</span>
               </span>
               <span className="font-mono font-extrabold">{money(Number(r.total_amount))} دج</span>
+              {r.paid_amount != null && Number(r.paid_amount) < Number(r.total_amount) && (
+                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-bold text-destructive">دين {money(Number(r.total_amount) - Number(r.paid_amount))}</span>
+              )}
               <ChevronDown className={`h-4 w-4 transition-transform ${open === r.id ? "rotate-180" : ""}`} />
             </button>
             {open === r.id && (

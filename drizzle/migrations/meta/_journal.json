@@ -169,6 +169,13 @@
       "when": 1794688114981,
       "tag": "0023_printers_and_customer_credit",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794690249884,
+      "tag": "0024_supplier_debts_and_expenses",
+      "breakpoints": true
     }
   ]
 }

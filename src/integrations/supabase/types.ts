@@ -256,6 +256,53 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          cash_session_id: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          note: string | null
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          cash_session_id?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          note?: string | null
+          source?: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          cash_session_id?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          note?: string | null
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           barcode: string
@@ -311,6 +358,7 @@ export type Database = {
           created_by_name: string
           id: string
           notes: string | null
+          paid_amount: number | null
           receipt_number: number
           reference: string | null
           supplier_id: string | null
@@ -324,6 +372,7 @@ export type Database = {
           created_by_name: string
           id?: string
           notes?: string | null
+          paid_amount?: number | null
           receipt_number: number
           reference?: string | null
           supplier_id?: string | null
@@ -337,6 +386,7 @@ export type Database = {
           created_by_name?: string
           id?: string
           notes?: string | null
+          paid_amount?: number | null
           receipt_number?: number
           reference?: string | null
           supplier_id?: string | null
@@ -1183,6 +1233,60 @@ export type Database = {
           },
         ]
       }
+      supplier_payments: {
+        Row: {
+          amount: number
+          cash_session_id: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          note: string | null
+          source: string
+          supplier_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          note?: string | null
+          source?: string
+          supplier_id: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          note?: string | null
+          source?: string
+          supplier_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -1359,6 +1463,15 @@ export type Database = {
         Args: { _amount: number; _beneficiary_id: string; _reason: string }
         Returns: string
       }
+      create_expense: {
+        Args: {
+          _amount: number
+          _category: string
+          _note: string
+          _source: string
+        }
+        Returns: string
+      }
       create_goods_receipt: {
         Args: {
           _items: Json
@@ -1484,6 +1597,15 @@ export type Database = {
         Args: { _amount: number; _customer_id: string; _note: string }
         Returns: string
       }
+      record_supplier_payment: {
+        Args: {
+          _amount: number
+          _note: string
+          _source: string
+          _supplier_id: string
+        }
+        Returns: string
+      }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_alt_barcodes: {
@@ -1496,6 +1618,10 @@ export type Database = {
       }
       set_product_second_barcode: {
         Args: { _barcode: string; _second: string }
+        Returns: undefined
+      }
+      set_receipt_paid: {
+        Args: { _paid: number; _receipt_id: string }
         Returns: undefined
       }
       set_ticket_customer: {

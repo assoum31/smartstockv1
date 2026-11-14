@@ -4,6 +4,7 @@ import { storeSalesQuery, money } from "@/lib/pos-queries";
 import { productsQuery } from "@/lib/queries";
 import { salesSummary } from "@/lib/sales-stats";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Revenue (chiffre d'affaires), cost and profit for a date range. */
 export function SalesStats({ tenantId }: { tenantId: string }) {
@@ -13,10 +14,20 @@ export function SalesStats({ tenantId }: { tenantId: string }) {
   const [from, setFrom] = useState(today.slice(0, 8) + "01");
   const [to, setTo] = useState(today);
   const s = useMemo(() => salesSummary(tickets, products, from, to), [tickets, products, from, to]);
+  const { data: expenses = [] } = useQuery({
+    queryKey: ["expenses-range", tenantId, from, to],
+    queryFn: async () => {
+      const { data } = await supabase.from("expenses").select("amount").eq("tenant_id", tenantId).gte("created_at", from).lte("created_at", to + "T23:59:59.999");
+      return data ?? [];
+    },
+  });
+  const spent = expenses.reduce((n, e) => n + Number(e.amount), 0);
   const cards = [
     { label: "رقم الأعمال", value: money(s.revenue) },
     { label: "تكلفة الشراء", value: money(s.cost) },
     { label: "الفائدة", value: money(s.profit) },
+    { label: "المصاريف", value: money(spent) },
+    { label: "الربح الصافي", value: money(s.profit - spent) },
     { label: "هامش الربح", value: `${s.margin.toFixed(1)}%` },
     { label: "متوسط فائدة الوصل", value: money(s.avgProfit) },
     { label: "عدد الوصولات", value: String(s.tickets) },
