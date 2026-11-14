@@ -1,5 +1,8 @@
 # Stocki Pro roadmap
 
+- [x] Installable desktop/phone app: guarded offline shell, durable sales/count queue, idempotent sales sync, cached catalogue/cash session and unit tests.
+- [ ] Verify installed offline sale/count and reconnection end-to-end — requires publication and a signed-in seller in preview (automatic session mint found no matching account).
+
 - [x] Auditor: shelf/name/all-barcode/ID search, automatic or manual IDs, camera, unaudited filter, Enter save and clear search after saving (authenticated end-to-end check awaits preview sign-in)
 
 - [ ] Get the original spec (cahier des charges + topo) from the user — waiting on the user

@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { withOfflineCopy } from './offline';
 
 export type Supplier = Tables<"suppliers">;
 export type GoodsReceipt = Tables<"goods_receipts"> & { items: Tables<"goods_receipt_items">[] };
@@ -70,7 +71,8 @@ export type CashSession = Tables<"cash_sessions">;
 export const myCashSessionQuery = (tenantId: string, userId: string) =>
   queryOptions({
     queryKey: ["cash-session", tenantId, userId],
-    queryFn: async (): Promise<CashSession | null> => {
+    networkMode: 'always',
+    queryFn: (): Promise<CashSession | null> => withOfflineCopy(`cash-session:${tenantId}:${userId}`, async () => {
       const { data, error } = await supabase
         .from("cash_sessions")
         .select("*")
@@ -80,5 +82,5 @@ export const myCashSessionQuery = (tenantId: string, userId: string) =>
         .maybeSingle();
       if (error) throw error;
       return data;
-    },
+    }),
   });

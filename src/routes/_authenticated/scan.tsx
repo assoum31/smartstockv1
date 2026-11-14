@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/scan")({
       context.queryClient.ensureQueryData(sessionLogsQuery(session?.id ?? null)),
     ]);
   },
-  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "السكان | SMART STOCK" }, { name: 'description', content: 'عد المنتجات بالباركود وحفظ الجرد على الجهاز في SMART STOCK.' }, { property: 'og:title', content: 'السكان | SMART STOCK' }, { property: 'og:description', content: 'الجرد بالباركود وحفظ الكميات والملاحظات.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
   component: ScanPage,
 });
 
@@ -272,32 +272,14 @@ function ScanPage() {
       notes: notes.trim() || null,
     };
     const known = productMap.get(clean);
+    let productPatch: { purchase: number; selling: number; alts: string[] } | undefined;
     if (known) {
       const pp = Number(purchasePrice.replace(",", "."));
       const sp = Number(sellingPrice.replace(",", "."));
       if (!Number.isFinite(pp) || pp < 0 || !Number.isFinite(sp) || sp < 0)
         return void toast.error("سعر غير صالح.");
-      if (pp !== Number(known.purchase_price) || sp !== Number(known.selling_price)) {
-        const { error } = await supabase.rpc("set_product_prices", {
-          _barcode: clean,
-          _purchase: pp,
-          _selling: sp,
-        });
-        if (error) toast.error("تعذر حفظ الأسعار.");
-        else void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
-      }
-    }
-    if (known) {
       const wanted = Array.from(new Set(altCodes.map((b) => b.trim()).filter((b) => b && b !== clean)));
-      const current = known.alt_barcodes ?? [];
-      if (wanted.join("|") !== current.join("|")) {
-        // Best effort: never blocks saving the count; invalid/duplicate codes are skipped by the DB.
-        void supabase
-          .rpc("set_product_alt_barcodes", { _barcode: clean, _alts: wanted })
-          .then(({ error }) => {
-            if (!error) void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
-          });
-      }
+      if (pp !== Number(known.purchase_price) || sp !== Number(known.selling_price) || wanted.join('|') !== (known.alt_barcodes ?? []).join('|')) productPatch = { purchase: pp, selling: sp, alts: wanted };
     }
     const editing = target;
     await enqueueCount({
@@ -306,6 +288,7 @@ function ScanPage() {
       user_id: me.userId,
       op: editing ? "update" : "insert",
       payload,
+      productPatch,
       created_at: new Date().toISOString(),
       status: "pending",
     });

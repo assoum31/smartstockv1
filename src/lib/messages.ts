@@ -22,7 +22,8 @@ export function reasonText(reason?: string): string {
 }
 
 export function errorText(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
+  const msg = e instanceof Error ? e.message : e && typeof e === 'object' && 'message' in e ? String(e.message) : String(e);
+  if (/cash_session_not_open/.test(msg)) return 'الصندوق الأصلي مغلق. البيع محفوظ على الجهاز ويحتاج مراجعة المسير.';
   if (/forbidden/.test(msg)) return FORBIDDEN;
   if (/session_already_active/.test(msg)) return "توجد جلسة جرد مفتوحة بالفعل.";
   if (/session_not_active/.test(msg)) return "لا يمكن تسجيل بيع إلا في جلسة مفتوحة.";

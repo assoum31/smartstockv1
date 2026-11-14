@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { cacheGet, cacheSet } from "./offline";
+import { withOfflineCopy } from "./offline";
 
 export type InventorySession = Tables<"inventory_sessions">;
 export type InventoryLog = Tables<"inventory_logs">;
@@ -27,22 +27,10 @@ async function fetchAll<T>(
   return out;
 }
 
-/** Try the network, keep a copy for offline use, fall back to the copy. */
-async function withOfflineCopy<T>(key: string, load: () => Promise<T>): Promise<T> {
-  try {
-    const value = await load();
-    void cacheSet(key, value);
-    return value;
-  } catch (e) {
-    const cached = await cacheGet<T>(key);
-    if (cached !== undefined) return cached;
-    throw e;
-  }
-}
-
 export const activeSessionQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["active-session", tenantId],
+    networkMode: 'always',
     queryFn: () =>
       withOfflineCopy(`active-session:${tenantId}`, async () => {
         const { data, error } = await supabase
@@ -74,6 +62,7 @@ export const sessionsQuery = (tenantId: string) =>
 export const sessionLogsQuery = (sessionId: string | null) =>
   queryOptions({
     queryKey: ["session-logs", sessionId],
+    networkMode: 'always',
     queryFn: () =>
       sessionId
         ? withOfflineCopy(`session-logs:${sessionId}`, () =>
@@ -108,6 +97,7 @@ export const snapshotQuery = (sessionId: string | null) =>
 export const productsQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["products", tenantId],
+    networkMode: 'always',
     queryFn: () =>
       withOfflineCopy(`products:${tenantId}`, () =>
         fetchAll<Product>((from, to) =>

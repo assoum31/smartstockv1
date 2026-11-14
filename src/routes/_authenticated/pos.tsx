@@ -18,6 +18,8 @@ import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
 import { ProductFormDialog } from "@/components/product-form";
 import { OnlineOrdersAlert } from "@/components/online-orders-alert";
+import { pendingStock, saveDeviceSale, syncDeviceSales, useDeviceSales, retryDeviceSale } from '@/lib/offline-sales';
+import { newClientId, useSyncState } from '@/lib/offline';
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/pos")({
       context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
       context.queryClient.ensureQueryData(myCashSessionQuery(context.tenant.id, context.userId)),
     ]),
-  head: () => ({ meta: [{ title: "نقطة البيع | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "نقطة البيع | SMART STOCK" }, { name: 'description', content: 'بيع المنتجات وحفظ الوصولات ومزامنة المبيعات في SMART STOCK.' }, { property: 'og:title', content: 'نقطة البيع | SMART STOCK' }, { property: 'og:description', content: 'إدارة البيع والصندوق ووصولات المتجر.' }, { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' }] }),
   component: PosPage,
 });
 
@@ -47,6 +49,9 @@ interface CartLine {
 function PosPage() {
   const { tenant, userId } = Route.useRouteContext();
   const storeSettings = useStoreSettings(tenant.id);
+  const { online, queue } = useSyncState();
+  const { sales: allDeviceSales, lastSyncedAt } = useDeviceSales();
+  const deviceSales = allDeviceSales.filter(sale => sale.tenant_id === tenant.id && sale.user_id === userId);
   const { data: cash } = useSuspenseQuery(myCashSessionQuery(tenant.id, userId));
   const [discount, setDiscount] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
@@ -68,6 +73,11 @@ function PosPage() {
   const [camera, setCamera] = useState(false);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!lastSyncedAt) return;
+    void queryClient.invalidateQueries({ queryKey: ['products', tenant.id] });
+    void queryClient.invalidateQueries({ queryKey: ['sales-tickets'] });
+  }, [lastSyncedAt, tenant.id, queryClient]);
 
   const q = code.trim().toLowerCase();
   const suggestions = useMemo(
@@ -118,7 +128,7 @@ function PosPage() {
   const discNum = Number(discount.replace(",", ".")) || 0;
   const discAmount = Math.min(subtotal, Math.max(0, discountPct ? (subtotal * discNum) / 100 : discNum));
   const total = subtotal - discAmount;
-  const stockOf = (b: string) => Number(products.find((p) => p.barcode === b)?.system_quantity ?? 0);
+  const stockOf = (b: string) => Number(products.find((p) => p.barcode === b)?.system_quantity ?? 0) - pendingStock(deviceSales, b);
   const paidNum = Number(paid.replace(",", ".")) || 0;
   const change = paidNum - total;
 
@@ -131,7 +141,7 @@ function PosPage() {
         date: new Date().toLocaleString("fr-FR"),
         lines,
         total: sum,
-        code: number ? ticketCode(number) : undefined,
+        code: number ? number.startsWith('LOCAL-') ? number : ticketCode(number) : undefined,
         extra: `${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${pay}</p>${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}`,
       }),
       "width=380,height=600",
@@ -139,23 +149,25 @@ function PosPage() {
   };
 
   const checkout = async (print: boolean) => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || saving) return;
+    if (!cash) return void toast.error('افتح الصندوق بالإنترنت أولاً.');
     setSaving(true);
-    const { data: id, error } = await supabase.rpc("create_sales_ticket", {
-      _session_id: (session?.id ?? null) as never,
-      _items: cart as never,
-      _notes: "نقطة البيع",
-    });
-    setSaving(false);
-    if (error) return void toast.error(errorText(error));
-    let number = "";
-    if (id) {
-      await supabase.rpc("set_ticket_payment", { _ticket_id: id as string, _payment: payment, _discount: discAmount });
-      const { data } = await supabase.from("sales_tickets").select("ticket_number").eq("id", id).maybeSingle();
-      number = data ? String(data.ticket_number).padStart(4, "0") : "";
+    try {
+    const clientId = newClientId();
+    await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
+    let number = `LOCAL-${clientId}`;
+    if (online) {
+      try {
+      await syncDeviceSales();
+      const { data: synced } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', clientId).maybeSingle();
+      if (synced) {
+        const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number').eq('id', synced.ticket_id).maybeSingle();
+        if (ticket) number = String(ticket.ticket_number).padStart(4, '0');
+      }
+      } catch { /* The committed device sale remains queued; never keep the sold cart on screen. */ }
     }
     if (print) printReceipt(cart, number);
-    toast.success(`تم البيع ${number ? `· بون ${number}` : ""}`);
+    toast.success('تم حفظ البيع على الجهاز');
     setCart([]);
     setPaid("");
     setDiscount("");
@@ -163,10 +175,23 @@ function PosPage() {
     void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
     void queryClient.invalidateQueries({ queryKey: ["sales-tickets"] });
     inputRef.current?.focus();
+    void syncDeviceSales().catch(console.error);
+    } catch (error) { toast.error(errorText(error)); }
+    finally { setSaving(false); }
   };
 
   return (
     <div className="space-y-5">
+      {(!online || deviceSales.length > 0) && <div className="space-y-2 border border-warning bg-warning/10 p-3 text-sm">
+        <p className="font-bold">المبيعات المحفوظة على الجهاز</p>
+        <p>{deviceSales.length}</p>
+        {deviceSales.map(sale => <div key={sale.client_id} className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-xs">LOCAL-{sale.client_id.slice(0, 8)}</span>
+          <span>{money(sale.items.reduce((sum,item) => sum + item.quantity * item.unit_price, 0) - sale.discount)} دج</span>
+          <span className={sale.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}>{sale.status === 'failed' ? errorText({ message: sale.error ?? '' }) : 'في الانتظار'}</span>
+          {sale.status === 'failed' && <Button size="sm" variant="outline" onClick={() => void retryDeviceSale(sale)}>إعادة الإرسال</Button>}
+        </div>)}
+      </div>}
       <OnlineOrdersAlert tenantId={tenant.id} />
       <ProductFormDialog
         product={null}
@@ -196,7 +221,7 @@ function PosPage() {
           <>
             <span className="flex-1">الصندوق مفتوح منذ {new Date(cash.opened_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} · رصيد البداية <b className="font-mono">{money(Number(cash.opening_amount))}</b> دج</span>
             {closing === null ? (
-              <Button size="sm" variant="outline" onClick={() => setClosing("")}>إغلاق الصندوق</Button>
+              <Button size="sm" variant="outline" disabled={!online || deviceSales.length > 0 || queue.length > 0} onClick={() => setClosing("")}>إغلاق الصندوق</Button>
             ) : (
               <CloseCash cashId={cash.id} opening={Number(cash.opening_amount)} value={closing} setValue={setClosing} onDone={() => { setClosing(null); void queryClient.invalidateQueries({ queryKey: ["cash-session"] }); }} />
             )}
@@ -205,7 +230,7 @@ function PosPage() {
           <>
             <span className="flex-1">الصندوق مغلق. أدخل رصيد البداية (Fond de caisse):</span>
             <Input inputMode="decimal" className="h-9 w-28 text-center font-mono" value={opening} onChange={(e) => setOpening(e.target.value)} />
-            <Button size="sm" onClick={async () => {
+            <Button size="sm" disabled={!online} onClick={async () => {
               const { error } = await supabase.rpc("open_cash_session", { _opening: Number(opening.replace(",", ".")) || 0 });
               if (error) return void toast.error(errorText(error));
               setOpening("");

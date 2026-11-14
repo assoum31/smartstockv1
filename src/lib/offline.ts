@@ -27,11 +27,12 @@ export interface QueuedCount {
   created_at: string;
   status: "pending" | "failed";
   error?: string | undefined;
+  productPatch?: { purchase: number; selling: number; alts: string[] } | undefined;
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
-function openDb() {
+export function openDb() {
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -57,8 +58,9 @@ async function tx<T>(
   return new Promise<T>((resolve, reject) => {
     const t = db.transaction(store, mode);
     const req = fn(t.objectStore(store));
-    req.onsuccess = () => resolve(req.result);
+    t.oncomplete = () => resolve(req.result);
     req.onerror = () => reject(req.error);
+    t.onabort = () => reject(t.error);
   });
 }
 
@@ -110,7 +112,8 @@ async function reloadQueue() {
   try {
     const all = (await tx("queue", "readonly", (s) => s.getAll())) as QueuedCount[];
     all.sort((a, b) => a.created_at.localeCompare(b.created_at));
-    setState({ queue: all });
+    const { data: { session } } = await supabase.auth.getSession();
+    setState({ queue: all.filter(item => item.user_id === session?.user.id) });
   } catch {
     /* ignore */
   }
@@ -121,7 +124,7 @@ export async function enqueueCount(item: QueuedCount) {
   const existing = state.queue.find((q) => q.client_id === item.client_id);
   const toStore: QueuedCount =
     existing && existing.op === "insert" && item.op === "update"
-      ? { ...existing, payload: item.payload, status: "pending", error: undefined }
+      ? { ...existing, payload: item.payload, productPatch: item.productPatch ?? existing.productPatch, status: "pending", error: undefined }
       : item;
   await tx("queue", "readwrite", (s) => s.put(toStore));
   await reloadQueue();
@@ -133,7 +136,7 @@ export async function discardQueued(clientId: string) {
   await reloadQueue();
 }
 
-function isNetworkError(message: string) {
+export function isNetworkError(message: string) {
   return /fetch|network|load failed|timeout|offline/i.test(message);
 }
 
@@ -141,6 +144,7 @@ let flushing: Promise<void> | null = null;
 
 /** Send waiting counts in order. Network errors keep them; refusals mark them failed. */
 export function flushQueue(): Promise<void> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return Promise.resolve();
   if (flushing) return flushing;
   flushing = (async () => {
     const {
@@ -186,10 +190,22 @@ export function flushQueue(): Promise<void> {
             setState({ online: false });
             break;
           }
+          const message = res.error.message;
           await tx("queue", "readwrite", (s) =>
-            s.put({ ...item, status: "failed", error: res.error!.message } satisfies QueuedCount),
+            s.put({ ...item, status: "failed", error: message } satisfies QueuedCount),
           );
           continue;
+        }
+        if (item.productPatch) {
+          const prices = item.productPatch;
+          const { error } = await supabase.rpc('set_product_prices', { _barcode: item.payload.barcode, _purchase: prices.purchase, _selling: prices.selling });
+          if (error) {
+            if (isNetworkError(error.message)) break;
+            const message = error.message;
+            await tx('queue', 'readwrite', s => s.put({ ...item, status: 'failed', error: message }));
+            continue;
+          }
+          await supabase.rpc('set_product_alt_barcodes', { _barcode: item.payload.barcode, _alts: prices.alts });
         }
         await tx("queue", "readwrite", (s) => s.delete(item.client_id));
         setState({ online: true, lastSyncedAt: new Date().toISOString() });
@@ -212,6 +228,7 @@ let started = false;
 export function startOfflineSync() {
   if (started || typeof window === "undefined") return;
   started = true;
+  void import('./offline-sales').then(module => module.startSalesSync());
   setState({ online: navigator.onLine });
   void reloadQueue().then(() => flushQueue());
   window.addEventListener("online", () => {
@@ -226,4 +243,23 @@ export function startOfflineSync() {
 
 export function newClientId() {
   return crypto.randomUUID();
+}
+
+export async function withOfflineCopy<T>(key: string, load: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    const cached = await cacheGet<T>(key);
+    if (cached !== undefined) return cached;
+    throw new Error('لا توجد نسخة محفوظة على هذا الجهاز. افتح الصفحة بالإنترنت أولاً.');
+  }
+  try {
+    const value = await load();
+    await cacheSet(key, value);
+    return value;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!isNetworkError(message)) throw error;
+    const cached = await cacheGet<T>(key);
+    if (cached !== undefined) return cached;
+    throw error;
+  }
 }

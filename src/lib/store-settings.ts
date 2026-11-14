@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/pos-queries";
 import { codesHtml } from "@/lib/receipt-code";
+import { withOfflineCopy } from './offline';
 
 export interface StoreSettings {
   tenant_id: string;
@@ -31,11 +32,12 @@ export const defaultSettings = (tenantId: string): StoreSettings => ({
 export const storeSettingsQuery = (tenantId: string) =>
   queryOptions({
     queryKey: ["store-settings", tenantId],
-    queryFn: async (): Promise<StoreSettings> => {
+    networkMode: 'always',
+    queryFn: (): Promise<StoreSettings> => withOfflineCopy(`store-settings:${tenantId}`, async () => {
       const { data, error } = await supabase.from("store_settings").select("*").eq("tenant_id", tenantId).maybeSingle();
       if (error) throw error;
       return data ? ({ ...defaultSettings(tenantId), ...data, label_width: Number(data.label_width), label_height: Number(data.label_height) } as StoreSettings) : defaultSettings(tenantId);
-    },
+    }),
     staleTime: 60_000,
   });
 
@@ -44,7 +46,7 @@ export function useStoreSettings(tenantId: string | undefined) {
 }
 
 export const esc = (s: unknown) =>
-  String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
 
 /** Header block (logo + company + legal ids) shared by tickets and A4 documents. */
 export function companyHeader(s: StoreSettings, fallbackName: string, compact: boolean) {

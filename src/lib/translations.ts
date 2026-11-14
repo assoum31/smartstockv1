@@ -1,5 +1,13 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "هذا الوصل لم تتم مزامنته بعد.": ["Ce ticket n’a pas encore été synchronisé.", "This receipt has not synced yet."],
+ "الصندوق الأصلي مغلق. البيع محفوظ على الجهاز ويحتاج مراجعة المسير.": ["La caisse d’origine est fermée. La vente reste sur cet appareil et nécessite une vérification du gérant.", "The original till is closed. The sale stays on this device for manager review."],
+ "تثبيت التطبيق": ["Installer l’application", "Install app"],
+ "المبيعات المحفوظة على الجهاز": ["Ventes enregistrées sur cet appareil", "Sales saved on this device"],
+ "تم حفظ البيع على الجهاز": ["Vente enregistrée sur cet appareil", "Sale saved on this device"],
+ "افتح الصندوق بالإنترنت أولاً.": ["Ouvrez d’abord la caisse avec une connexion Internet.", "Open the till online first."],
+ "زامن العمليات المحفوظة قبل تسجيل الخروج.": ["Synchronisez les opérations enregistrées avant de vous déconnecter.", "Sync saved operations before signing out."],
+ "لا توجد نسخة محفوظة على هذا الجهاز. افتح الصفحة بالإنترنت أولاً.": ["Aucune copie sur cet appareil. Ouvrez d’abord cette page en ligne.", "No saved copy on this device. Open this page online first."],
  "البحث في الجرد": ["Rechercher dans l’inventaire", "Search inventory"],
  "مسح البحث": ["Effacer la recherche", "Clear search"],
  "الرف أو المكان": ["Rayon ou emplacement", "Shelf or location"],

@@ -33,6 +33,9 @@ use the editor.
 
 ## Project rules
 
+- Offline installability uses vite-plugin-pwa generateSW and one guarded registration module; only published top-level apps register, and HTML is NetworkFirst to avoid stale previews.
+- Device sales and counts persist in IndexedDB before success is shown; sales synchronize via sync_offline_sale with a unique client ID and original time/cash session so retries cannot double-charge stock or cash. Cached identity enables local screens only; the server revalidates permissions on sync.
+
 - Auditor search and numeric ID normalization live in `src/lib/audit-rules.ts`; save audits only through the existing database function so permissions and logging remain enforced.
 
 - Accounts are real auth users with a synthetic per-store email (`username@storecode...`); only server functions in `src/lib/accounts.functions.ts` create them or check activation PINs (hashed, table has no client policies), so no browser can create accounts or read PINs. The legacy `app_users` table is retired.

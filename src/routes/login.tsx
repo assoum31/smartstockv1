@@ -1,11 +1,17 @@
 import { BrandMark } from "@/components/brand-logo";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { meQueryOptions } from '@/lib/me';
 import { ArrowLeft, ClipboardList, ScanLine } from "lucide-react";
 
 const TITLE = "تسجيل الدخول | SMART STOCK";
 const DESCRIPTION = "اختر صفحة الدخول: مسير المتجر أو عامل الجرد.";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async ({ context }) => {
+    if (typeof window === 'undefined') return;
+    const me = await context.queryClient.ensureQueryData(meQueryOptions);
+    if (me && !me.blocked) throw redirect({ to: !navigator.onLine && me.canSell ? '/pos' : !navigator.onLine && me.roles.includes('worker') ? '/scan' : me.homePath });
+  },
   head: () => ({
     meta: [
       { title: TITLE },
