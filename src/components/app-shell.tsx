@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
-import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe } from "lucide-react";
+import { HandCoins, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,7 +54,8 @@ type NavItem = {
     | "/returns"
     | "/activity"
     | "/customers"
-    | "/orders";
+    | "/orders"
+    | "/online-store";
   label: TKey;
   short?: TKey;
   icon: LucideIcon;
@@ -83,6 +84,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/team", label: "team", icon: Users },
       { to: "/audit", label: "audit", icon: ShieldCheck },
       { to: "/advances", label: "advances", icon: HandCoins },
+      { to: "/online-store", label: "onlineStore", icon: Store },
       ...pos,
       activity,
     ];

@@ -530,10 +530,14 @@ export type Database = {
           default_location: string | null
           famille: string | null
           id: string
+          image_url: string | null
           min_stock: number
           model: string | null
           name: string
+          online_description: string | null
+          online_visible: boolean
           purchase_price: number
+          related_barcodes: string[]
           selling_price: number
           system_quantity: number
           tenant_id: string | null
@@ -547,10 +551,14 @@ export type Database = {
           default_location?: string | null
           famille?: string | null
           id?: string
+          image_url?: string | null
           min_stock?: number
           model?: string | null
           name: string
+          online_description?: string | null
+          online_visible?: boolean
           purchase_price?: number
+          related_barcodes?: string[]
           selling_price?: number
           system_quantity?: number
           tenant_id?: string | null
@@ -564,10 +572,14 @@ export type Database = {
           default_location?: string | null
           famille?: string | null
           id?: string
+          image_url?: string | null
           min_stock?: number
           model?: string | null
           name?: string
+          online_description?: string | null
+          online_visible?: boolean
           purchase_price?: number
+          related_barcodes?: string[]
           selling_price?: number
           system_quantity?: number
           tenant_id?: string | null
@@ -971,6 +983,12 @@ export type Database = {
           nis: string | null
           phone: string | null
           rc: string | null
+          store_banner: string | null
+          store_color: string | null
+          store_enabled: boolean
+          store_logo: string | null
+          store_tagline: string | null
+          store_title: string | null
           tenant_id: string
           ticket_footer: string | null
           ticket_width: number
@@ -989,6 +1007,12 @@ export type Database = {
           nis?: string | null
           phone?: string | null
           rc?: string | null
+          store_banner?: string | null
+          store_color?: string | null
+          store_enabled?: boolean
+          store_logo?: string | null
+          store_tagline?: string | null
+          store_title?: string | null
           tenant_id: string
           ticket_footer?: string | null
           ticket_width?: number
@@ -1007,6 +1031,12 @@ export type Database = {
           nis?: string | null
           phone?: string | null
           rc?: string | null
+          store_banner?: string | null
+          store_color?: string | null
+          store_enabled?: boolean
+          store_logo?: string | null
+          store_tagline?: string | null
+          store_title?: string | null
           tenant_id?: string
           ticket_footer?: string | null
           ticket_width?: number
@@ -1277,6 +1307,32 @@ export type Database = {
           name: string
           selling_price: number
           store_name: string
+        }[]
+      }
+      public_store_catalog_v2: {
+        Args: { _code: string }
+        Returns: {
+          available: number
+          barcode: string
+          description: string
+          famille: string
+          image_url: string
+          name: string
+          related: string[]
+          selling_price: number
+        }[]
+      }
+      public_store_info: {
+        Args: { _code: string }
+        Returns: {
+          address: string
+          banner: string
+          color: string
+          enabled: boolean
+          logo: string
+          phone: string
+          tagline: string
+          title: string
         }[]
       }
       request_recount: { Args: { _log_id: string }; Returns: string }
