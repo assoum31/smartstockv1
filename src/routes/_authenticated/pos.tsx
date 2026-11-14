@@ -157,12 +157,14 @@ function PosPage() {
     await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
     let number = `LOCAL-${clientId}`;
     if (online) {
+      try {
       await syncDeviceSales();
       const { data: synced } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', clientId).maybeSingle();
       if (synced) {
         const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number').eq('id', synced.ticket_id).maybeSingle();
         if (ticket) number = String(ticket.ticket_number).padStart(4, '0');
       }
+      } catch { /* The committed device sale remains queued; never keep the sold cart on screen. */ }
     }
     if (print) printReceipt(cart, number);
     toast.success('تم حفظ البيع على الجهاز');

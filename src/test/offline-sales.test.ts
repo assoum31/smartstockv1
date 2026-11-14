@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), session: { user: { id: 'seller-a' } } }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { auth: { getSession: async () => ({ data: { session: mocks.session } }) }, rpc: mocks.rpc } }));
 import { saveDeviceSale, syncDeviceSales, pendingStock, type DeviceSale } from '@/lib/offline-sales';
-import { openDb, cacheSet, withOfflineCopy } from '@/lib/offline';
+import { openDb, cacheSet, withOfflineCopy, enqueueCount, flushQueue } from '@/lib/offline';
 
 const sale: DeviceSale = { client_id: 'sale-one', user_id: 'seller-a', tenant_id: 'store-a', session_id: null, cash_id: 'cash-one', payment: 'cash', discount: 10, sold_at: '2026-11-14T16:00:00Z', status: 'pending', items: [{ barcode: '001', product_name: 'Item', quantity: 2, unit_price: 50 }] };
 async function records() {
@@ -21,6 +21,15 @@ describe('durable offline operations', () => {
     await saveDeviceSale(sale);
     await syncDeviceSales();
     expect(await records()).toEqual([sale]);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it('keeps the original count time, quantity and note while offline', async () => {
+    const count = { client_id: 'count-one', user_id: 'seller-a', op: 'insert' as const, status: 'pending' as const, created_at: '2026-11-14T16:00:00Z', payload: { session_id: 'inventory-one', barcode: '001', product_name: 'Item', counted_quantity: 90, location: 'A1', counted_by_name: 'Seller', counted_at: '2026-11-14T16:00:00Z', notes: 'Note' } };
+    await enqueueCount(count);
+    await flushQueue();
+    const db = await openDb();
+    const saved = await new Promise(resolve => { const request = db.transaction('queue').objectStore('queue').get('count-one'); request.onsuccess = () => resolve(request.result); });
+    expect(saved).toEqual(count);
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
   it('preserves sale time, cash session, discount and items on synchronization', async () => {
