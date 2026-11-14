@@ -54,7 +54,8 @@ type NavItem = {
     | "/returns"
     | "/activity"
     | "/customers"
-    | "/orders";
+    | "/orders"
+    | "/online-store";
   label: TKey;
   short?: TKey;
   icon: LucideIcon;
@@ -83,6 +84,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/team", label: "team", icon: Users },
       { to: "/audit", label: "audit", icon: ShieldCheck },
       { to: "/advances", label: "advances", icon: HandCoins },
+      { to: "/online-store", label: "onlineStore", icon: Store },
       ...pos,
       activity,
     ];
