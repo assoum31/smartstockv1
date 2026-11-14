@@ -51,7 +51,7 @@ function OrdersPage() {
           <DialogHeader><DialogTitle>تأكيد التسليم #{delivering?.order_number}</DialogTitle></DialogHeader>
           <p className="text-sm">المبلغ: <b>{money(Number(delivering?.total_amount ?? 0))} دج</b> — سيُسجَّل كبون بيع ويُنقص من المخزون ويدخل الكاسة المفتوحة.</p>
           <div className="grid grid-cols-3 gap-2">
-            {[["cash", "نقداً"], ["card", "بطاقة"], ["credit", "آجل"]].map(([v, l]) => (
+            {([["cash", "نقداً"], ["card", "بطاقة"], ["credit", "آجل"]] as const).map(([v, l]) => (
               <Button key={v} variant={pay === v ? "default" : "outline"} onClick={() => setPay(v)}>{l}</Button>
             ))}
           </div>
