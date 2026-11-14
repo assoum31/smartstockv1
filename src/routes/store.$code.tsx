@@ -63,7 +63,7 @@ function StorePage() {
   const familles = useMemo(() => [...new Set(data.map((d) => d.famille).filter(Boolean) as string[])].sort(), [data]);
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return data.filter((d) => (fam === "all" || d.famille === fam) && (!s || d.name.toLowerCase().includes(s) || d.barcode.toLowerCase().includes(s))).slice(0, 300);
+    return data.filter((d) => (fam === "all" || d.famille === fam) && (!s || d.name.toLowerCase().includes(s) || d.barcode.toLowerCase().includes(s)));
   }, [data, q, fam]);
   const byCode = useMemo(() => new Map(data.map((d) => [d.barcode, d])), [data]);
   const lines = Object.entries(cart).map(([b, n]) => ({ item: byCode.get(b), n })).filter((l) => l.item) as { item: Item; n: number }[];
@@ -142,7 +142,7 @@ function StorePage() {
                   <div className="flex items-center justify-between gap-1">
                     <Button size="icon" variant="outline" aria-label="إنقاص" onClick={() => setQty(d.barcode, n - 1)}><Minus /></Button>
                     <span className="font-bold">{n}</span>
-                    <Button size="icon" variant="outline" aria-label="زيادة" disabled={n >= Number(d.available)} onClick={() => setQty(d.barcode, n + 1)}><Plus /></Button>
+                    <Button size="icon" variant="outline" aria-label="زيادة" onClick={() => setQty(d.barcode, n + 1)}><Plus /></Button>
                   </div>
                 )}
               </div>
