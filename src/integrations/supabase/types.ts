@@ -155,11 +155,63 @@ export type Database = {
           },
         ]
       }
+      customer_payments: {
+        Row: {
+          amount: number
+          cash_session_id: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          customer_id: string
+          id: string
+          note: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          customer_id: string
+          id?: string
+          note?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          customer_id?: string
+          id?: string
+          note?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
           created_at: string
           created_by: string | null
+          credit_limit: number
           email: string | null
           id: string
           name: string
@@ -172,6 +224,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
+          credit_limit?: number
           email?: string | null
           id?: string
           name: string
@@ -184,6 +237,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           created_by?: string | null
+          credit_limit?: number
           email?: string | null
           id?: string
           name?: string
@@ -800,6 +854,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           created_by_name: string
+          customer_id: string | null
           discount: number
           id: string
           notes: string | null
@@ -815,6 +870,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name: string
+          customer_id?: string | null
           discount?: number
           id?: string
           notes?: string | null
@@ -830,6 +886,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string
+          customer_id?: string | null
           discount?: number
           id?: string
           notes?: string | null
@@ -841,6 +898,13 @@ export type Database = {
           total_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_tickets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_tickets_online_order_id_fkey"
             columns: ["online_order_id"]
@@ -1025,7 +1089,12 @@ export type Database = {
           company_name: string | null
           email: string | null
           invoice_footer: string | null
+          invoice_paper: string
+          invoice_signature: boolean
+          label_copies: number
           label_height: number
+          label_show_name: boolean
+          label_show_price: boolean
           label_width: number
           logo: string | null
           nif: string | null
@@ -1040,6 +1109,7 @@ export type Database = {
           store_title: string | null
           tenant_id: string
           ticket_footer: string | null
+          ticket_show_codes: boolean
           ticket_width: number
           updated_at: string
         }
@@ -1049,7 +1119,12 @@ export type Database = {
           company_name?: string | null
           email?: string | null
           invoice_footer?: string | null
+          invoice_paper?: string
+          invoice_signature?: boolean
+          label_copies?: number
           label_height?: number
+          label_show_name?: boolean
+          label_show_price?: boolean
           label_width?: number
           logo?: string | null
           nif?: string | null
@@ -1064,6 +1139,7 @@ export type Database = {
           store_title?: string | null
           tenant_id: string
           ticket_footer?: string | null
+          ticket_show_codes?: boolean
           ticket_width?: number
           updated_at?: string
         }
@@ -1073,7 +1149,12 @@ export type Database = {
           company_name?: string | null
           email?: string | null
           invoice_footer?: string | null
+          invoice_paper?: string
+          invoice_signature?: boolean
+          label_copies?: number
           label_height?: number
+          label_show_name?: boolean
+          label_show_price?: boolean
           label_width?: number
           logo?: string | null
           nif?: string | null
@@ -1088,6 +1169,7 @@ export type Database = {
           store_title?: string | null
           tenant_id?: string
           ticket_footer?: string | null
+          ticket_show_codes?: boolean
           ticket_width?: number
           updated_at?: string
         }
@@ -1398,6 +1480,10 @@ export type Database = {
           title: string
         }[]
       }
+      record_customer_payment: {
+        Args: { _amount: number; _customer_id: string; _note: string }
+        Returns: string
+      }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_product_alt_barcodes: {
@@ -1410,6 +1496,10 @@ export type Database = {
       }
       set_product_second_barcode: {
         Args: { _barcode: string; _second: string }
+        Returns: undefined
+      }
+      set_ticket_customer: {
+        Args: { _customer_id: string; _ticket_id: string }
         Returns: undefined
       }
       set_ticket_payment: {

@@ -10,6 +10,7 @@ export interface DeviceSale {
   cash_id: string;
   items: { barcode: string; product_name: string; quantity: number; unit_price: number }[];
   payment: 'cash' | 'card' | 'credit';
+  customer_id?: string | null | undefined;
   discount: number;
   sold_at: string;
   status: 'pending' | 'failed';
@@ -69,6 +70,10 @@ export function syncDeviceSales(): Promise<void> {
           if (isNetworkError(error.message)) break;
           await saveDeviceSale({ ...sale, status: 'failed', error: error.message });
           continue;
+        }
+        if (sale.customer_id) {
+          const { data: link } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', sale.client_id).maybeSingle();
+          if (link) await supabase.rpc('set_ticket_customer', { _ticket_id: link.ticket_id, _customer_id: sale.customer_id });
         }
         await transaction(store => store.delete(`sale:${sale.client_id}`));
         notify({ lastSyncedAt: new Date().toISOString() });

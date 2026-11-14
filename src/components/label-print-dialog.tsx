@@ -36,8 +36,10 @@ export function LabelPrintDialog({
   open,
   onOpenChange,
   defaultSize,
+  defaults,
 }: {
   defaultSize?: { w: number; h: number };
+  defaults?: { copies: number; showName: boolean; showPrice: boolean };
   products: LabelProduct[];
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -49,6 +51,7 @@ export function LabelPrintDialog({
   const [showPrice, setShowPrice] = useState(true);
 
   useEffect(() => {
+    if (defaults) { setCopies(defaults.copies || 1); setShowName(defaults.showName); setShowPrice(defaults.showPrice); }
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
       if (defaultSize) {

@@ -20,6 +20,12 @@ export interface StoreSettings {
   ticket_width: number;
   label_width: number;
   label_height: number;
+  invoice_paper: string;
+  invoice_signature: boolean;
+  ticket_show_codes: boolean;
+  label_show_name: boolean;
+  label_show_price: boolean;
+  label_copies: number;
 }
 
 export const defaultSettings = (tenantId: string): StoreSettings => ({
@@ -27,6 +33,8 @@ export const defaultSettings = (tenantId: string): StoreSettings => ({
   company_name: null, logo: null, phone: null, address: null, email: null,
   rc: null, nif: null, nis: null, ai: null, ticket_footer: null, invoice_footer: null,
   ticket_width: 80, label_width: 40, label_height: 20,
+  invoice_paper: "A4", invoice_signature: true, ticket_show_codes: true,
+  label_show_name: true, label_show_price: true, label_copies: 1,
 });
 
 export const storeSettingsQuery = (tenantId: string) =>
@@ -72,7 +80,7 @@ export function ticketHtml(s: StoreSettings, fallbackName: string, opts: {
   h2,p{text-align:center;margin:3px 0}h2{font-size:${fs + 3}px}.hdr{text-align:center}.logo{max-width:${Math.round(inner * 0.6)}mm;max-height:18mm}.sm{font-size:${fs - 2}px}
   svg{max-width:100%}</style></head><body>${companyHeader(s, fallbackName, true)}
   <p><b>${esc(opts.title)}</b></p><p>${esc(opts.date)}</p><table>${rows}</table>${opts.extra ?? ""}
-  <h2>المجموع: ${money(opts.total)} دج</h2>${opts.code ? codesHtml(opts.code) : ""}<p>${esc(s.ticket_footer || "شكراً لزيارتكم")}</p></body></html>`;
+  <h2>المجموع: ${money(opts.total)} دج</h2>${opts.code && s.ticket_show_codes !== false ? codesHtml(opts.code) : ""}<p>${esc(s.ticket_footer || "شكراً لزيارتكم")}</p></body></html>`;
 }
 
 /** Professional A4 document (goods receipt / invoice). */
@@ -83,7 +91,7 @@ export function a4DocHtml(s: StoreSettings, fallbackName: string, opts: {
   const total = opts.lines.reduce((n, l) => n + l.quantity * l.price, 0);
   const rows = opts.lines.map((l, i) => `<tr><td>${i + 1}</td><td dir="ltr">${esc(l.barcode)}</td><td>${esc(l.product_name)}</td><td>${l.quantity}</td><td>${money(l.price)}</td><td>${money(l.quantity * l.price)}</td></tr>`).join("");
   return `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>${esc(opts.title)} ${esc(opts.number)}</title><style>
-  @page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#111}
+  @page{size:${s.invoice_paper === "A5" ? "A5" : "A4"};margin:${s.invoice_paper === "A5" ? 8 : 14}mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:${s.invoice_paper === "A5" ? 10 : 12}px;color:#111}
   .hdr{display:flex;gap:14px;align-items:center;border-bottom:2px solid #111;padding-bottom:10px}.hdr h2{margin:0 0 4px;font-size:20px}.hdr p{margin:2px 0;color:#444}
   .logo{max-height:70px;max-width:160px}.meta{display:flex;justify-content:space-between;margin:16px 0}.box{border:1px solid #bbb;border-radius:6px;padding:8px 12px;min-width:45%}
   h1{text-align:center;font-size:18px;margin:16px 0 4px;letter-spacing:1px}table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -96,7 +104,7 @@ export function a4DocHtml(s: StoreSettings, fallbackName: string, opts: {
   <div class="box"><b>المورد:</b> ${esc(opts.party || "—")}${opts.notes ? `<br/><b>ملاحظات:</b> ${esc(opts.notes)}` : ""}</div></div>
   <table><thead><tr><th>#</th><th>الباركود</th><th>التسمية</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr></thead><tbody>${rows}</tbody></table>
   <p class="tot">المجموع الكلي: ${money(total)} دج</p>
-  <div class="sig"><div>توقيع المستلم</div><div>توقيع المورد</div></div>
+  ${s.invoice_signature !== false ? `<div class="sig"><div>توقيع المستلم</div><div>توقيع المورد</div></div>` : ""}
   ${s.invoice_footer ? `<p class="foot">${esc(s.invoice_footer)}</p>` : ""}</body></html>`;
 }
 

@@ -1,7 +1,7 @@
 import { openPrint, ticketHtml, useStoreSettings } from "@/lib/store-settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { AlertTriangle, Camera, CameraOff, Minus, PauseCircle, Plus, Printer, Search, Trash2, Undo2, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { myCashSessionQuery } from "@/lib/pos-queries";
@@ -19,7 +19,7 @@ import { errorText } from "@/lib/messages";
 import { ProductFormDialog } from "@/components/product-form";
 import { OnlineOrdersAlert } from "@/components/online-orders-alert";
 import { pendingStock, saveDeviceSale, syncDeviceSales, useDeviceSales, retryDeviceSale } from '@/lib/offline-sales';
-import { newClientId, useSyncState } from '@/lib/offline';
+import { newClientId, useSyncState, withOfflineCopy } from "@/lib/offline";
 
 export const Route = createFileRoute("/_authenticated/pos")({
   beforeLoad: ({ context }) => {
@@ -56,6 +56,16 @@ function PosPage() {
   const [discount, setDiscount] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
   const [payment, setPayment] = useState<"cash" | "card" | "credit">("cash");
+  const [customerId, setCustomerId] = useState("");
+  const { data: customers = [] } = useQuery({
+    queryKey: ["customers", tenant.id],
+    networkMode: "always",
+    queryFn: () => withOfflineCopy(`customers:${tenant.id}`, async () => {
+      const { data, error } = await supabase.from("customers").select("*").eq("tenant_id", tenant.id).order("name");
+      if (error) throw error;
+      return data;
+    }),
+  });
   const HOLD_KEY = `smartstock:held:${tenant.id}`;
   const [held, setHeld] = useState<{ at: string; cart: CartLine[] }[]>(() => {
     if (typeof window === "undefined") return [];
@@ -143,7 +153,7 @@ function PosPage() {
 
   const printReceipt = (lines: CartLine[], number: string) => {
     const sum = lines.reduce((n, l) => n + l.quantity * l.unit_price, 0) - discAmount;
-    const pay = { cash: "نقداً", card: "بطاقة / BaridiMob", credit: "على الحساب" }[payment];
+    const pay = { cash: "نقداً", card: "بطاقة / BaridiMob", credit: `بالدين${customerId ? ` — ${customers.find((c) => c.id === customerId)?.name ?? ""}` : ""}` }[payment];
     openPrint(
       ticketHtml(storeSettings, tenant.name, {
         title: `بون رقم ${number}`,
@@ -160,10 +170,11 @@ function PosPage() {
   const checkout = async (print: boolean) => {
     if (cart.length === 0 || saving) return;
     if (!cash) return void toast.error('افتح الصندوق بالإنترنت أولاً.');
+    if (payment === 'credit' && !customerId) return void toast.error('اختر الزبون لتسجيل البيع بالدين.');
     setSaving(true);
     try {
     const clientId = newClientId();
-    await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
+    await saveDeviceSale({ client_id: clientId, tenant_id: tenant.id, user_id: userId, session_id: session?.id ?? null, cash_id: cash.id, items: cart, payment, customer_id: payment === 'credit' ? customerId : null, discount: discAmount, sold_at: new Date().toISOString(), status: 'pending' });
     let number = `LOCAL-${clientId}`;
     if (online) {
       try {
@@ -181,6 +192,7 @@ function PosPage() {
     setPaid("");
     setDiscount("");
     setPayment("cash");
+    setCustomerId("");
     void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] });
     void queryClient.invalidateQueries({ queryKey: ["sales-tickets"] });
     inputRef.current?.focus();
@@ -409,6 +421,12 @@ function PosPage() {
                 <Button key={k} type="button" size="sm" variant={payment === k ? "default" : "outline"} onClick={() => setPayment(k)}>{l}</Button>
               ))}
             </div>
+            {payment === "credit" && (
+              <select aria-label="الزبون" value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="h-10 w-full rounded-md border bg-background px-2 text-sm">
+                <option value="">— اختر الزبون —</option>
+                {customers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
+              </select>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="paid">المبلغ المستلم</Label>
@@ -453,23 +471,24 @@ function PosPage() {
 }
 
 function CloseCash({ cashId, opening, value, setValue, onDone }: { cashId: string; opening: number; value: string; setValue: (v: string) => void; onDone: () => void }) {
-  const [summary, setSummary] = useState<{ cash: number; card: number; credit: number; returns: number } | null>(null);
+  const [summary, setSummary] = useState<{ cash: number; card: number; credit: number; returns: number; debt: number } | null>(null);
   const load = async () => {
     const [{ data: t }, { data: cs }] = await Promise.all([
       supabase.from("sales_tickets").select("total_amount, payment_method").eq("cash_session_id", cashId),
       supabase.from("cash_sessions").select("opened_at").eq("id", cashId).maybeSingle(),
     ]);
     const { data: r } = await supabase.from("stock_returns").select("total_amount").eq("kind", "customer").gte("created_at", cs?.opened_at ?? new Date().toISOString());
+    const { data: dp } = await supabase.from("customer_payments").select("amount").eq("cash_session_id", cashId);
     const by = (m: string) => (t ?? []).filter((x) => x.payment_method === m).reduce((n, x) => n + Number(x.total_amount), 0);
-    setSummary({ cash: by("cash"), card: by("card"), credit: by("credit"), returns: (r ?? []).reduce((n, x) => n + Number(x.total_amount), 0) });
+    setSummary({ cash: by("cash"), card: by("card"), credit: by("credit"), returns: (r ?? []).reduce((n, x) => n + Number(x.total_amount), 0), debt: (dp ?? []).reduce((n, x) => n + Number(x.amount), 0) });
   };
   useEffect(() => { void load(); }, [cashId]);
-  const expected = summary ? opening + summary.cash - summary.returns : 0;
+  const expected = summary ? opening + summary.cash + summary.debt - summary.returns : 0;
   return (
     <div className="w-full space-y-2 rounded-xl bg-muted/50 p-3">
       {summary && (
         <p className="text-xs leading-relaxed">
-          نقداً: <b>{money(summary.cash)}</b> · بطاقة: <b>{money(summary.card)}</b> · كريدي: <b>{money(summary.credit)}</b> · إرجاعات: <b>−{money(summary.returns)}</b>
+          نقداً: <b>{money(summary.cash)}</b> · بطاقة: <b>{money(summary.card)}</b> · كريدي: <b>{money(summary.credit)}</b> · تسديد ديون: <b>+{money(summary.debt)}</b> · إرجاعات: <b>−{money(summary.returns)}</b>
           <br />المبلغ المتوقع في الصندوق: <b className="font-mono">{money(expected)}</b> دج
         </p>
       )}
