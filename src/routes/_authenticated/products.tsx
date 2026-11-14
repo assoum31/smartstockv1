@@ -37,7 +37,7 @@ import { formatQty } from "@/lib/messages";
 export const Route = createFileRoute("/_authenticated/products")({
   beforeLoad: ({ context }) => {
     if (!context.me.canSeeProducts || !context.me.tenant) throw redirect({ to: context.me.homePath });
-    return { tenant: context.me.tenant, isManager: context.me.isManager };
+    return { tenant: context.me.tenant, isManager: context.me.isManager, canSell: context.me.canSell };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
   head: () => ({ meta: [{ title: "المنتجات | SMART STOCK" }] }),
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/products")({
 const IMPORT_CHUNK = 500;
 
 function ProductsPage() {
-  const { tenant, isManager } = Route.useRouteContext();
+  const { tenant, isManager, canSell } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const storeSettings = useStoreSettings(tenant.id);
   const { data: products } = useSuspenseQuery(productsQuery(tenant.id));
@@ -174,7 +174,7 @@ function ProductsPage() {
               <Printer />
               ملصقات الباركود
             </Button>
-            {isManager && (
+            {canSell && (
               <Button onClick={() => setEditing("new")}>
                 <Plus />
                 منتج جديد
@@ -278,7 +278,7 @@ function ProductsPage() {
                       {Number(p.carton_size) > 1 ? `× ${formatQty(Number(p.carton_size))}` : "—"}
                     </td>
                     <td className="flex px-2 py-3">
-                      {isManager && (
+                      {canSell && (
                         <Button size="icon" variant="ghost" aria-label="تعديل" onClick={() => setEditing(p)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
