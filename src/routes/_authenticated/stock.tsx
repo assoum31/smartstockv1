@@ -152,7 +152,7 @@ function StockPage() {
             );
           })}
         </div>
-      ) : (
+      ) : tab === "alerts" ? (
         <div className="divide-y rounded-xl border bg-card">
           {shownAlerts.length === 0 && <p className="p-6 text-center text-muted-foreground">لا توجد تنبيهات.</p>}
           {shownAlerts.map((p) => (
