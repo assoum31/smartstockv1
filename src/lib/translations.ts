@@ -2574,5 +2574,13 @@ export const PHRASES: Record<string, [string, string]> = {
  "تلقائي": [
   "Auto",
   "Auto"
+ ],
+ "البحث": [
+  "Recherche",
+  "Search"
+ ],
+ "بيع دون طباعة": [
+  "Vendre sans imprimer",
+  "Sell without printing"
  ]
 };
