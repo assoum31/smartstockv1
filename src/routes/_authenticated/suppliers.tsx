@@ -15,7 +15,7 @@ import { errorText } from "@/lib/messages";
 
 export const Route = createFileRoute("/_authenticated/suppliers")({
   beforeLoad: ({ context }) => {
-    if (!context.me.canSell || !context.me.tenant) throw redirect({ to: context.me.homePath });
+    if (!context.me.canStock || !context.me.tenant) throw redirect({ to: context.me.homePath });
     return { tenant: context.me.tenant, isManager: context.me.isManager };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(suppliersQuery(context.tenant.id)),
