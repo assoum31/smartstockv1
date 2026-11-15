@@ -110,9 +110,10 @@ function navFor(me: Me): NavItem[] {
       { to: "/advances", label: "advances", icon: HandCoins },
       { to: "/expenses", label: "expenses", icon: Wallet },
       { to: "/online-store", label: "onlineStore", icon: Store },
+      { to: "/g50", label: "g50", icon: FileText },
       ...pos,
       activity,
-    ];
+    ].filter((i) => navAllowed(me, i.to));
   const items: NavItem[] = [];
   if (me.canAudit) items.push({ to: "/audit", label: "audit", icon: ShieldCheck, dock: true });
   if (me.canWatchInventory) items.push({ to: "/inventory", label: "inventory", icon: ClipboardList, dock: true });
@@ -124,10 +125,29 @@ function navFor(me: Me): NavItem[] {
       { to: "/advances", label: "advances", icon: HandCoins },
       { to: "/expenses", label: "expenses", icon: Wallet },
     );
-  if (me.roles.includes("worker")) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
+  if (!me.canSell && me.canStock)
+    items.push(
+      { to: "/receipts", label: "receipts", short: "receiptsShort", icon: PackagePlus, dock: true },
+      { to: "/suppliers", label: "suppliers", icon: Truck, dock: true },
+      { to: "/returns", label: "returns", short: "returnsShort", icon: Undo2, dock: true },
+    );
+  if (me.canStock && me.roles.includes("storekeeper")) items.push({ to: "/g50", label: "g50", icon: FileText });
+  if (me.roles.includes("worker") && me.features.inventory) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true }, { to: "/stock", label: "stock", icon: Warehouse });
+  if (me.canSell && !me.canStock) {
+    for (let k = items.length - 1; k >= 0; k--) if (["/receipts", "/suppliers"].includes(items[k].to)) items.splice(k, 1);
+  }
   if (!items.length) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   return items;
+}
+
+function navAllowed(me: Me, to: string) {
+  const f = me.features;
+  if (["/inventory", "/scan", "/audit"].includes(to)) return f.inventory;
+  if (["/pos", "/sales", "/dashboard", "/customers", "/orders", "/advances", "/expenses"].includes(to)) return f.sales;
+  if (["/receipts", "/suppliers", "/returns", "/g50"].includes(to)) return f.stock_io || to === "/g50";
+  if (to === "/online-store") return f.online_store;
+  return true;
 }
 
 export function SyncBadge() {
