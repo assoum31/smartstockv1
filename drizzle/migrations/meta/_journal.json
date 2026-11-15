@@ -197,6 +197,13 @@
       "when": 1794698344434,
       "tag": "0027_security_hardening_step_3",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794724237322,
+      "tag": "0028_store_subscriptions_features_storekeeper",
+      "breakpoints": true
     }
   ]
 }
