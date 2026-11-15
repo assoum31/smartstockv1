@@ -50,3 +50,4 @@ use the editor.
 
 - The public store `/store/$code` reads only through `public_store_catalog_v2` and orders only through `place_online_order` (security definer, granted to anon), so visitors never touch tables or see purchase prices; it lists every manager-visible product regardless of stock.
 - Store subscription (plan, end date, feature switches, staff limits) lives on `tenants` and is edited only by the master via `updateStoreConfig`; `Me.features`/`Me.expired`/`Me.canStock` (storekeeper = receipts, suppliers, returns, G50) gate nav and routes, and staff limits are enforced server-side in `createMember`/`updateMember`. Rules are in `src/lib/subscription.ts`.
+- Subscription expiry, store suspension, disabled features and the storekeeper no-sell rule are enforced by BEFORE INSERT triggers (`enforce_tenant_feature`) on sales, cash, inventory, receipt/return and online-order tables, so hiding nav is not the only barrier.

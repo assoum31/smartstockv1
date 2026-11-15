@@ -204,6 +204,13 @@
       "when": 1794724237322,
       "tag": "0028_store_subscriptions_features_storekeeper",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794724937200,
+      "tag": "0029_enforce_subscription_features_storekeeper",
+      "breakpoints": true
     }
   ]
 }
