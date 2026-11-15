@@ -1,5 +1,7 @@
 # Stocki Pro roadmap
 
+- [ ] Independent annual numbering for sales, invoices, goods receipts and customer/supplier returns; preserve legacy lookup IDs.
+
 - [x] Installable desktop/phone app: guarded offline shell, durable sales/count queue, idempotent sales sync, cached catalogue/cash session and unit tests.
 - [ ] Verify installed offline sale/count and reconnection end-to-end — requires publication and a signed-in seller in preview (automatic session mint found no matching account).
 
