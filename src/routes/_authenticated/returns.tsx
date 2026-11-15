@@ -20,7 +20,7 @@ import { BarcodeScanner } from "@/components/barcode-scanner";
 
 export const Route = createFileRoute("/_authenticated/returns")({
   beforeLoad: ({ context }) => {
-    if (!context.me.canSell || !context.me.tenant) throw redirect({ to: context.me.homePath });
+    if (!context.me.canStock || !context.me.tenant) throw redirect({ to: context.me.homePath });
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) =>

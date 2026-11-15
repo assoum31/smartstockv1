@@ -1329,23 +1329,41 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          features: Json
           id: string
           is_active: boolean
+          max_managers: number | null
+          max_members: number | null
           name: string
+          notes: string | null
+          plan: string
+          subscription_ends_at: string | null
         }
         Insert: {
           code: string
           created_at?: string
+          features?: Json
           id?: string
           is_active?: boolean
+          max_managers?: number | null
+          max_members?: number | null
           name: string
+          notes?: string | null
+          plan?: string
+          subscription_ends_at?: string | null
         }
         Update: {
           code?: string
           created_at?: string
+          features?: Json
           id?: string
           is_active?: boolean
+          max_managers?: number | null
+          max_members?: number | null
           name?: string
+          notes?: string | null
+          plan?: string
+          subscription_ends_at?: string | null
         }
         Relationships: []
       }
@@ -1679,6 +1697,7 @@ export type Database = {
         | "observer"
         | "auditor"
         | "sales_manager"
+        | "storekeeper"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1815,6 +1834,7 @@ export const Constants = {
         "observer",
         "auditor",
         "sales_manager",
+        "storekeeper",
       ],
     },
   },

@@ -14,6 +14,7 @@ const dict = {
   inventory: { ar: "الجرد", fr: "Inventaire", en: "Inventory" },
   audit: { ar: "التدقيق", fr: "Contrôle", en: "Audit" },
   customers: { ar: "الزبائن", fr: "Clients", en: "Customers" },
+  g50: { ar: "تصريح G50", fr: "Déclaration G50", en: "G50 return" },
   onlineStore: { ar: "إدارة المتجر أونلاين", fr: "Gérer la boutique", en: "Manage online store" },
   onlineOrders: { ar: "طلبيات أونلاين", fr: "Commandes en ligne", en: "Online orders" },
   ordersShort: { ar: "الطلبيات", fr: "Commandes", en: "Orders" },

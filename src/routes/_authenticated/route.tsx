@@ -23,9 +23,11 @@ function AuthenticatedLayout() {
       <div className="bg-ledger flex min-h-screen items-center justify-center p-6">
         <div className="surface-card max-w-sm p-8 text-center">
           <ShieldOff className="mx-auto h-10 w-10 text-destructive" />
-          <h1 className="mt-4 text-xl font-extrabold">الحساب موقوف</h1>
+          <h1 className="mt-4 text-xl font-extrabold">{me.expired ? "انتهى الاشتراك" : "الحساب موقوف"}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            تم إيقاف حسابك أو متجرك. تواصل مع المسير أو المدير العام.
+            {me.expired
+              ? "انتهت مدة اشتراك متجرك. تواصل مع المدير العام لتجديد الاشتراك."
+              : "تم إيقاف حسابك أو متجرك. تواصل مع المسير أو المدير العام."}
           </p>
           <Button
             className="mt-6"

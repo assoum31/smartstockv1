@@ -1,3 +1,4 @@
+import { reasonText } from "@/lib/messages";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { KeyRound, Pencil, Power, Trash2 } from "lucide-react";
@@ -160,7 +161,7 @@ function EditMemberDialog({
 }) {
   const updateFn = useServerFn(updateMember);
   const deleteFn = useServerFn(deleteMember);
-  const initialRole = (["manager", "cashier", "pricer", "auditor", "observer", "worker"] as MemberRole[]).find((r) =>
+  const initialRole = (["manager", "sales_manager", "storekeeper", "cashier", "pricer", "auditor", "observer", "worker"] as MemberRole[]).find((r) =>
     m.roles.includes(r),
   ) ?? "worker";
   const [fullName, setFullName] = useState(m.full_name);
@@ -190,7 +191,11 @@ function EditMemberDialog({
               e.preventDefault();
               setBusy(true);
               try {
-                await updateFn({ data: { memberId: m.id, fullName, role } });
+                const res = await updateFn({ data: { memberId: m.id, fullName, role } });
+                if (res && "reason" in res && !res.ok) {
+                  toast.error(reasonText(res.reason));
+                  return;
+                }
                 toast.success("تم حفظ التعديلات");
                 onOpenChange(false);
                 onChanged();

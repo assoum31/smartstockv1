@@ -1,5 +1,16 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "تصريح G50": ["Déclaration G50", "G50 return"],
+ "الاشتراك والخصائص": ["Abonnement et fonctions", "Subscription & features"],
+ "الباقة": ["Formule", "Plan"],
+ "تاريخ انتهاء الاشتراك": ["Fin d'abonnement", "Subscription end"],
+ "بدون مدة": ["Sans durée", "No end date"],
+ "الخصائص المفعّلة": ["Fonctions activées", "Enabled features"],
+ "أقصى عدد للمسيرين": ["Gérants max", "Max managers"],
+ "أقصى عدد للعمال (الإجمالي)": ["Employés max (total)", "Max staff (total)"],
+ "انتهى الاشتراك": ["Abonnement expiré", "Subscription expired"],
+ "أمين المتجر": ["Gestionnaire de magasin", "Storekeeper"],
+ "الشهر": ["Mois", "Month"],
  "المخزون وحركة السلع": ["Stock et mouvements", "Stock & movements"],
  "قيمة السلع وحركة المخزون": ["Valeur et mouvements de stock", "Stock value and movements"],
  "قيمة المخزون (شراء)": ["Valeur stock (achat)", "Stock value (cost)"],

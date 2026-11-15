@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Plus,
   Power,
+  Settings2,
   Store,
   UserPlus,
   Users,
@@ -36,6 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { StoreConfigDialog, SubscriptionBadge } from "@/components/store-config-dialog";
 import { PageHeader, StatCard } from "@/components/stat-card";
 import { MemberActions, MemberStatus } from "@/components/member-actions";
 import { MemberForm, UsernameField } from "@/components/member-form";
@@ -146,6 +148,7 @@ function StoreRow({
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [stopOpen, setStopOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const managers = store.members.filter((m) => m.roles.includes("manager"));
 
   const toggleActive = async () => {
@@ -183,6 +186,12 @@ function StoreRow({
         ) : (
           <Badge variant="destructive">موقوف</Badge>
         )}
+        <SubscriptionBadge store={store} />
+        <Button size="sm" variant="outline" onClick={() => setConfigOpen(true)}>
+          <Settings2 />
+          الاشتراك والخصائص
+        </Button>
+        <StoreConfigDialog store={store} open={configOpen} onOpenChange={setConfigOpen} onSaved={onChanged} />
         {store.is_active ? (
           <Button size="sm" variant="ghost" disabled={busy} onClick={() => setStopOpen(true)}>
             <Power />

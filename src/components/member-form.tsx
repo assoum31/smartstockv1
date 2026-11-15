@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { isValidUsername } from "@/lib/identity";
 
-export type MemberRole = "worker" | "manager" | "cashier" | "pricer" | "observer" | "auditor" | "sales_manager";
+export type MemberRole = "worker" | "manager" | "cashier" | "pricer" | "observer" | "auditor" | "sales_manager" | "storekeeper";
 
 export const ROLE_OPTIONS: { role: MemberRole; label: string; hint: string; managerOnly?: boolean }[] = [
   { role: "manager", label: "مسير", hint: "كل الصلاحيات: الجرد، الفريق، المنتجات، البيع", managerOnly: true },
   { role: "sales_manager", label: "مسؤول المبيعات", hint: "كل البيع + إحصائيات المبيعات، رقم الأعمال والفائدة" },
+  { role: "storekeeper", label: "أمين المتجر", hint: "وصول السلع، الموردين، الإرجاع، المخزون والوثائق التجارية G50" },
   { role: "cashier", label: "بائع / كاشير", hint: "نقطة البيع، سجل المبيعات، الموردين، وصول السلع" },
   { role: "worker", label: "عامل جرد", hint: "يمسح ويعدّ فقط" },
   { role: "pricer", label: "مصحح الأسعار", hint: "يعدّل أسعار المنتجات فقط" },

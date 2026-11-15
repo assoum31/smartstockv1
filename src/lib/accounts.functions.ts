@@ -1,3 +1,4 @@
+import { memberLimitReason } from "@/lib/subscription";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -298,6 +299,54 @@ export const setStoreActive = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+
+/** Enforce the master's staff limits for a store before adding/changing a member. */
+async function checkMemberLimits(admin: Awaited<ReturnType<typeof loadAdmin>>, tenantId: string, role: string, excludeUserId?: string) {
+  const { data: t } = await admin.from("tenants").select("max_managers, max_members").eq("id", tenantId).single();
+  if (!t || (t.max_managers == null && t.max_members == null)) return null;
+  const { data: people } = await admin.from("profiles").select("id").eq("tenant_id", tenantId);
+  const ids = (people ?? []).map((p) => p.id).filter((id) => id !== excludeUserId);
+  const { data: roles } = ids.length ? await admin.from("user_roles").select("user_id, role").in("user_id", ids) : { data: [] };
+  const managers = (roles ?? []).filter((r) => r.role === "manager").length;
+  return memberLimitReason({ managers, total: ids.length }, t, role);
+}
+
+export const updateStoreConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d) =>
+    z
+      .object({
+        storeId: z.string().uuid(),
+        name: z.string().trim().min(2).max(80),
+        plan: z.string().max(40),
+        subscriptionEndsAt: z.string().datetime().nullable(),
+        features: z.object({ sales: z.boolean(), inventory: z.boolean(), stock_io: z.boolean(), import_export: z.boolean(), online_store: z.boolean() }),
+        maxManagers: z.number().int().min(1).max(1000).nullable(),
+        maxMembers: z.number().int().min(1).max(10000).nullable(),
+        notes: z.string().max(1000).nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const scope = await callerScope(context);
+    if (!scope.isMaster) throw new Error("forbidden");
+    const admin = await loadAdmin();
+    const { error } = await admin
+      .from("tenants")
+      .update({
+        name: data.name,
+        plan: data.plan,
+        subscription_ends_at: data.subscriptionEndsAt,
+        features: data.features,
+        max_managers: data.maxManagers,
+        max_members: data.maxMembers,
+        notes: data.notes,
+      })
+      .eq("id", data.storeId);
+    if (error) throw new Error("failed");
+    return { ok: true as const };
+  });
+
 // ---------- Managers (and master): team ----------
 
 export const createMember = createServerFn({ method: "POST" })
@@ -307,7 +356,7 @@ export const createMember = createServerFn({ method: "POST" })
       .object({
         username: usernameSchema,
         fullName: fullNameSchema,
-        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager"]),
+        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager", "storekeeper"]),
         storeId: z.string().uuid().optional(),
       })
       .parse(d),
@@ -324,6 +373,8 @@ export const createMember = createServerFn({ method: "POST" })
       .eq("id", tenantId)
       .single();
     if (!tenant) throw new Error("not_found");
+    const limit = await checkMemberLimits(admin, tenantId, data.role);
+    if (limit) return { ok: false as const, reason: limit };
     const res = await createAccount(admin, {
       tenantId,
       storeCode: tenant.code,
@@ -389,13 +440,17 @@ export const updateMember = createServerFn({ method: "POST" })
       .object({
         memberId: z.string().uuid(),
         fullName: fullNameSchema,
-        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager"]),
+        role: z.enum(["worker", "manager", "cashier", "pricer", "observer", "auditor", "sales_manager", "storekeeper"]),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { admin, member } = await authorizeOverMember(context, data.memberId);
     if (member.id === context.userId) throw new Error("forbidden");
+    if (data.role === "manager" && member.tenant_id) {
+      const limit = await checkMemberLimits(admin, member.tenant_id, data.role, member.id);
+      if (limit === "limit_managers") return { ok: false as const, reason: limit };
+    }
     const { error: pErr } = await admin
       .from("profiles")
       .update({ full_name: data.fullName })

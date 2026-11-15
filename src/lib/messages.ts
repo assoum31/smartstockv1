@@ -15,6 +15,8 @@ export const REASON_TEXT: Record<string, string | undefined> = {
   forbidden: "ليست لديك صلاحية لهذا الإجراء.",
   create_failed: "تعذر إنشاء الحساب، حاول مرة أخرى.",
   failed: "حدث خطأ، حاول مرة أخرى.",
+  limit_managers: "وصل المتجر إلى الحد الأقصى لعدد المسيرين حسب الاشتراك.",
+  limit_members: "وصل المتجر إلى الحد الأقصى لعدد العمال حسب الاشتراك.",
 };
 
 export function reasonText(reason?: string): string {
