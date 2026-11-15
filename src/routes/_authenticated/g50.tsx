@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/g50")({
 });
 
 const monthRange = (m: string) => {
-  const [y, mo] = m.split("-").map(Number);
+  const [y = 2026, mo = 1] = m.split("-").map(Number);
   return { from: new Date(Date.UTC(y, mo - 1, 1)).toISOString(), to: new Date(Date.UTC(y, mo, 1)).toISOString() };
 };
 const sum = (rows: { total_amount: number | string }[] | null) => (rows ?? []).reduce((a, r) => a + Number(r.total_amount), 0);

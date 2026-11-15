@@ -98,7 +98,7 @@ function navFor(me: Me): NavItem[] {
   ];
   const activity: NavItem = { to: "/activity", label: "activity", short: "activityShort", icon: History };
   if (me.isManager)
-    return [
+    return ([
       { to: "/dashboard", label: "dashboard", short: "dashboardShort", icon: LayoutDashboard, dock: true },
       { to: "/inventory", label: "inventory", icon: ClipboardList, dock: true },
       { to: "/pos", label: "pos", icon: ShoppingCart, dock: true },
@@ -113,7 +113,7 @@ function navFor(me: Me): NavItem[] {
       { to: "/g50", label: "g50", icon: FileText },
       ...pos,
       activity,
-    ].filter((i) => navAllowed(me, i.to));
+    ] satisfies NavItem[]).filter((i) => navAllowed(me, i.to));
   const items: NavItem[] = [];
   if (me.canAudit) items.push({ to: "/audit", label: "audit", icon: ShieldCheck, dock: true });
   if (me.canWatchInventory) items.push({ to: "/inventory", label: "inventory", icon: ClipboardList, dock: true });
@@ -135,7 +135,7 @@ function navFor(me: Me): NavItem[] {
   if (me.roles.includes("worker") && me.features.inventory) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   if (me.canSeeProducts) items.push({ to: "/products", label: "products", icon: Package, dock: true }, { to: "/stock", label: "stock", icon: Warehouse });
   if (me.canSell && !me.canStock) {
-    for (let k = items.length - 1; k >= 0; k--) if (["/receipts", "/suppliers"].includes(items[k].to)) items.splice(k, 1);
+    for (let k = items.length - 1; k >= 0; k--) if (["/receipts", "/suppliers"].includes(items[k]?.to ?? "")) items.splice(k, 1);
   }
   if (!items.length) items.push({ to: "/scan", label: "scan", icon: ScanLine, dock: true });
   return items;
