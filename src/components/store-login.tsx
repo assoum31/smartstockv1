@@ -21,6 +21,7 @@ import {
 } from "@/lib/identity";
 import { fetchMe, meQueryOptions } from "@/lib/me";
 import { reasonText } from "@/lib/messages";
+import { desktopStore, isDesktopApp, lockDesktopStore, unlockDesktopStore } from "@/lib/desktop";
 
 const PORTAL_TEXT: Record<
   Portal,
@@ -62,9 +63,13 @@ export function StoreLogin({ portal }: { portal: Portal }) {
   const [loading, setLoading] = useState(false);
   // Forms only work once the page is interactive; avoid a plain page reload before that.
   const hydrated = useHydrated();
+  const [locked, setLocked] = useState<string | null>(null);
 
   useEffect(() => {
-    setStoreCode(localStorage.getItem(LAST_STORE_KEY) ?? "");
+    isDesktopApp();
+    const lk = desktopStore();
+    setLocked(lk);
+    setStoreCode(lk ?? localStorage.getItem(LAST_STORE_KEY) ?? "");
     // Already signed in? Go straight to the right page.
     void fetchMe()
       .then((me) => {
@@ -88,6 +93,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
       return;
     }
     localStorage.setItem(LAST_STORE_KEY, storeCode.trim().toLowerCase());
+    lockDesktopStore(storeCode.trim().toLowerCase());
     queryClient.removeQueries({ queryKey: ["me"] });
     const me = await queryClient.fetchQuery(meQueryOptions);
     if (me && portalFor(me.roles) !== portal) {
@@ -156,8 +162,16 @@ export function StoreLogin({ portal }: { portal: Portal }) {
             placeholder="ex: magasin-oran"
             value={storeCode}
             onChange={(e) => setStoreCode(e.target.value)}
+            readOnly={!!locked}
             className="barcode-chip h-11 ps-9 text-start"
           />
+        </div>
+        {locked && (
+          <button type="button" className="text-xs text-muted-foreground underline" onClick={() => { if (window.confirm("تغيير المتجر المرتبط بهذا الجهاز؟")) { unlockDesktopStore(); setLocked(null); } }}>
+            هذا الجهاز مرتبط بهذا المتجر — تغيير
+          </button>
+        )}
+        <div className="hidden">
         </div>
       </div>
       <div className="space-y-1.5">

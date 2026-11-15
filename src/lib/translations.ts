@@ -1721,6 +1721,10 @@ export const PHRASES: Record<string, [string, string]> = {
   "Code d'activation",
   "Activation code"
  ],
+ "هذا الجهاز مرتبط بهذا المتجر — تغيير": [
+  "Cet appareil est lié à ce magasin — changer",
+  "This device is linked to this store — change"
+ ],
  "رمز المتجر": [
   "Code magasin",
   "Store code"
