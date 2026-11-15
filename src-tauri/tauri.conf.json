@@ -5,7 +5,7 @@
   "identifier": "online.stoky.smartstock",
   "build": { "frontendDist": "../desktop-dist" },
   "app": {
-    "windows": [{ "title": "SMART STOCK", "url": "https://stoky.online/login", "width": 1366, "height": 860, "minWidth": 1024, "minHeight": 640, "maximized": true }],
+    "windows": [{ "title": "SMART STOCK", "url": "https://stoky.online/login?desktop=1", "width": 1366, "height": 860, "minWidth": 1024, "minHeight": 640, "maximized": true }],
     "security": { "csp": null }
   },
   "bundle": { "active": true, "targets": ["nsis"], "icon": ["icons/icon.png"], "windows": { "nsis": { "languages": ["Arabic", "French", "English"] } } }

@@ -16,6 +16,7 @@ import {
 } from "@/lib/identity";
 import { fetchMe, meQueryOptions } from "@/lib/me";
 import { reasonText } from "@/lib/messages";
+import { isDesktopApp } from "@/lib/desktop";
 
 // Private entry for the single master account. Not linked from anywhere.
 export const Route = createFileRoute("/master")({
@@ -46,6 +47,9 @@ function MasterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (isDesktopApp()) navigate({ to: "/login", replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     void fetchMe()
