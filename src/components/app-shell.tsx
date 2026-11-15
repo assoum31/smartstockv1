@@ -44,6 +44,7 @@ import { InstallApp } from '@/components/install-app';
 type NavItem = {
   to:
     | "/admin"
+    | "/g50"
     | "/audit"
     | "/advances"
     | "/expenses"
