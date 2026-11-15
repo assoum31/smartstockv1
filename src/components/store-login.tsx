@@ -167,7 +167,7 @@ export function StoreLogin({ portal }: { portal: Portal }) {
           />
         </div>
         {locked && (
-          <button type="button" className="text-xs text-muted-foreground underline" onClick={() => { if (confirm("تغيير المتجر المرتبط بهذا الجهاز؟")) { unlockDesktopStore(); setLocked(null); } }}>
+          <button type="button" className="text-xs text-muted-foreground underline" onClick={() => { if (window.confirm("تغيير المتجر المرتبط بهذا الجهاز؟")) { unlockDesktopStore(); setLocked(null); } }}>
             هذا الجهاز مرتبط بهذا المتجر — تغيير
           </button>
         )}
