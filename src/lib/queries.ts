@@ -144,6 +144,12 @@ export const teamQuery = (tenantId: string) =>
   });
 
 export interface StoreSummary {
+  plan: string;
+  subscription_ends_at: string | null;
+  features: unknown;
+  max_managers: number | null;
+  max_members: number | null;
+  notes: string | null;
   id: string;
   code: string;
   name: string;
