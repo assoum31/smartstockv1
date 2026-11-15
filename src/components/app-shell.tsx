@@ -2,7 +2,7 @@ import { BrandMark } from "@/components/brand-logo";
 import { RecountBanner } from "@/components/recount-banner";
 import { Warehouse, HandCoins, Wallet, History, ShieldCheck, Undo2, Contact, Globe, Store } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, FileText } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
