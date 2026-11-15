@@ -19,6 +19,7 @@ import {
   type SnapshotRow,
 } from "@/lib/queries";
 import { errorText, formatDateTime, formatQty } from "@/lib/messages";
+import { documentNumber } from "@/lib/document-number";
 
 const money = (n: number) =>
   new Intl.NumberFormat("fr-DZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -122,7 +123,7 @@ export function SalesPanel({
             >
               <Receipt className="h-5 w-5 text-primary" />
               <div className="flex-1">
-                <p className="font-bold">بون رقم {String(t.ticket_number).padStart(4, "0")}</p>
+                <p className="font-bold">{documentNumber("sale", t, t.ticket_number)}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatDateTime(t.created_at)} · {t.created_by_name} · {lines.length} منتج
                 </p>
@@ -342,7 +343,7 @@ function TicketDialog({
           </p>
           <div className="my-3 border-t border-dashed" />
           <div className="flex justify-between text-xs">
-            <span>رقم: {String(ticket.ticket_number).padStart(4, "0")}</span>
+            <span>{documentNumber("sale", ticket, ticket.ticket_number)}</span>
             <span dir="ltr">
               {d.toLocaleDateString("fr-FR")}{" "}
               {d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}

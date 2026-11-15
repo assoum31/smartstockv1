@@ -256,6 +256,35 @@ export type Database = {
           },
         ]
       }
+      document_counters: {
+        Row: {
+          document_year: number
+          kind: string
+          last_number: number
+          tenant_id: string
+        }
+        Insert: {
+          document_year: number
+          kind: string
+          last_number?: number
+          tenant_id: string
+        }
+        Update: {
+          document_year?: number
+          kind?: string
+          last_number?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_counters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -356,6 +385,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           created_by_name: string
+          document_sequence: number | null
+          document_year: number | null
           id: string
           notes: string | null
           paid_amount: number | null
@@ -370,6 +401,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name: string
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
           notes?: string | null
           paid_amount?: number | null
@@ -384,6 +417,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
           notes?: string | null
           paid_amount?: number | null
@@ -906,7 +941,10 @@ export type Database = {
           created_by_name: string
           customer_id: string | null
           discount: number
+          document_sequence: number | null
+          document_year: number | null
           id: string
+          invoice_sequence: number | null
           notes: string | null
           online_order_id: string | null
           payment_method: string
@@ -922,7 +960,10 @@ export type Database = {
           created_by_name: string
           customer_id?: string | null
           discount?: number
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
+          invoice_sequence?: number | null
           notes?: string | null
           online_order_id?: string | null
           payment_method?: string
@@ -938,7 +979,10 @@ export type Database = {
           created_by_name?: string
           customer_id?: string | null
           discount?: number
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
+          invoice_sequence?: number | null
           notes?: string | null
           online_order_id?: string | null
           payment_method?: string
@@ -1067,6 +1111,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           created_by_name: string
+          document_sequence: number | null
+          document_year: number | null
           id: string
           kind: string
           reason: string | null
@@ -1082,6 +1128,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name: string
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
           kind: string
           reason?: string | null
@@ -1097,6 +1145,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           created_by_name?: string
+          document_sequence?: number | null
+          document_year?: number | null
           id?: string
           kind?: string
           reason?: string | null
@@ -1451,6 +1501,10 @@ export type Database = {
       }
     }
     Functions: {
+      allocate_document_number: {
+        Args: { _kind: string; _tenant: string; _year: number }
+        Returns: number
+      }
       audit_inventory_log: {
         Args: {
           _barcode: string

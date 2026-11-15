@@ -13,6 +13,7 @@ import { money, returnsQuery, suppliersQuery, type SaleTicket, type StockReturn 
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
 import { codesHtml, parseTicketCode, returnCode } from "@/lib/receipt-code";
+import { documentNumber, parseAnnualSaleNumber, type NumberedDocument } from "@/lib/document-number";
 import { useStoreSettings } from "@/lib/store-settings";
 import { printTicket } from "@/lib/print-ticket";
 import { BarcodeScanner } from "@/components/barcode-scanner";
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/returns")({
   validateSearch: (s: Record<string, unknown>): { ticket?: number | undefined } => ({
     ticket: Number(s["ticket"]) > 0 ? Number(s["ticket"]) : undefined,
   }),
-  head: () => ({ meta: [{ title: "بونات الإرجاع | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "بونات الإرجاع | SMART STOCK" }, { name: "description", content: "إرجاع الزبائن والموردين بترقيم سنوي مستقل والبحث بوصل البيع." }, { property: "og:title", content: "بونات الإرجاع | SMART STOCK" }, { property: "og:description", content: "وصول إرجاع الزبائن والموردين." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ReturnsPage,
 });
 
@@ -41,7 +42,7 @@ interface Line { barcode: string; product_name: string; quantity: number; unit_p
 
 const REASONS = ["تالف", "انتهاء الصلاحية", "خطأ في الطلبية", "تغيير رأي الزبون", "أخرى"];
 
-function printReturn(r: { kind: Kind; number: number; party: string; lines: Line[]; store: string; reason?: string | undefined }) {
+function printReturn(r: { kind: Kind; number: number; party: string; lines: Line[]; store: string; reason?: string | undefined; document?: NumberedDocument; date?: string }) {
   const w = window.open("", "_blank", "width=380,height=600");
   if (!w) return;
   const sum = r.lines.reduce((n, l) => n + l.quantity * l.unit_price, 0);
@@ -50,9 +51,9 @@ function printReturn(r: { kind: Kind; number: number; party: string; lines: Line
     .join("");
   w.document.write(`<html dir="rtl"><head><title>Bon de retour</title><style>@page{size:80mm auto;margin:3mm}body{font-family:sans-serif;font-size:12px;width:74mm}table{width:100%;border-collapse:collapse}td{padding:3px 0;border-bottom:1px dashed #999}h2,p{text-align:center;margin:4px 0}</style></head><body>
   <h2>${r.store}</h2><p><b>${r.kind === "customer" ? "BON DE RETOUR CLIENT" : "BON DE RETOUR FOURNISSEUR"}</b></p>
-  <p>رقم ${String(r.number).padStart(4, "0")} · ${new Date().toLocaleString("fr-FR")}</p>
+  <p>${documentNumber(r.kind === "customer" ? "customer_return" : "supplier_return", r.document ?? {}, r.number)} · ${new Date(r.date ?? Date.now()).toLocaleString("fr-FR")}</p>
   ${r.party ? `<p>${r.party}</p>` : ""}${r.reason ? `<p>السبب: ${r.reason}</p>` : ""}
-  <table>${rows}</table><h2>المبلغ المسترجع: ${money(sum)} دج</h2>${codesHtml(returnCode(r.kind, r.number))}<p>SMART STOCK</p></body></html>`);
+  <table>${rows}</table><h2>المبلغ المسترجع: ${money(sum)} دج</h2>${codesHtml(r.document?.document_sequence != null ? documentNumber(r.kind === "customer" ? "customer_return" : "supplier_return", r.document, r.number) : returnCode(r.kind, r.number))}<p>SMART STOCK</p></body></html>`);
   w.document.close(); w.focus(); w.print();
 }
 
@@ -88,11 +89,14 @@ function ReturnsPage() {
       if (!ticket) return void toast.error('الوصل غير موجود');
       return lookup(String(ticket.ticket_number));
     }
+    const annual = parseAnnualSaleNumber(raw);
     const n = parseTicketCode(raw);
-    if (!n) return void toast.error("رقم وصل غير صالح");
-    const { data, error } = await supabase
+    if (!n && !annual) return void toast.error("رقم وصل غير صالح");
+    let request = supabase
       .from("sales_tickets").select("*, items:sales_ticket_items(*)")
-      .eq("tenant_id", tenant.id).eq("ticket_number", n).maybeSingle();
+      .eq("tenant_id", tenant.id);
+    request = annual ? request.eq("document_sequence", annual.sequence).eq("document_year", annual.year) : request.eq("ticket_number", n ?? 0);
+    const { data, error } = await request.maybeSingle();
     if (error) return void toast.error(errorText(error));
     if (!data) { setFound(null); return void toast.error("الوصل غير موجود"); }
     const { data: prev } = await supabase.from("stock_returns").select("items:stock_return_items(barcode, quantity)").eq("ticket_id", data.id);
@@ -114,7 +118,7 @@ function ReturnsPage() {
     }
     if (!ls.length) return void toast.error("كل منتجات هذا الوصل أُرجعت من قبل");
     setLines(ls);
-    setTicketRef(String(found.ticket_number).padStart(4, "0"));
+    setTicketRef(documentNumber("sale", found, found.ticket_number));
     setLinked({ id: found.id, number: found.ticket_number, edit });
     if (edit) toast.info("أرجع المنتجات الخاطئة، ثم ستنتقل لنقطة البيع لعمل وصل جديد");
   };
@@ -153,9 +157,9 @@ function ReturnsPage() {
         });
     setSaving(false);
     if (error) return void toast.error(errorText(error));
-    const { data } = await supabase.from("stock_returns").select("return_number").eq("id", id as string).maybeSingle();
+    const { data } = await supabase.from("stock_returns").select("return_number, document_year, document_sequence, created_at").eq("id", id as string).maybeSingle();
     const party = kind === "supplier" ? suppliers.find((s) => s.id === supplierId)?.name ?? "" : ticketRef ? `بون البيع: ${ticketRef}` : "";
-    printReturn({ kind, number: data?.return_number ?? 0, party, lines, store: tenant.name, reason });
+    if (data) printReturn({ kind, number: data.return_number, document: data, date: data.created_at, party, lines, store: tenant.name, reason });
     toast.success("تم تسجيل الإرجاع وتحديث المخزون");
     setLines([]); setTicketRef(""); setReason("");
     const wasEdit = linked?.edit;
@@ -181,7 +185,7 @@ function ReturnsPage() {
         {found && (
           <div className="rounded-xl border p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-bold">وصل #{String(found.ticket_number).padStart(4, "0")} · {found.created_by_name}</p>
+              <p className="font-bold">{documentNumber("sale", found, found.ticket_number)} · {found.created_by_name}</p>
               <span className="text-xs text-muted-foreground">{new Date(found.created_at).toLocaleString("fr-FR")}</span>
             </div>
             <ul className="my-2 text-sm">
@@ -281,12 +285,12 @@ function ReturnsPage() {
           {shown.map((r: StockReturn) => (
             <div key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
               <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${r.kind === "customer" ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive"}`}>
-                {r.kind === "customer" ? "Client" : "Fournisseur"} #{String(r.return_number).padStart(4, "0")}
+                {documentNumber(r.kind === "customer" ? "customer_return" : "supplier_return", r, r.return_number)}
               </span>
               <span className="flex-1">{r.supplier_name ?? (r.ticket_ref ? `بون ${r.ticket_ref}` : "—")} · {r.items.length} سطر{r.reason ? ` · ${r.reason}` : ""}</span>
               <span className="text-xs text-muted-foreground">{r.created_by_name} · {new Date(r.created_at).toLocaleString("fr-FR")}</span>
               <span className="font-mono font-bold">{money(Number(r.total_amount))}</span>
-              <Button size="icon" variant="ghost" aria-label="طباعة" onClick={() => printReturn({ kind: r.kind as Kind, number: r.return_number, party: r.supplier_name ?? r.ticket_ref ?? "", lines: r.items.map((i) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price) })), store: tenant.name, reason: r.reason ?? undefined })}>
+              <Button size="icon" variant="ghost" aria-label="طباعة" onClick={() => printReturn({ kind: r.kind as Kind, number: r.return_number, document: r, date: r.created_at, party: r.supplier_name ?? r.ticket_ref ?? "", lines: r.items.map((i) => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price) })), store: tenant.name, reason: r.reason ?? undefined })}>
                 <Printer className="h-4 w-4" />
               </Button>
             </div>

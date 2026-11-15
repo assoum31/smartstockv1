@@ -11,6 +11,8 @@ import { PageHeader, StatCard } from "@/components/stat-card";
 import { SalesStats } from "@/components/sales-stats";
 import { useStoreSettings } from "@/lib/store-settings";
 import { printTicket } from "@/lib/print-ticket";
+import { documentNumber } from "@/lib/document-number";
+import { a4DocHtml, openPrint } from "@/lib/store-settings";
 import { money, storeSalesQuery, type SaleTicket } from "@/lib/pos-queries";
 
 export const Route = createFileRoute("/_authenticated/sales")({
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/sales")({
     return { tenant: context.me.tenant };
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(storeSalesQuery(context.tenant.id)),
-  head: () => ({ meta: [{ title: "سجل المبيعات | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "سجل المبيعات | SMART STOCK" }, { name: "description", content: "سجل وصول البيع والفواتير ذات الترقيم السنوي في SMART STOCK." }, { property: "og:title", content: "سجل المبيعات | SMART STOCK" }, { property: "og:description", content: "عرض وطباعة وصول البيع والفواتير." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: SalesPage,
 });
 
@@ -44,6 +46,8 @@ function SalesPage() {
         (!onlineOnly || !!t.online_order_id) &&
         (!s ||
           String(t.ticket_number).includes(s) ||
+          documentNumber("sale", t, t.ticket_number).toLowerCase().includes(s) ||
+          documentNumber("invoice", t, t.ticket_number).toLowerCase().includes(s) ||
           t.created_by_name.toLowerCase().includes(s) ||
           t.items.some((i) => i.product_name.toLowerCase().includes(s) || i.barcode.toLowerCase().includes(s))),
     );
@@ -76,7 +80,7 @@ function SalesPage() {
         {list.map((t) => (
           <div key={t.id} className="surface-card overflow-hidden">
             <button type="button" onClick={() => setOpen(open === t.id ? null : t.id)} className="flex w-full items-center gap-3 p-3 text-start">
-              <span className="barcode-chip rounded-lg bg-muted px-2 py-1 text-xs font-bold">#{String(t.ticket_number).padStart(4, "0")}</span>
+              <span className="barcode-chip rounded-lg bg-muted px-2 py-1 text-xs font-bold">{documentNumber("sale", t, t.ticket_number)}</span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-bold">{t.created_by_name}{t.online_order_id && <span className="ms-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">أونلاين</span>}</span>
                 <span className="block text-[11px] text-muted-foreground">
@@ -102,6 +106,12 @@ function SalesPage() {
                 <Button size="sm" variant="outline" className="mt-3" onClick={() => printTicket(tenant.name, t, storeSettings)}>
                   <Printer /> إعادة الطباعة
                 </Button>
+                <Button size="sm" variant="outline" className="mt-3 ms-2" onClick={() => openPrint(a4DocHtml(storeSettings, tenant.name, {
+                  title: "فاتورة", number: documentNumber("invoice", t, t.ticket_number),
+                  date: new Date(t.created_at).toLocaleString("fr-FR"),
+                  discount: Number(t.discount),
+                  lines: t.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: Number(i.quantity), price: Number(i.unit_price) })),
+                }))}><Printer /> {documentNumber("invoice", t, t.ticket_number)}</Button>
                 <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
                   <Link to="/returns" search={{ ticket: t.ticket_number }}><Undo2 /> إرجاع الوصل</Link>
                 </Button>

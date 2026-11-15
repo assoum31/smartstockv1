@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/stat-card";
 import { BarcodeScanner } from "@/components/barcode-scanner";
 import { ticketCode } from "@/lib/receipt-code";
+import { documentNumber } from "@/lib/document-number";
 import { activeSessionQuery, productsQuery, type Product } from "@/lib/queries";
 import { findProductByBarcode } from "@/lib/inventory-rules";
 import { errorText } from "@/lib/messages";
@@ -160,7 +161,7 @@ function PosPage() {
         date: new Date().toLocaleString("fr-FR"),
         lines,
         total: sum,
-        code: number ? number.startsWith('LOCAL-') ? number : ticketCode(number) : undefined,
+        code: number ? number.startsWith('LOCAL-') || number.startsWith('BV ') ? number : ticketCode(number) : undefined,
         extra: `${discAmount ? `<p>خصم: -${money(discAmount)}</p>` : ""}<p>الدفع: ${pay}</p>${paidNum ? `<p>المدفوع: ${money(paidNum)} · الباقي: ${money(paidNum - sum)}</p>` : ""}`,
       }),
       "width=380,height=600",
@@ -181,8 +182,8 @@ function PosPage() {
       await syncDeviceSales();
       const { data: synced } = await supabase.from('offline_sales_sync').select('ticket_id').eq('client_id', clientId).maybeSingle();
       if (synced) {
-        const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number').eq('id', synced.ticket_id).maybeSingle();
-        if (ticket) number = String(ticket.ticket_number).padStart(4, '0');
+        const { data: ticket } = await supabase.from('sales_tickets').select('ticket_number, document_year, document_sequence').eq('id', synced.ticket_id).maybeSingle();
+        if (ticket) number = documentNumber("sale", ticket, ticket.ticket_number);
       }
       } catch { /* The committed device sale remains queued; never keep the sold cart on screen. */ }
     }

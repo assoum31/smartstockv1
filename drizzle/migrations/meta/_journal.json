@@ -211,6 +211,27 @@
       "when": 1794724937200,
       "tag": "0029_enforce_subscription_features_storekeeper",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794739058274,
+      "tag": "0030_annual_document_numbering",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794739113297,
+      "tag": "0031_safe_document_trigger_record_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794739161774,
+      "tag": "0032_restrict_document_counter_grants",
+      "breakpoints": true
     }
   ]
 }
