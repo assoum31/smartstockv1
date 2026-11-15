@@ -1,5 +1,6 @@
 /** Arabic UI phrase -> [French, English]. Used by the screen translator. */
 export const PHRASES: Record<string, [string, string]> = {
+ "فاتورة": ["Facture", "Invoice"],
  "تصريح G50": ["Déclaration G50", "G50 return"],
  "الاشتراك والخصائص": ["Abonnement et fonctions", "Subscription & features"],
  "الباقة": ["Formule", "Plan"],

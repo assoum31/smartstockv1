@@ -225,6 +225,13 @@
       "when": 1794739113297,
       "tag": "0031_safe_document_trigger_record_access",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794739161774,
+      "tag": "0032_restrict_document_counter_grants",
+      "breakpoints": true
     }
   ]
 }

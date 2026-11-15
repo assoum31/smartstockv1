@@ -85,10 +85,10 @@ export function ticketHtml(s: StoreSettings, fallbackName: string, opts: {
 
 /** Professional A4 document (goods receipt / invoice). */
 export function a4DocHtml(s: StoreSettings, fallbackName: string, opts: {
-  title: string; number: string; date: string; party?: string | null; reference?: string | null; notes?: string | null;
+  title: string; number: string; date: string; party?: string | null; reference?: string | null; notes?: string | null; discount?: number;
   lines: { barcode: string; product_name: string; quantity: number; price: number }[];
 }) {
-  const total = opts.lines.reduce((n, l) => n + l.quantity * l.price, 0);
+  const total = opts.lines.reduce((n, l) => n + l.quantity * l.price, 0) - (opts.discount ?? 0);
   const rows = opts.lines.map((l, i) => `<tr><td>${i + 1}</td><td dir="ltr">${esc(l.barcode)}</td><td>${esc(l.product_name)}</td><td>${l.quantity}</td><td>${money(l.price)}</td><td>${money(l.quantity * l.price)}</td></tr>`).join("");
   return `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>${esc(opts.title)} ${esc(opts.number)}</title><style>
   @page{size:${s.invoice_paper === "A5" ? "A5" : "A4"};margin:${s.invoice_paper === "A5" ? 8 : 14}mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:${s.invoice_paper === "A5" ? 10 : 12}px;color:#111}
@@ -103,7 +103,7 @@ export function a4DocHtml(s: StoreSettings, fallbackName: string, opts: {
   <div class="meta"><div class="box"><b>التاريخ:</b> ${esc(opts.date)}${opts.reference ? `<br/><b>المرجع:</b> ${esc(opts.reference)}` : ""}</div>
   <div class="box"><b>المورد:</b> ${esc(opts.party || "—")}${opts.notes ? `<br/><b>ملاحظات:</b> ${esc(opts.notes)}` : ""}</div></div>
   <table><thead><tr><th>#</th><th>الباركود</th><th>التسمية</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr></thead><tbody>${rows}</tbody></table>
-  <p class="tot">المجموع الكلي: ${money(total)} دج</p>
+  ${opts.discount ? `<p class="tot">الخصم: ${money(opts.discount)} دج</p>` : ""}<p class="tot">المجموع الكلي: ${money(total)} دج</p>
   ${s.invoice_signature !== false ? `<div class="sig"><div>توقيع المستلم</div><div>توقيع المورد</div></div>` : ""}
   ${s.invoice_footer ? `<p class="foot">${esc(s.invoice_footer)}</p>` : ""}</body></html>`;
 }

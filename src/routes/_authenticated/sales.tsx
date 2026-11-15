@@ -109,6 +109,7 @@ function SalesPage() {
                 <Button size="sm" variant="outline" className="mt-3 ms-2" onClick={() => openPrint(a4DocHtml(storeSettings, tenant.name, {
                   title: "فاتورة", number: documentNumber("invoice", t, t.ticket_number),
                   date: new Date(t.created_at).toLocaleString("fr-FR"),
+                  discount: Number(t.discount),
                   lines: t.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: Number(i.quantity), price: Number(i.unit_price) })),
                 }))}><Printer /> {documentNumber("invoice", t, t.ticket_number)}</Button>
                 <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
