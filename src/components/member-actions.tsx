@@ -1,3 +1,4 @@
+import { reasonText } from "@/lib/messages";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { KeyRound, Pencil, Power, Trash2 } from "lucide-react";
@@ -190,7 +191,11 @@ function EditMemberDialog({
               e.preventDefault();
               setBusy(true);
               try {
-                await updateFn({ data: { memberId: m.id, fullName, role } });
+                const res = await updateFn({ data: { memberId: m.id, fullName, role } });
+                if (res && "reason" in res && !res.ok) {
+                  toast.error(reasonText(res.reason));
+                  return;
+                }
                 toast.success("تم حفظ التعديلات");
                 onOpenChange(false);
                 onChanged();
