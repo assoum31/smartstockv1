@@ -33,6 +33,8 @@ use the editor.
 
 ## Project rules
 
+- Official document references use additive annual per-tenant/type counters assigned atomically by database triggers; keep legacy ticket numbers for old links, and use src/lib/document-number.ts for display so offline caches never fabricate official numbers.
+
 - Offline installability uses vite-plugin-pwa generateSW and one guarded registration module; only published top-level apps register, and HTML is NetworkFirst to avoid stale previews.
 - Device sales and counts persist in IndexedDB before success is shown; sales synchronize via sync_offline_sale with a unique client ID and original time/cash session so retries cannot double-charge stock or cash. Cached identity enables local screens only; the server revalidates permissions on sync.
 

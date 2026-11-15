@@ -16,6 +16,7 @@ import { errorText } from "@/lib/messages";
 import { downloadWorkbook, readSheetAsText } from "@/lib/excel";
 import { parseReceiptRows, RECEIPT_TEMPLATE_HEADERS } from "@/lib/receipt-import";
 import { a4DocHtml, openPrint, useStoreSettings } from "@/lib/store-settings";
+import { documentNumber } from "@/lib/document-number";
 
 export const Route = createFileRoute("/_authenticated/receipts")({
   beforeLoad: ({ context }) => {
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/receipts")({
       context.queryClient.ensureQueryData(suppliersQuery(context.tenant.id)),
       context.queryClient.ensureQueryData(productsQuery(context.tenant.id)),
     ]),
-  head: () => ({ meta: [{ title: "وصول السلع | SMART STOCK" }] }),
+  head: () => ({ meta: [{ title: "وصول السلع | SMART STOCK" }, { name: "description", content: "وصول استلام السلع وترقيمها السنوي وتحديث مخزون المتجر." }, { property: "og:title", content: "وصول السلع | SMART STOCK" }, { property: "og:description", content: "إدارة وطباعة وصول استلام السلع." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ReceiptsPage,
 });
 
@@ -73,13 +74,13 @@ function ReceiptsPage() {
     toast.success("تمت إضافة المورد");
   };
 
-  const brCode = (n: number) => `BR-${String(n).padStart(4, "0")}`;
+  const brCode = (r: (typeof receipts)[number]) => documentNumber("receipt", r, r.receipt_number);
 
   const printReceiptDoc = (r: (typeof receipts)[number]) =>
     openPrint(
       a4DocHtml(storeSettings, tenant.name, {
         title: "وصل استلام سلع",
-        number: brCode(r.receipt_number),
+        number: brCode(r),
         date: new Date(r.created_at).toLocaleString("fr-FR"),
         party: r.supplier_name,
         reference: r.reference,
@@ -106,12 +107,12 @@ function ReceiptsPage() {
       {
         name: "Réceptions",
         headers: ["N°", "التاريخ", "المورد", "رقم الفاتورة", "المستخدم", "عدد المنتجات", "المجموع"],
-        rows: receipts.map((r) => [brCode(r.receipt_number), new Date(r.created_at).toLocaleString("fr-FR"), r.supplier_name ?? "", r.reference ?? "", r.created_by_name, r.items.length, Number(r.total_amount)]),
+        rows: receipts.map((r) => [brCode(r), new Date(r.created_at).toLocaleString("fr-FR"), r.supplier_name ?? "", r.reference ?? "", r.created_by_name, r.items.length, Number(r.total_amount)]),
       },
       {
         name: "Lignes",
         headers: ["N°", "المورد", "رقم الفاتورة", "الباركود", "اسم المنتج", "الكمية", "سعر الشراء", "سعر البيع"],
-        rows: receipts.flatMap((r) => r.items.map((i) => [brCode(r.receipt_number), r.supplier_name ?? "", r.reference ?? "", i.barcode, i.product_name, Number(i.quantity), Number(i.purchase_price), Number(i.selling_price)])),
+        rows: receipts.flatMap((r) => r.items.map((i) => [brCode(r), r.supplier_name ?? "", r.reference ?? "", i.barcode, i.product_name, Number(i.quantity), Number(i.purchase_price), Number(i.selling_price)])),
         textColumns: [3],
       },
     ]);
@@ -348,7 +349,7 @@ function ReceiptsPage() {
         {receipts.map((r) => (
           <div key={r.id} className="surface-card overflow-hidden">
             <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)} className="flex w-full items-center gap-3 p-3 text-start">
-              <span className="barcode-chip rounded-lg bg-muted px-2 py-1 text-xs font-bold">BR-{String(r.receipt_number).padStart(4, "0")}</span>
+              <span className="barcode-chip rounded-lg bg-muted px-2 py-1 text-xs font-bold">{brCode(r)}</span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-bold">{r.supplier_name ?? "بدون مورد"}{r.reference && ` · ${r.reference}`}</span>
                 <span className="block text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("fr-FR")} · {r.created_by_name} · {r.items.length} منتج</span>
