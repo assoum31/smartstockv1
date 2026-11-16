@@ -1266,6 +1266,10 @@ export const PHRASES: Record<string, [string, string]> = {
   "Exporter le journal",
   "Export log"
  ],
+ "تم تعديل الوصل وتصحيح المخزون": [
+  "Bon modifié et stock corrigé",
+  "Receipt updated and stock corrected"
+ ],
  "تعديل": [
   "Modifier",
   "Edit"
