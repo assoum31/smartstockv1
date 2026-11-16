@@ -1740,6 +1740,16 @@ export type Database = {
         }
         Returns: Json
       }
+      update_goods_receipt: {
+        Args: {
+          _items: Json
+          _notes?: string
+          _receipt_id: string
+          _reference?: string
+          _supplier_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:

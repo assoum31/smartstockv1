@@ -2,7 +2,7 @@ import { ProductFormDialog } from "@/components/product-form";
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronDown, Download, FileSpreadsheet, PackagePlus, Plus, Printer, Search, Trash2, Upload } from "lucide-react";
+import { ChevronDown, Pencil, Download, FileSpreadsheet, PackagePlus, Plus, Printer, Search, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,7 @@ function ReceiptsPage() {
   const [code, setCode] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const storeSettings = useStoreSettings(tenant.id);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -196,6 +197,24 @@ function ReceiptsPage() {
     if (lines.some((l) => !(Number(l.quantity) > 0))) return void toast.error("أدخل كمية صحيحة لكل منتج");
     if (lines.some((l) => l.isNew && !l.product_name.trim())) return void toast.error("أدخل اسم كل منتج جديد");
     setSaving(true);
+    const items = lines.map((l) => ({
+      barcode: l.barcode,
+      product_name: l.product_name,
+      quantity: Number(l.quantity),
+      purchase_price: Number(l.purchase_price || 0),
+      selling_price: Number(l.selling_price || 0),
+    }));
+    if (editingId) {
+      const { error } = await supabase.rpc("update_goods_receipt", {
+        _receipt_id: editingId, _supplier_id: (supplierId || null) as never, _items: items as never, _reference: reference, _notes: notes,
+      });
+      setSaving(false);
+      if (error) return void toast.error(errorText(error));
+      toast.success("تم تعديل الوصل وتصحيح المخزون");
+      setEditingId(null); setLines([]); setReference(""); setNotes(""); setPaid(""); setCreating(false);
+      void qc.invalidateQueries();
+      return;
+    }
     const { data: newId, error } = await supabase.rpc("create_goods_receipt", {
       _supplier_id: (supplierId || null) as never,
       _items: lines.map((l) => ({
@@ -336,7 +355,7 @@ function ReceiptsPage() {
                 <span className="text-xs font-bold text-destructive">دين: {money(total - (Number(paid.replace(",", ".")) || 0))}</span>
               )}
             </div>
-            <Button variant="outline" onClick={() => { setCreating(false); setLines([]); }}>إلغاء</Button>
+            <Button variant="outline" onClick={() => { setCreating(false); setEditingId(null); setLines([]); }}>إلغاء</Button>
             <Button disabled={saving || lines.length === 0} onClick={() => void save()}>
               <PackagePlus /> {saving ? "جاري الحفظ..." : "حفظ وصل الاستلام"}
             </Button>
@@ -363,6 +382,15 @@ function ReceiptsPage() {
             {open === r.id && (
               <div className="border-t bg-muted/30 p-3 text-sm">
                 <Button size="sm" variant="outline" className="mb-2" onClick={() => printReceiptDoc(r)}><Printer /> طباعة / PDF (A4)</Button>
+                <Button size="sm" variant="outline" className="mb-2 ms-2" onClick={() => {
+                  setEditingId(r.id);
+                  setSupplierId(r.supplier_id ?? "");
+                  setReference(r.reference ?? "");
+                  setNotes(r.notes ?? "");
+                  setLines(r.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: String(i.quantity), purchase_price: String(i.purchase_price), selling_price: String(i.selling_price), isNew: false })));
+                  setCreating(true);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}><Pencil /> تعديل</Button>
                 {isManager && (
                   <Button size="sm" variant="outline" className="mb-2 ms-2 text-destructive" onClick={async () => {
                     if (!window.confirm("حذف هذا الوصل؟ ستُنقص كمياته من المخزون.")) return;

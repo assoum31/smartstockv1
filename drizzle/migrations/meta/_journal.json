@@ -232,6 +232,13 @@
       "when": 1794739161774,
       "tag": "0032_restrict_document_counter_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794813621127,
+      "tag": "0033_seller_edit_receipts_products",
+      "breakpoints": true
     }
   ]
 }
