@@ -361,7 +361,7 @@ function ProductsPage() {
         open={editing !== null}
         familles={familles}
         tenantId={tenant.id}
-        isManager={isManager}
+        isManager={isManager || canSell}
         onOpenChange={(o) => !o && setEditing(null)}
         onSaved={() => { setEditing(null); void queryClient.invalidateQueries({ queryKey: ["products", tenant.id] }); }}
       />
