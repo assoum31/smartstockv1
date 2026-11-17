@@ -1703,6 +1703,10 @@ export type Database = {
       }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
+      set_goods_receipt_date: {
+        Args: { _date: string; _receipt_id: string }
+        Returns: undefined
+      }
       set_product_alt_barcodes: {
         Args: { _alts: string[]; _barcode: string }
         Returns: string[]

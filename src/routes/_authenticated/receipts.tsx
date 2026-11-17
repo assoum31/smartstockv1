@@ -54,6 +54,7 @@ function ReceiptsPage() {
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
   const [paid, setPaid] = useState("");
+  const [docDate, setDocDate] = useState("");
   const [code, setCode] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [saving, setSaving] = useState(false);
@@ -208,9 +209,14 @@ function ReceiptsPage() {
       const { error } = await supabase.rpc("update_goods_receipt", {
         _receipt_id: editingId, _supplier_id: (supplierId || null) as never, _items: items as never, _reference: reference, _notes: notes,
       });
+      if (!error && docDate) {
+        const d = await supabase.rpc("set_goods_receipt_date", { _receipt_id: editingId, _date: new Date(docDate).toISOString() });
+        if (d.error) toast.error(errorText(d.error));
+      }
       setSaving(false);
       if (error) return void toast.error(errorText(error));
       toast.success("تم تعديل الوصل وتصحيح المخزون");
+      setDocDate("");
       setEditingId(null); setLines([]); setReference(""); setNotes(""); setPaid(""); setCreating(false);
       void qc.invalidateQueries();
       return;
@@ -231,10 +237,15 @@ function ReceiptsPage() {
       const r = await supabase.rpc("set_receipt_paid", { _receipt_id: newId as string, _paid: Number(paid.replace(",", ".")) || 0 });
       if (r.error) toast.error(errorText(r.error));
     }
+    if (!error && newId && docDate) {
+      const d = await supabase.rpc("set_goods_receipt_date", { _receipt_id: newId as string, _date: new Date(docDate).toISOString() });
+      if (d.error) toast.error(errorText(d.error));
+    }
     setSaving(false);
     if (error) return void toast.error(errorText(error));
     toast.success("تم حفظ وصل الاستلام وتحديث المخزون");
     setPaid("");
+    setDocDate("");
     setLines([]);
     setReference("");
     setNotes("");
@@ -285,6 +296,10 @@ function ReceiptsPage() {
             <div className="space-y-1.5">
               <Label htmlFor="rc-notes">ملاحظات</Label>
               <Input id="rc-notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="h-11" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="rc-date">تاريخ الوصل</Label>
+              <Input id="rc-date" type="datetime-local" value={docDate} onChange={(e) => setDocDate(e.target.value)} className="h-11" dir="ltr" />
             </div>
           </div>
 
@@ -387,6 +402,7 @@ function ReceiptsPage() {
                   setSupplierId(r.supplier_id ?? "");
                   setReference(r.reference ?? "");
                   setNotes(r.notes ?? "");
+                  { const d = new Date(r.created_at); setDocDate(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)); }
                   setLines(r.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: String(i.quantity), purchase_price: String(i.purchase_price), selling_price: String(i.selling_price), isNew: false })));
                   setCreating(true);
                   window.scrollTo({ top: 0, behavior: "smooth" });

@@ -239,6 +239,13 @@
       "when": 1794813621127,
       "tag": "0033_seller_edit_receipts_products",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794905410343,
+      "tag": "0034_set_goods_receipt_date",
+      "breakpoints": true
     }
   ]
 }
