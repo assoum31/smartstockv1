@@ -49,7 +49,7 @@ export async function saveDeviceSale(sale: DeviceSale) {
   await reload();
 }
 export async function retryDeviceSale(sale: DeviceSale, cashId?: string) {
-  await saveDeviceSale({ ...sale, cash_id: cashId ?? sale.cash_id, status: 'pending', error: undefined });
+  await saveDeviceSale({ ...sale, ...(cashId ? { cash_id: cashId, sold_at: new Date().toISOString() } : {}), status: 'pending', error: undefined });
   await syncDeviceSales();
 }
 let running: Promise<void> | null = null;
