@@ -5,6 +5,7 @@ import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-quer
 import { AlertTriangle, Camera, CameraOff, Minus, PauseCircle, Plus, Printer, Search, Trash2, Undo2, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { myCashSessionQuery } from "@/lib/pos-queries";
+import { isFromPreviousDay } from "@/lib/cash-day";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,19 @@ function PosPage() {
   const { sales: allDeviceSales, lastSyncedAt } = useDeviceSales();
   const deviceSales = allDeviceSales.filter(sale => sale.tenant_id === tenant.id && sale.user_id === userId);
   const { data: cash } = useSuspenseQuery(myCashSessionQuery(tenant.id, userId));
+  const [today, setToday] = useState(() => new Date().toDateString());
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date().toDateString();
+      setToday((prev) => (prev === d ? prev : d));
+      void queryClient.invalidateQueries({ queryKey: ["cash-session"] });
+    };
+    const id = window.setInterval(() => setToday(new Date().toDateString()), 60_000);
+    window.addEventListener("focus", tick);
+    document.addEventListener("visibilitychange", tick);
+    return () => { window.clearInterval(id); window.removeEventListener("focus", tick); document.removeEventListener("visibilitychange", tick); };
+  }, []);
+  const staleCash = !!cash && isFromPreviousDay(cash.opened_at) && today.length > 0;
   const [discount, setDiscount] = useState("");
   const [discountPct, setDiscountPct] = useState(false);
   const [payment, setPayment] = useState<"cash" | "card" | "credit">("cash");
@@ -171,6 +185,7 @@ function PosPage() {
   const checkout = async (print: boolean) => {
     if (cart.length === 0 || saving) return;
     if (!cash) return void toast.error('افتح الصندوق بالإنترنت أولاً.');
+    if (staleCash) return void toast.error('كاسة يوم سابق مازالت مفتوحة. أغلقها وافتح كاسة اليوم أولاً.');
     if (payment === 'credit' && !customerId) return void toast.error('اختر الزبون لتسجيل البيع بالدين.');
     setSaving(true);
     try {
@@ -251,7 +266,12 @@ function PosPage() {
       />
       <div className="surface-card flex flex-wrap items-center gap-3 p-3 text-sm">
         <Wallet className="h-5 w-5 text-primary" />
-        {cash ? (
+        {cash && staleCash ? (
+          <>
+            <span className="flex flex-1 items-center gap-2 font-medium text-destructive"><AlertTriangle className="h-4 w-4" />كاسة يوم {new Date(cash.opened_at).toLocaleDateString("fr-FR")} مازالت مفتوحة. أغلقها وافتح كاسة اليوم.</span>
+            <CloseCash rollover cashId={cash.id} opening={Number(cash.opening_amount)} value={closing ?? ""} setValue={setClosing} onDone={() => { setClosing(null); void queryClient.invalidateQueries({ queryKey: ["cash-session"] }); }} />
+          </>
+        ) : cash ? (
           <>
             <span className="flex-1">الصندوق مفتوح منذ {new Date(cash.opened_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} · رصيد البداية <b className="font-mono">{money(Number(cash.opening_amount))}</b> دج</span>
             {closing === null ? (
@@ -471,7 +491,7 @@ function PosPage() {
   );
 }
 
-function CloseCash({ cashId, opening, value, setValue, onDone }: { cashId: string; opening: number; value: string; setValue: (v: string) => void; onDone: () => void }) {
+function CloseCash({ cashId, opening, value, setValue, onDone, rollover = false }: { rollover?: boolean; cashId: string; opening: number; value: string; setValue: (v: string) => void; onDone: () => void }) {
   const [summary, setSummary] = useState<{ cash: number; card: number; credit: number; returns: number; debt: number; out: number } | null>(null);
   const load = async () => {
     const [{ data: t }, { data: cs }] = await Promise.all([
@@ -501,12 +521,16 @@ function CloseCash({ cashId, opening, value, setValue, onDone }: { cashId: strin
       <div className="flex gap-2">
         <Input inputMode="decimal" placeholder="المبلغ الفعلي في الصندوق" value={value} onChange={(e) => setValue(e.target.value)} className="h-9 font-mono" />
         <Button size="sm" onClick={async () => {
-          const n = Number(value.replace(",", ".")) || 0;
+          const n = value.trim() === "" && rollover ? expected : Number(value.replace(",", ".")) || 0;
           const { error } = await supabase.rpc("close_cash_session", { _id: cashId, _closing: n });
           if (error) return void toast.error(errorText(error));
-          toast.success(`تم إغلاق الصندوق · الفرق ${money(n - expected)} دج`);
+          if (rollover) {
+            const { error: e2 } = await supabase.rpc("open_cash_session", { _opening: n });
+            if (e2) { toast.error(errorText(e2)); return onDone(); }
+            toast.success(`تم إغلاق كاسة البارح وفتح كاسة اليوم برصيد ${money(n)} دج`);
+          } else toast.success(`تم إغلاق الصندوق · الفرق ${money(n - expected)} دج`);
           onDone();
-        }}>تأكيد الإغلاق</Button>
+        }}>{rollover ? "إغلاق وفتح كاسة اليوم" : "تأكيد الإغلاق"}</Button>
       </div>
     </div>
   );
