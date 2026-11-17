@@ -239,6 +239,7 @@ function PosPage() {
           <span>{money(sale.items.reduce((sum,item) => sum + item.quantity * item.unit_price, 0) - sale.discount)} دج</span>
           <span className={sale.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}>{sale.status === 'failed' ? errorText({ message: sale.error ?? '' }) : 'في الانتظار'}</span>
           {sale.status === 'failed' && <Button size="sm" variant="outline" onClick={() => void retryDeviceSale(sale)}>إعادة الإرسال</Button>}
+          {sale.status === 'failed' && cash && !staleCash && cash.id !== sale.cash_id && <Button size="sm" onClick={() => void retryDeviceSale(sale, cash.id)}>إرسال إلى كاسة اليوم</Button>}
         </div>)}
       </div>}
       <OnlineOrdersAlert tenantId={tenant.id} />
