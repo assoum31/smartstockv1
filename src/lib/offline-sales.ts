@@ -48,8 +48,8 @@ export async function saveDeviceSale(sale: DeviceSale) {
   await transaction(store => store.put(sale, `sale:${sale.client_id}`));
   await reload();
 }
-export async function retryDeviceSale(sale: DeviceSale) {
-  await saveDeviceSale({ ...sale, status: 'pending', error: undefined });
+export async function retryDeviceSale(sale: DeviceSale, cashId?: string) {
+  await saveDeviceSale({ ...sale, ...(cashId ? { cash_id: cashId, sold_at: new Date().toISOString() } : {}), status: 'pending', error: undefined });
   await syncDeviceSales();
 }
 let running: Promise<void> | null = null;

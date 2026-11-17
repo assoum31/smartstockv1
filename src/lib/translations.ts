@@ -1210,7 +1210,9 @@ export const PHRASES: Record<string, [string, string]> = {
   "Vendre et imprimer",
   "Sell and print"
  ],
- "تأكيد الإغلاق": [
+ "إرسال إلى كاسة اليوم": ["Envoyer dans la caisse du jour", "Send to today's cash"],
+  "إغلاق وفتح كاسة اليوم": ["Fermer et ouvrir la caisse du jour", "Close and open today's cash"],
+  "تأكيد الإغلاق": [
   "Confirmer la clôture",
   "Confirm close"
  ],
