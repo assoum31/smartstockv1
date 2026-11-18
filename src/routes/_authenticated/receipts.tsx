@@ -407,7 +407,7 @@ function ReceiptsPage() {
                   setCreating(true);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}><Pencil /> تعديل</Button>
-                {isManager && (
+                {true && (
                   <Button size="sm" variant="outline" className="mb-2 ms-2 text-destructive" onClick={async () => {
                     if (!window.confirm("حذف هذا الوصل؟ ستُنقص كمياته من المخزون.")) return;
                     const { error } = await supabase.rpc("delete_goods_receipt", { _receipt_id: r.id });
