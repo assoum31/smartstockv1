@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.18"
-  }
   public: {
     Tables: {
       activity_log: {
@@ -1417,6 +1412,50 @@ export type Database = {
         }
         Relationships: []
       }
+      treasury_transactions: {
+        Row: {
+          amount: number
+          cash_session_id: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string
+          id: string
+          kind: string
+          note: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name: string
+          id?: string
+          kind: string
+          note?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -1701,6 +1740,14 @@ export type Database = {
         }
         Returns: string
       }
+      record_treasury: {
+        Args: { _amount: number; _kind: string; _note?: string }
+        Returns: string
+      }
+      reopen_inventory_session: {
+        Args: { _session_id: string }
+        Returns: undefined
+      }
       request_recount: { Args: { _log_id: string }; Returns: string }
       session_is_active: { Args: { _session_id: string }; Returns: boolean }
       set_goods_receipt_date: {
@@ -1751,6 +1798,16 @@ export type Database = {
           _receipt_id: string
           _reference?: string
           _supplier_id: string
+        }
+        Returns: undefined
+      }
+      update_sales_ticket: {
+        Args: {
+          _discount?: number
+          _items: Json
+          _notes?: string
+          _payment: string
+          _ticket_id: string
         }
         Returns: undefined
       }
@@ -1907,3 +1964,4 @@ export const Constants = {
     },
   },
 } as const
+
