@@ -4,9 +4,10 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { errorText } from "@/lib/messages";
-import { Banknote, ChevronDown, Globe, Package, Printer, Receipt, Search, Trash2, Undo2 } from "lucide-react";
+import { Banknote, ChevronDown, Globe, Package, Pencil, Printer, Receipt, Search, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader, StatCard } from "@/components/stat-card";
 import { SalesStats } from "@/components/sales-stats";
 import { useStoreSettings } from "@/lib/store-settings";
@@ -37,6 +38,7 @@ function SalesPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [onlineOnly, setOnlineOnly] = useState(false);
+  const [editing, setEditing] = useState<SaleTicket | null>(null);
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -75,6 +77,7 @@ function SalesPage() {
         <Button variant="outline" className="h-11" onClick={() => setDay("")}>كل الأيام</Button>
         <Button variant={onlineOnly ? "default" : "outline"} className="h-11" onClick={() => setOnlineOnly(!onlineOnly)}><Globe />أونلاين فقط</Button>
       </div>
+      {editing && <EditTicketDialog ticket={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); void qc.invalidateQueries(); }} />}
       <div className="space-y-2">
         {list.length === 0 && <p className="surface-card p-8 text-center text-muted-foreground">لا توجد مبيعات.</p>}
         {list.map((t) => (
@@ -115,7 +118,8 @@ function SalesPage() {
                 <Button size="sm" variant="outline" className="mt-3 ms-2" asChild>
                   <Link to="/returns" search={{ ticket: t.ticket_number }}><Undo2 /> إرجاع الوصل</Link>
                 </Button>
-                {isManager && (
+                <Button size="sm" variant="outline" className="mt-3 ms-2" onClick={() => setEditing(t)}><Pencil /> تعديل الوصل</Button>
+                {(isManager || me.canSell) && (
                   <Button size="sm" variant="outline" className="mt-3 ms-2 text-destructive" onClick={async () => {
                     if (!window.confirm("حذف هذا البون؟ ستعود كمياته إلى المخزون.")) return;
                     const { error } = await supabase.rpc("delete_sales_ticket", { _ticket_id: t.id });
@@ -130,5 +134,86 @@ function SalesPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+type EditLine = { barcode: string; product_name: string; quantity: string; unit_price: string };
+
+function EditTicketDialog({ ticket, onClose, onSaved }: { ticket: SaleTicket; onClose: () => void; onSaved: () => void }) {
+  const [lines, setLines] = useState<EditLine[]>(() => ticket.items.map((i) => ({ barcode: i.barcode, product_name: i.product_name, quantity: String(Number(i.quantity)), unit_price: String(Number(i.unit_price)) })));
+  const [payment, setPayment] = useState<string>(ticket.payment_method ?? "cash");
+  const [discount, setDiscount] = useState(String(Number(ticket.discount ?? 0)));
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<{ barcode: string; name: string; selling_price: number | null }[]>([]);
+  const [saving, setSaving] = useState(false);
+  const num = (v: string) => Number(v.replace(",", ".")) || 0;
+  const sub = lines.reduce((n, l) => n + num(l.quantity) * num(l.unit_price), 0);
+  const set = (k: number, patch: Partial<EditLine>) => setLines((ls) => ls.map((l, i) => (i === k ? { ...l, ...patch } : l)));
+  const find = async (v: string) => {
+    setSearch(v);
+    const s = v.trim();
+    if (s.length < 2) return setResults([]);
+    const { data } = await supabase.from("products").select("barcode, name, selling_price").eq("tenant_id", ticket.tenant_id).or(`barcode.ilike.%${s.replace(/[,()%]/g, "")}%,name.ilike.%${s.replace(/[,()%]/g, "")}%`).limit(8);
+    setResults(data ?? []);
+  };
+  const add = (p: { barcode: string; name: string; selling_price: number | null }) => {
+    setLines((ls) => {
+      const k = ls.findIndex((l) => l.barcode === p.barcode);
+      if (k >= 0) return ls.map((l, i) => (i === k ? { ...l, quantity: String(num(l.quantity) + 1) } : l));
+      return [...ls, { barcode: p.barcode, product_name: p.name, quantity: "1", unit_price: String(Number(p.selling_price ?? 0)) }];
+    });
+    setSearch(""); setResults([]);
+  };
+  const save = async () => {
+    const items = lines.filter((l) => num(l.quantity) > 0).map((l) => ({ barcode: l.barcode, product_name: l.product_name, quantity: num(l.quantity), unit_price: num(l.unit_price) }));
+    if (!items.length) return void toast.error("الوصل فارغ");
+    setSaving(true);
+    const { error } = await supabase.rpc("update_sales_ticket", { _ticket_id: ticket.id, _items: items, _payment: payment, _discount: num(discount) });
+    setSaving(false);
+    if (error) return void toast.error(errorText(error));
+    toast.success("تم تعديل الوصل وتحديث المخزون");
+    onSaved();
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader><DialogTitle>تعديل الوصل {documentNumber("sale", ticket, ticket.ticket_number)}</DialogTitle></DialogHeader>
+        <div className="relative">
+          <Input value={search} onChange={(e) => void find(e.target.value)} placeholder="إضافة منتج بالاسم أو الباركود..." className="h-10" />
+          {results.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded-lg border bg-popover shadow">
+              {results.map((p) => (
+                <button key={p.barcode} type="button" onClick={() => add(p)} className="block w-full px-3 py-2 text-start text-sm hover:bg-muted">
+                  {p.name} <span className="text-xs text-muted-foreground" dir="ltr">{p.barcode}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="space-y-2">
+          {lines.map((l, k) => (
+            <div key={l.barcode + k} className="flex items-center gap-2 rounded-lg border p-2">
+              <div className="min-w-0 flex-1 text-sm">{l.product_name}<span className="block text-[10px] text-muted-foreground" dir="ltr">{l.barcode}</span></div>
+              <Input inputMode="decimal" value={l.quantity} onChange={(e) => set(k, { quantity: e.target.value })} className="h-9 w-16 font-mono" aria-label="الكمية" />
+              <Input inputMode="decimal" value={l.unit_price} onChange={(e) => set(k, { unit_price: e.target.value })} className="h-9 w-24 font-mono" aria-label="السعر" />
+              <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setLines((ls) => ls.filter((_, i) => i !== k))}><Trash2 /></Button>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <select value={payment} onChange={(e) => setPayment(e.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm">
+            <option value="cash">نقداً</option>
+            <option value="card">بطاقة</option>
+            <option value="credit">كريدي</option>
+          </select>
+          <Input inputMode="decimal" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="التخفيض" className="h-10 font-mono" />
+        </div>
+        <p className="text-sm">المجموع الجديد: <b className="font-mono">{money(Math.max(0, sub - num(discount)))}</b> دج</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <Button onClick={() => void save()} disabled={saving}>حفظ التعديل</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
