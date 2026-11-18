@@ -1,7 +1,7 @@
 import { Suspense, useState } from "react";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ClipboardList, Play, Square } from "lucide-react";
+import { ClipboardList, Play, RotateCcw, Square } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -108,10 +108,25 @@ function InventoryPage() {
                 إغلاق الجلسة
               </Button>
             ) : (
-              <Button onClick={() => setStarting(true)}>
-                <Play />
-                بدء جلسة جرد
-              </Button>
+              <>
+                {session && session.status !== "active" && (
+                  <Button variant="outline" onClick={async () => {
+                    if (!window.confirm("إعادة فتح هذه الجلسة ومواصلة الجرد؟")) return;
+                    const { error } = await supabase.rpc("reopen_inventory_session", { _session_id: session.id });
+                    if (error) return void toast.error(errorText(error));
+                    toast.success("تمت إعادة فتح الجلسة");
+                    setSelectedId(session.id);
+                    refreshSessions();
+                  }}>
+                    <RotateCcw />
+                    إعادة فتح الجلسة ومواصلة الجرد
+                  </Button>
+                )}
+                <Button onClick={() => setStarting(true)}>
+                  <Play />
+                  بدء جلسة جرد
+                </Button>
+              </>
             )}
           </>
         }
